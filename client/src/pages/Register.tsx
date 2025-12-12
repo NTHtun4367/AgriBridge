@@ -47,15 +47,14 @@ function Register() {
   const form = useForm<RegisterFormInputs>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      status, // ← must include
       name: "",
       email: "",
       password: "",
-      // businessName: "",
-      // phone: "",
-      // nrcRegion: "",
-      // nrcTownship: "",
-      // nrcType: "",
-      // nrcNumber: "",
+      homeAddress: "",
+      division: "",
+      district: "",
+      township: "",
     },
   });
 
@@ -76,6 +75,7 @@ function Register() {
 
   const handleChoice = (choice: "farmer" | "merchant") => {
     setStatus(choice);
+    form.setValue("status", choice);
     setDialogOpen(false);
     setStep(1); // reset to first step
   };
