@@ -1,11 +1,20 @@
 import { apiSlice } from "./api";
 
-interface LoginInput {
+interface LoginRequest {
   email: string;
   password: string;
 }
 
-interface RegisterFarmer extends LoginInput {
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    role: "farmer" | "merchant" | "admin";
+    merchantId?: string | null;
+  };
+}
+
+interface RegisterFarmer extends LoginRequest {
   name: string;
   homeAddress: string;
   division: string;
@@ -13,30 +22,30 @@ interface RegisterFarmer extends LoginInput {
   township: string;
 }
 
-interface RegisterMerchant extends RegisterFarmer {
-  businessName: string;
-  phone: string;
+// interface RegisterMerchant extends RegisterFarmer {
+//   businessName: string;
+//   phone: string;
 
-  nrcRegion: string;
-  nrcTownship: string;
-  nrcType: string;
-  nrcNumber: string;
+//   nrcRegion: string;
+//   nrcTownship: string;
+//   nrcType: string;
+//   nrcNumber: string;
 
-  nrcFrontImage: {
-    url: string;
-    public_alt?: string;
-  };
+//   nrcFrontImage: {
+//     url: string;
+//     public_alt?: string;
+//   };
 
-  nrcBackImage: {
-    url: string;
-    public_alt?: string;
-  };
-}
+//   nrcBackImage: {
+//     url: string;
+//     public_alt?: string;
+//   };
+// }
 
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    login: builder.mutation({
-      query: (data: LoginInput) => ({
+    login: builder.mutation<LoginResponse, LoginRequest>({
+      query: (data) => ({
         url: "/login",
         method: "POST",
         body: data,
@@ -49,12 +58,15 @@ export const authApi = apiSlice.injectEndpoints({
         url: "/register/farmer",
         method: "POST",
         body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }),
       invalidatesTags: ["User"],
     }),
 
     registerMerchant: builder.mutation({
-      query: (data: RegisterMerchant) => ({
+      query: (data: FormData) => ({
         url: "/register/merchant",
         method: "POST",
         body: data,

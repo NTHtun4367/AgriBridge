@@ -4,7 +4,7 @@ import { ENV } from "./env";
 const generateToken = (user: any) => {
   const token = jwt.sign(
     {
-      userId: user._id,
+      _id: user._id,
       role: user.role,
       merchantId: user.merchantId || null,
     },

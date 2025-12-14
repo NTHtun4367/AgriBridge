@@ -1,6 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcrypt";
 
+// Define the base interface for the User Document
 export interface IUser extends Document {
   role: "farmer" | "merchant" | "admin";
 
@@ -13,6 +14,7 @@ export interface IUser extends Document {
   district: string;
   township: string;
 
+  // The merchantId is a reference to the Merchant document
   merchantId?: Schema.Types.ObjectId;
 
   matchPassword(enteredPassword: string): Promise<boolean>;
@@ -55,4 +57,5 @@ userSchema.methods.matchPassword = function (enteredPassword: string) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
+// Export the model
 export const User = model<IUser>("User", userSchema);

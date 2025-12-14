@@ -18,8 +18,6 @@ export interface IMerchant extends Document {
     url: string;
     public_alt?: string;
   };
-
-  // plan?: "free" | "pro" | "enterprise";
 }
 
 const merchantSchema = new Schema<IMerchant>(
@@ -40,8 +38,6 @@ const merchantSchema = new Schema<IMerchant>(
       url: { type: String, required: true },
       public_alt: String,
     },
-
-    // plan: { type: String, default: "free" },
   },
   { timestamps: true }
 );

@@ -40,10 +40,21 @@ import {
   registerSchema,
   type RegisterFormInputs,
 } from "@/schema/register/register.combineSteps";
+import {
+  useRegisterFarmerMutation,
+  useRegisterMerchantMutation,
+} from "@/store/slices/userApi";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 function Register() {
+  const [registerFarmerMutation, { isLoading: farmerLoading }] =
+    useRegisterFarmerMutation();
+  const [registerMerchantMutation, { isLoading: merchantLoading }] =
+    useRegisterMerchantMutation();
   const [status, setStatus] = useState<"farmer" | "merchant">("farmer");
   const [dialogOpen, setDialogOpen] = useState(true);
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1); // ← form step (1–4)
 
@@ -78,7 +89,8 @@ function Register() {
   const nextStep = async () => {
     let fields: string[] = [];
     if (step === 1) fields = ["name", "email", "password"];
-    if (step === 2) fields = ["homeAddress", "division", "district", "township"];
+    if (step === 2)
+      fields = ["homeAddress", "division", "district", "township"];
     if (status === "merchant" && step === 3) fields = ["businessName", "phone"];
     if (status === "merchant" && step === 4)
       fields = [
@@ -111,9 +123,8 @@ function Register() {
     if (step > 1) setStep(step - 1);
   };
 
-  const onSubmit = (data: RegisterFormInputs) => {
+  const onSubmit = async (data: RegisterFormInputs) => {
     const basePayload = {
-      status: data.status,
       name: data.name,
       email: data.email,
       password: data.password,
@@ -123,26 +134,45 @@ function Register() {
       township: data.township,
     };
 
-    const payload =
-      data.status === "merchant"
-        ? {
-            ...basePayload,
-            businessName: data.businessName,
-            phone: data.phone,
-            nrc: {
-              region: data.nrcRegion,
-              township: data.nrcTownship,
-              type: data.nrcType,
-              number: data.nrcNumber,
-            },
-            nrcImages: {
-              front: data.nrcFrontImage,
-              back: data.nrcBackImage,
-            },
-          }
-        : basePayload;
+    const formData = new FormData();
 
-    console.log("FINAL PAYLOAD:", payload);
+    // common fields
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("homeAddress", data.homeAddress);
+    formData.append("division", data.division);
+    formData.append("district", data.district);
+    formData.append("township", data.township);
+
+    if (data.status === "merchant") {
+      formData.append("businessName", data.businessName);
+      formData.append("phone", data.phone);
+
+      // NRC fields (IMPORTANT FORMAT)
+      formData.append("nrc[region]", data.nrcRegion);
+      formData.append("nrc[township]", data.nrcTownship);
+      formData.append("nrc[type]", data.nrcType);
+      formData.append("nrc[number]", data.nrcNumber);
+
+      // Images
+      formData.append("nrcFront", data.nrcFrontImage?.file as File);
+      formData.append("nrcBack", data.nrcBackImage?.file as File);
+    }
+
+    console.log("FINAL PAYLOAD:", formData);
+
+    try {
+      if (status === "farmer") {
+        await registerFarmerMutation(basePayload).unwrap();
+      } else if (status === "merchant") {
+        await registerMerchantMutation(formData).unwrap();
+      }
+      toast.success("Register successful.");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error(error?.data?.message);
+    }
   };
 
   const handleChoice = (choice: "farmer" | "merchant") => {
@@ -630,7 +660,10 @@ function Register() {
                     Next
                   </Button>
                 ) : (
-                  <Button type="submit">
+                  <Button
+                    type="submit"
+                    disabled={farmerLoading || merchantLoading}
+                  >
                     {status === "farmer"
                       ? "Create Account"
                       : "Submit for Verification"}

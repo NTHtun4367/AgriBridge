@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { ENV } from "./utils/env";
 import { connectDB } from "./db/dbConnect";
 import farmerRoutes from "./routes/farmer";
+import merchantRoutes from "./routes/merchant";
 import errorHandler from "./middlewares/errorHandler";
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/v1", farmerRoutes);
+app.use("/api/v1", merchantRoutes);
 
 // error handler
 app.use(errorHandler);
