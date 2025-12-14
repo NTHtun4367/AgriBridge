@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,16 @@ function Register() {
 
     if (fields.length) {
       const valid = await form.trigger(fields as any, { shouldFocus: true });
-      if (!valid) return;
+      if (!valid) {
+        fields.forEach((f) => {
+          const v = form.getValues(f as any);
+          const state = form.getFieldState(f as any);
+          if (state.invalid) {
+            form.setValue(f as any, v as any, { shouldTouch: true });
+          }
+        });
+        return;
+      }
     }
 
     setStep(step + 1);
@@ -139,28 +148,70 @@ function Register() {
   const handleChoice = (choice: "farmer" | "merchant") => {
     setStatus(choice);
     form.setValue("status", choice);
-
-    // if (choice === "farmer") {
-    //   form.reset({
-    //     ...form.getValues(),
-    //     businessName: "",
-    //     phone: "",
-    //     nrcRegion: "",
-    //     nrcTownship: "",
-    //     nrcType: "",
-    //     nrcNumber: "",
-    //     nrcFrontImage: null,
-    //     nrcBackImage: null,
-    //   });
-    // }
-
     setDialogOpen(false);
     setStep(1);
   };
 
+  const allFields = [
+    "name",
+    "email",
+    "password",
+    "homeAddress",
+    "division",
+    "district",
+    "township",
+    "businessName",
+    "phone",
+    "nrcRegion",
+    "nrcTownship",
+    "nrcType",
+    "nrcNumber",
+    "nrcFrontImage",
+    "nrcBackImage",
+  ];
+
+  const getCurrentStepFields = (): string[] => {
+    if (step === 1) return ["name", "email", "password"];
+    if (step === 2) return ["homeAddress", "division", "district", "township"];
+    if (status === "merchant" && step === 3) return ["businessName", "phone"];
+    if (status === "merchant" && step === 4)
+      return [
+        "nrcRegion",
+        "nrcTownship",
+        "nrcType",
+        "nrcNumber",
+        "nrcFrontImage",
+        "nrcBackImage",
+      ];
+    return [];
+  };
+
   useEffect(() => {
-    form.clearErrors();
-  }, [step]);
+    const current = getCurrentStepFields();
+    const toClear = allFields.filter((f) => !current.includes(f));
+    form.clearErrors(toClear as any);
+  }, [step, status]);
+
+  const step4Fields = [
+    "nrcRegion",
+    "nrcTownship",
+    "nrcType",
+    "nrcNumber",
+    "nrcFrontImage",
+    "nrcBackImage",
+  ] as const;
+
+  const step4Values = useWatch({
+    control: form.control,
+    name: step4Fields as unknown as string[],
+  });
+
+  useEffect(() => {
+    if (status === "merchant" && step === 4) {
+      form.trigger(step4Fields as any);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, step, ...step4Values]);
 
   return (
     <div className="max-w-[450px] lg:mx-auto mx-6 mt-12">

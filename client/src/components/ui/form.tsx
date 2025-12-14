@@ -91,12 +91,14 @@ function FormLabel({
   className,
   ...props
 }: React.ComponentProps<typeof LabelPrimitive.Root>) {
-  const { error, formItemId } = useFormField()
+  const { error, formItemId, isDirty, isTouched } = useFormField()
+  const { isSubmitted } = useFormState()
+  const shouldShowError = !!error && (isSubmitted || isDirty || isTouched)
 
   return (
     <Label
       data-slot="form-label"
-      data-error={!!error}
+      data-error={shouldShowError}
       className={cn("data-[error=true]:text-destructive", className)}
       htmlFor={formItemId}
       {...props}
@@ -105,18 +107,27 @@ function FormLabel({
 }
 
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  const {
+    error,
+    formItemId,
+    formDescriptionId,
+    formMessageId,
+    isDirty,
+    isTouched,
+  } = useFormField()
+  const { isSubmitted } = useFormState()
+  const shouldShowError = !!error && (isSubmitted || isDirty || isTouched)
 
   return (
     <Slot
       data-slot="form-control"
       id={formItemId}
       aria-describedby={
-        !error
+        !shouldShowError
           ? `${formDescriptionId}`
           : `${formDescriptionId} ${formMessageId}`
       }
-      aria-invalid={!!error}
+      aria-invalid={shouldShowError}
       {...props}
     />
   )
