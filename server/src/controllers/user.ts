@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { User } from "../models/user";
 
-// @route POST | api/v1/register
+// @route POST | api/v1/register-farmer
 // @desc Register new user
 // @access Public
-export const registerUser = asyncHandler(
+export const registerFarmer = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, email, password, homeAddress, division, district, township } =
       req.body;

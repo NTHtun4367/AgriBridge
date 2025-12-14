@@ -1,34 +1,49 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcrypt";
-import { IUserBase } from "./userBase";
 
-export interface IUser extends IUserBase {
-  status: "farmer";
+export interface IUser extends Document {
+  role: "farmer" | "merchant" | "admin";
+
+  name: string;
+  email: string;
+  password: string;
+
+  homeAddress: string;
+  division: string;
+  district: string;
+  township: string;
+
+  merchantId?: Schema.Types.ObjectId;
+
+  matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
-    status: {
+    role: {
       type: String,
-      enum: ["farmer", "merchant"],
-      default: "farmer",
+      enum: ["farmer", "merchant", "admin"],
+      required: true,
     },
 
-    // Step 1
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
 
-    // Step 2
     homeAddress: { type: String, required: true },
     division: { type: String, required: true },
     district: { type: String, required: true },
     township: { type: String, required: true },
+
+    merchantId: {
+      type: Schema.Types.ObjectId,
+      ref: "Merchant",
+      required: false,
+    },
   },
   { timestamps: true }
 );
 
-// HASH PASSWORD
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -36,7 +51,7 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.methods.matchPassword = async function (enteredPassword: string) {
+userSchema.methods.matchPassword = function (enteredPassword: string) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 

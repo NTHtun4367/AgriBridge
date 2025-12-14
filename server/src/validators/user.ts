@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-export const registerValidator = [
+export const registerFarmerValidator = [
   body("name").notEmpty().withMessage("Name is required."),
   body("email").isEmail().withMessage("Invalid email address."),
   body("password")
