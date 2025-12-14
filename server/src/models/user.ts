@@ -40,4 +40,4 @@ userSchema.methods.matchPassword = async function (enteredPassword: string) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-export const Farmer = model<IUser>("Farmer", userSchema);
+export const User = model<IUser>("User", userSchema);

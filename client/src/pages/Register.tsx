@@ -39,7 +39,7 @@ import ImageUpload from "@/components/ImageUpload";
 import {
   registerSchema,
   type RegisterFormInputs,
-} from "@/schema/register.combineSteps";
+} from "@/schema/register/register.combineSteps";
 
 function Register() {
   const [status, setStatus] = useState<"farmer" | "merchant">("farmer");

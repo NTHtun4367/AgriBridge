@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ENV } from "./utils/env";
 import { connectDB } from "./db/dbConnect";
+import userRoutes from "./routes/user";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(json());
 app.use(cookieParser());
 
 // routes
+app.use("/api/v1", userRoutes);
 
 app.listen(ENV.PORT, () => {
   // database connection
