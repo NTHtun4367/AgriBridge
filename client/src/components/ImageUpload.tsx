@@ -1,36 +1,54 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
 
+/* ---------- TYPE (MATCHES ZOD) ---------- */
+export type ImageValue = {
+  file?: File;
+  url: string;
+  public_alt?: string;
+};
+
 interface ImageUploadProps {
-  images: File[] | null;
-  onChange: (files: File[]) => void;
+  image: ImageValue | null;
+  onChange: (value: ImageValue | null) => void;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange }) => {
+/* ---------- COMPONENT ---------- */
+const ImageUpload: React.FC<ImageUploadProps> = ({ image, onChange }) => {
   const [preview, setPreview] = useState<string | null>(null);
 
+  /* ---------- PREVIEW HANDLING ---------- */
   useEffect(() => {
-    if (images && images.length > 0) {
-      const file = images[0];
+    if (image?.file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(image.file);
+    } else if (image?.url) {
+      setPreview(image.url);
     } else {
       setPreview(null);
     }
-  }, [images]);
+  }, [image]);
 
+  /* ---------- FILE CHANGE ---------- */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    onChange([file]); // always pass array for compatibility
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+
+    onChange({
+      file,
+      url: previewUrl,
+    });
   };
 
+  /* ---------- REMOVE ---------- */
   const removeImage = () => {
-    onChange([]);
+    onChange(null);
   };
 
   return (
@@ -49,7 +67,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange }) => {
             className="absolute top-1 right-1"
             onClick={removeImage}
           >
-            <Trash className="font-bold text-destructive" />
+            <Trash className="text-destructive" />
           </Button>
         </div>
       ) : (

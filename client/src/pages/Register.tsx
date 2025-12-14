@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -21,7 +21,6 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 
-import { registerSchema, type RegisterFormInputs } from "@/schema/register";
 import {
   Select,
   SelectTrigger,
@@ -37,6 +36,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import ImageUpload from "@/components/ImageUpload";
+import {
+  registerSchema,
+  type RegisterFormInputs,
+} from "@/schema/register.combineSteps";
 
 function Register() {
   const [status, setStatus] = useState<"farmer" | "merchant">("farmer");
@@ -44,10 +47,13 @@ function Register() {
 
   const [step, setStep] = useState(1); // ← form step (1–4)
 
-  const form = useForm<RegisterFormInputs>({
+  const form = useForm<any>({
     resolver: zodResolver(registerSchema),
+    mode: "onChange",
+    reValidateMode: "onBlur",
+    shouldUnregister: false,
     defaultValues: {
-      status, // ← must include
+      status: "farmer",
       name: "",
       email: "",
       password: "",
@@ -55,14 +61,41 @@ function Register() {
       division: "",
       district: "",
       township: "",
+      businessName: "",
+      phone: "",
+      nrcRegion: "",
+      nrcTownship: "",
+      nrcType: "",
+      nrcNumber: "",
+      nrcFrontImage: null,
+      nrcBackImage: null,
     },
   });
 
   // Step count depends on account type
   const totalSteps = status === "farmer" ? 2 : 4;
 
-  const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
+  const nextStep = async () => {
+    let fields: string[] = [];
+    if (step === 1) fields = ["name", "email", "password"];
+    if (step === 2) fields = ["homeAddress", "division", "district", "township"];
+    if (status === "merchant" && step === 3) fields = ["businessName", "phone"];
+    if (status === "merchant" && step === 4)
+      fields = [
+        "nrcRegion",
+        "nrcTownship",
+        "nrcType",
+        "nrcNumber",
+        "nrcFrontImage",
+        "nrcBackImage",
+      ];
+
+    if (fields.length) {
+      const valid = await form.trigger(fields as any, { shouldFocus: true });
+      if (!valid) return;
+    }
+
+    setStep(step + 1);
   };
 
   const prevStep = () => {
@@ -70,15 +103,64 @@ function Register() {
   };
 
   const onSubmit = (data: RegisterFormInputs) => {
-    console.log("Final Form Submitted:", data);
+    const basePayload = {
+      status: data.status,
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      homeAddress: data.homeAddress,
+      division: data.division,
+      district: data.district,
+      township: data.township,
+    };
+
+    const payload =
+      data.status === "merchant"
+        ? {
+            ...basePayload,
+            businessName: data.businessName,
+            phone: data.phone,
+            nrc: {
+              region: data.nrcRegion,
+              township: data.nrcTownship,
+              type: data.nrcType,
+              number: data.nrcNumber,
+            },
+            nrcImages: {
+              front: data.nrcFrontImage,
+              back: data.nrcBackImage,
+            },
+          }
+        : basePayload;
+
+    console.log("FINAL PAYLOAD:", payload);
   };
 
   const handleChoice = (choice: "farmer" | "merchant") => {
     setStatus(choice);
     form.setValue("status", choice);
+
+    // if (choice === "farmer") {
+    //   form.reset({
+    //     ...form.getValues(),
+    //     businessName: "",
+    //     phone: "",
+    //     nrcRegion: "",
+    //     nrcTownship: "",
+    //     nrcType: "",
+    //     nrcNumber: "",
+    //     nrcFrontImage: null,
+    //     nrcBackImage: null,
+    //   });
+    // }
+
     setDialogOpen(false);
-    setStep(1); // reset to first step
+    setStep(1);
   };
+
+  useEffect(() => {
+    form.clearErrors();
+  }, [step]);
 
   return (
     <div className="max-w-[450px] lg:mx-auto mx-6 mt-12">
@@ -166,7 +248,7 @@ function Register() {
           {/* ---------------------------------------
            FORM
          --------------------------------------- */}
-          <Form {...form}>
+          <Form {...(form as any)}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-6 mt-6"
@@ -245,7 +327,10 @@ function Register() {
                       <FormItem>
                         <FormLabel>Division</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select division" />
                             </SelectTrigger>
@@ -267,7 +352,10 @@ function Register() {
                       <FormItem>
                         <FormLabel>District</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select district" />
                             </SelectTrigger>
@@ -289,7 +377,10 @@ function Register() {
                       <FormItem>
                         <FormLabel>Township</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select township" />
                             </SelectTrigger>
@@ -353,7 +444,10 @@ function Register() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Select onValueChange={field.onChange}>
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="1" />
                                 </SelectTrigger>
@@ -376,7 +470,10 @@ function Register() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Select onValueChange={field.onChange}>
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Township" />
                                 </SelectTrigger>
@@ -399,7 +496,10 @@ function Register() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Select onValueChange={field.onChange}>
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="N" />
                                 </SelectTrigger>
@@ -436,8 +536,8 @@ function Register() {
                         <FormItem className="flex-1">
                           <FormControl>
                             <ImageUpload
-                              images={field.value}
-                              onChange={field.onChange}
+                              image={field.value}
+                              onChange={(img) => field.onChange(img)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -450,8 +550,8 @@ function Register() {
                         <FormItem className="flex-1">
                           <FormControl>
                             <ImageUpload
-                              images={field.value}
-                              onChange={field.onChange}
+                              image={field.value}
+                              onChange={(img) => field.onChange(img)}
                             />
                           </FormControl>
                           <FormMessage />

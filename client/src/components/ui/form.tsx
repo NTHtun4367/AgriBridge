@@ -136,10 +136,12 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
-  const { error, formMessageId } = useFormField()
+  const { error, formMessageId, isDirty, isTouched } = useFormField()
+  const { isSubmitted } = useFormState()
   const body = error ? String(error?.message ?? "") : props.children
 
-  if (!body) {
+  const shouldShow = !!body && (!!error ? isSubmitted || isDirty || isTouched : true)
+  if (!shouldShow) {
     return null
   }
 
