@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ENV } from "./utils/env";
 import { connectDB } from "./db/dbConnect";
-import userRoutes from "./routes/user";
+import farmerRoutes from "./routes/farmer";
 import errorHandler from "./middlewares/errorHandler";
 
 const app = express();
@@ -18,7 +18,7 @@ app.use(json());
 app.use(cookieParser());
 
 // routes
-app.use("/api/v1", userRoutes);
+app.use("/api/v1", farmerRoutes);
 
 // error handler
 app.use(errorHandler);

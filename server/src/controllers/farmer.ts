@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { User } from "../models/user";
+import generateToken from "../utils/generateToken";
 
-// @route POST | api/v1/register-farmer
+// @route POST | api/v1/register/farmer
 // @desc Register new user
 // @access Public
 export const registerFarmer = asyncHandler(
@@ -14,10 +15,11 @@ export const registerFarmer = asyncHandler(
 
     if (existingUser) {
       res.status(400);
-      throw new Error("User already exist with this email address.");
+      throw new Error("Email already registered.");
     }
 
     const newUser = await User.create({
+      role: "farmer",
       name,
       email,
       password,
@@ -27,15 +29,15 @@ export const registerFarmer = asyncHandler(
       township,
     });
 
+    const token = generateToken(newUser);
+
     if (newUser) {
       res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        homeAddress: newUser.homeAddress,
-        division: newUser.division,
-        district: newUser.district,
-        township: newUser.township,
+        token,
+        user: {
+          id: newUser._id,
+          role: newUser.role,
+        },
       });
     }
   }
