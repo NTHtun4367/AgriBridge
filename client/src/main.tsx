@@ -8,6 +8,11 @@ import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import { Provider } from "react-redux";
 import { store } from "./store/index.ts";
+import Panel from "./pages/admin/Panel.tsx";
+import IsAdmin from "./pages/protector/IsAdmin.tsx";
+import Dashboard from "./pages/admin/Dashboard.tsx";
+import Farmer from "./pages/admin/Farmer.tsx";
+import Merchant from "./pages/admin/Merchant.tsx";
 
 const router = createBrowserRouter([
   {
@@ -25,6 +30,28 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/admin",
+        element: (
+          <IsAdmin>
+            <Panel />
+          </IsAdmin>
+        ),
+        children: [
+          {
+            path: "/admin/dashboard",
+            element: <Dashboard />,
+          },
+          {
+            path: "/admin/manage-farmers",
+            element: <Farmer />,
+          },
+          {
+            path: "/admin/manage-merchants",
+            element: <Merchant />,
+          },
+        ],
       },
     ],
   },

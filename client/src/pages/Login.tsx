@@ -43,16 +43,15 @@ function Login() {
       dispatch(setCredentials(response));
       form.reset();
       toast.success("Login successful.");
-      navigate("/");
 
-      // 🔹 Redirect by role
-      // if (response.user.role === "admin") {
-      //   navigate("/admin");
-      // } else if (response.user.role === "merchant") {
-      //   navigate("/merchant");
-      // } else {
-      //   navigate("/farmer");
-      // }
+      // Redirect by role
+      if (response.user.role === "admin") {
+        navigate("/admin");
+      } else if (response.user.role === "merchant") {
+        navigate("/merchant");
+      } else {
+        navigate("/farmer");
+      }
     } catch (error: any) {
       toast.error(error?.data?.message);
     }

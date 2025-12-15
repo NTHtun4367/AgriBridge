@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 // Define the base interface for the User Document
 export interface IUser extends Document {
   role: "farmer" | "merchant" | "admin";
+  status: "active" | "ban";
 
   name: string;
   email: string;
@@ -26,6 +27,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["farmer", "merchant", "admin"],
       required: true,
+    },
+    status: {
+      type: String,
+      enum: ["active", "ban"],
+      default: "active",
     },
 
     name: { type: String, required: true },
