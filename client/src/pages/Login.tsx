@@ -46,7 +46,7 @@ function Login() {
 
       // Redirect by role
       if (response.user.role === "admin") {
-        navigate("/admin");
+        navigate("/admin/dashboard");
       } else if (response.user.role === "merchant") {
         navigate("/merchant");
       } else {

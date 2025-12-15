@@ -5,6 +5,7 @@ import { ENV } from "./utils/env";
 import { connectDB } from "./db/dbConnect";
 import farmerRoutes from "./routes/farmer";
 import merchantRoutes from "./routes/merchant";
+import adminRoutes from "./routes/admin";
 import errorHandler from "./middlewares/errorHandler";
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 // routes
 app.use("/api/v1", farmerRoutes);
 app.use("/api/v1", merchantRoutes);
+app.use("/api/v1", adminRoutes);
 
 // error handler
 app.use(errorHandler);

@@ -1,4 +1,3 @@
-// import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,7 +44,9 @@ function Farmer() {
                   <TableCell className="text-center">
                     <Badge
                       className={
-                        user.status === "active" ? "bg-primary" : "bg-red-600"
+                        user.status === "active"
+                          ? "bg-primary"
+                          : "bg-destructive"
                       }
                     >
                       {user.status}
@@ -53,14 +54,14 @@ function Farmer() {
                   </TableCell>
                   <TableCell className="flex items-center justify-end">
                     <UserStatusDropDown
-                    // userId={user._id}
-                    // userStatus={user.status}
+                      userId={user._id}
+                      userStatus={user.status}
                     />
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>  
+          </Table>
         </CardContent>
       </Card>
     </div>
