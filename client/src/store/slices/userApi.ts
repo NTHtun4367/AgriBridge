@@ -1,4 +1,3 @@
-import type { Farmer } from "@/types/farmer";
 import { apiSlice } from "./api";
 
 interface LoginRequest {
@@ -74,20 +73,6 @@ export const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
-
-    getAllFarmers: builder.query<Farmer[], undefined>({
-      query: () => "/farmers/all",
-      providesTags: ["Farmer"],
-    }),
-
-    changeUserStatus: builder.mutation({
-      query: ({ userId, status }) => ({
-        url: `/users/${userId}`,
-        method: "PATCH",
-        body: { status },
-      }),
-      invalidatesTags: ["Farmer"],
-    }),
   }),
 });
 
@@ -95,6 +80,4 @@ export const {
   useLoginMutation,
   useRegisterFarmerMutation,
   useRegisterMerchantMutation,
-  useGetAllFarmersQuery,
-  useChangeUserStatusMutation,
 } = authApi;

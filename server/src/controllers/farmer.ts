@@ -27,6 +27,8 @@ export const registerFarmer = asyncHandler(
       division,
       district,
       township,
+
+      verificationStatus: "verified",
     });
 
     const token = generateToken(newUser);

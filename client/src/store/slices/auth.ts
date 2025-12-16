@@ -1,10 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
+export interface AuthState {
   token: string | null;
   user: {
     id: string;
     role: "farmer" | "merchant" | "admin";
+    verificationStatus: "unverified" | "pending" | "verified";
     merchantId?: string | null;
   } | null;
 }

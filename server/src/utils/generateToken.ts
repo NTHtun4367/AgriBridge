@@ -6,6 +6,7 @@ const generateToken = (user: any) => {
     {
       _id: user._id,
       role: user.role,
+      verificationStatus: user.verificationStatus,
       merchantId: user.merchantId || null,
     },
     ENV.JWT_SECRET!,

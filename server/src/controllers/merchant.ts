@@ -90,6 +90,7 @@ export const registerMerchant = asyncHandler(
       district,
       township,
       merchantId: merchant._id,
+      verificationStatus: "pending",
     };
 
     const user: HydratedDocument<IUser> = await User.create(userData);

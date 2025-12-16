@@ -1,4 +1,3 @@
-import { useChangeUserStatusMutation } from "@/store/slices/userApi";
 import { useState } from "react";
 import {
   Select,
@@ -7,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-// import { Check } from "lucide-react";
+import { useChangeUserStatusMutation } from "@/store/slices/adminApi";
 
 type UserStatus = "active" | "ban";
 
@@ -46,12 +45,7 @@ function UserStatusDropDown({ userId, userStatus }: UserStatusDropDownProps) {
             key={item.value}
             className="cursor-pointer"
           >
-            <span className="flex items-center gap-1">
-              {item.label}
-              {/* {selectedStatus === item.value && (
-                <Check className="text-green-500" />
-              )} */}
-            </span>
+            <span className="flex items-center gap-1">{item.label}</span>
           </SelectItem>
         ))}
       </SelectContent>

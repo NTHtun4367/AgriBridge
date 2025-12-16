@@ -160,8 +160,6 @@ function Register() {
       formData.append("nrcBack", data.nrcBackImage?.file as File);
     }
 
-    console.log("FINAL PAYLOAD:", formData);
-
     try {
       if (status === "farmer") {
         await registerFarmerMutation(basePayload).unwrap();
@@ -169,7 +167,12 @@ function Register() {
         await registerMerchantMutation(formData).unwrap();
       }
       toast.success("Register successful.");
-      navigate("/login");
+
+      if (status === "farmer") {
+        navigate("/login");
+      } else if (status === "merchant") {
+        navigate("/verification-submitted");
+      }
     } catch (error: any) {
       toast.error(error?.data?.message);
     }

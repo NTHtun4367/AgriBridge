@@ -6,6 +6,8 @@ export interface IUser extends Document {
   role: "farmer" | "merchant" | "admin";
   status: "active" | "ban";
 
+  verificationStatus: "unverified" | "pending" | "verified";
+
   name: string;
   email: string;
   password: string;
@@ -32,6 +34,12 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["active", "ban"],
       default: "active",
+    },
+
+    verificationStatus: {
+      type: String,
+      enum: ["unverified", "pending", "verified"],
+      default: "unverified",
     },
 
     name: { type: String, required: true },
