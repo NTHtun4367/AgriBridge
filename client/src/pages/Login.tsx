@@ -50,7 +50,7 @@ function Login() {
       } else if (response.user.role === "merchant") {
         navigate("/merchant");
       } else {
-        navigate("/farmer");
+        navigate("/farmer/dashboard");
       }
     } catch (error: any) {
       toast.error(error?.data?.message);

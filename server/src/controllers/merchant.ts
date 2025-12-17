@@ -102,6 +102,7 @@ export const registerMerchant = asyncHandler(
       user: {
         id: user._id,
         role: user.role,
+        verificationStatus: user.verificationStatus,
         merchantId: merchant._id,
       },
     });

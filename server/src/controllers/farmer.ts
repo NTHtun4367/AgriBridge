@@ -39,6 +39,7 @@ export const registerFarmer = asyncHandler(
         user: {
           id: newUser._id,
           role: newUser.role,
+          verificationStatus: newUser.verificationStatus,
         },
       });
     }

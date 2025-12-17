@@ -16,6 +16,10 @@ import Merchant from "./pages/admin/Merchant.tsx";
 import { PersistGate } from "redux-persist/integration/react";
 import Verification from "./pages/admin/Verification.tsx";
 import VerificationSubmitted from "./pages/VerificationSubmitted.tsx";
+import MarketManager from "./pages/admin/MarketManager.tsx";
+import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
+import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
+import AddFarmEntry from "./pages/farmer/AddFarmEntry.tsx";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +41,20 @@ const router = createBrowserRouter([
       {
         path: "/verification-submitted",
         element: <VerificationSubmitted />,
+      },
+      {
+        path: "/farmer",
+        element: <FarmerPanel />,
+        children: [
+          {
+            path: "/farmer/dashboard",
+            element: <FarmerDashboard />,
+          },
+          {
+            path: "/farmer/add-entry",
+            element: <AddFarmEntry />,
+          },
+        ],
       },
       {
         path: "/admin",
@@ -61,6 +79,10 @@ const router = createBrowserRouter([
           {
             path: "/admin/verification",
             element: <Verification />,
+          },
+          {
+            path: "/admin/manage-market",
+            element: <MarketManager />,
           },
         ],
       },

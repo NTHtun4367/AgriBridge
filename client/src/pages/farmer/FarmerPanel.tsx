@@ -1,60 +1,64 @@
 import SideBar from "@/common/SideBar";
 import { Outlet } from "react-router";
 import {
+  Building2,
+  Calculator,
   ChartLine,
-  ChartNoAxesCombined,
+  //   ChartNoAxesCombined,
   CircleDollarSign,
-  HandCoins,
+  History,
+  //   HandCoins,
+  LayersPlus,
   LogOut,
-  Megaphone,
+  //   Megaphone,
   Settings,
-  ShieldCheck,
-  TriangleAlert,
-  Wheat,
+  // ShieldCheck,
+  //   TriangleAlert,
+  //   Wheat,
 } from "lucide-react";
 import type { Page } from "@/types/sidebar";
 
 const pages: Page[] = [
   {
     name: "Dashboard",
-    path: "/admin/dashboard",
+    path: "/farmer/dashboard",
     icon: <ChartLine className="w-5 h-5" />,
   },
   {
-    name: "Farmer Management",
-    path: "/admin/manage-farmers",
-    icon: <Wheat className="w-5 h-5" />,
+    name: "Add Farm Entry",
+    path: "/farmer/add-entry",
+    icon: <LayersPlus className="w-5 h-5" />,
   },
   {
-    name: "Merchant Management",
+    name: "Market Prices",
     path: "/admin/manage-merchants",
-    icon: <HandCoins className="w-5 h-5" />,
-  },
-  {
-    name: "Market Management",
-    path: "/admin/manage-market",
     icon: <CircleDollarSign className="w-5 h-5" />,
   },
   {
-    name: "Verification",
-    path: "/admin/verification",
-    icon: <ShieldCheck className="w-5 h-5" />,
+    name: "Merchants",
+    path: "/farmer/merchants",
+    icon: <Building2 className="w-5 h-5" />,
   },
   {
-    name: "Analytics",
-    path: "/admin/analytics",
-    icon: <ChartNoAxesCombined className="w-5 h-5" />,
+    name: "Profit Calculator",
+    path: "/farmer/profit-calculator",
+    icon: <Calculator className="w-5 h-5" />,
   },
   {
-    name: "Announcements",
-    path: "/admin/announcements",
-    icon: <Megaphone className="w-5 h-5" />,
+    name: "History",
+    path: "/farmer/history",
+    icon: <History className="w-5 h-5" />,
   },
-  {
-    name: "User Complaints",
-    path: "/admin/complaints",
-    icon: <TriangleAlert className="w-5 h-5" />,
-  },
+  //   {
+  //     name: "Announcements",
+  //     path: "/admin/announcements",
+  //     icon: <Megaphone className="w-5 h-5" />,
+  //   },
+  //   {
+  //     name: "User Complaints",
+  //     path: "/admin/complaints",
+  //     icon: <TriangleAlert className="w-5 h-5" />,
+  //   },
   {
     name: "Settings",
     path: "/admin/settings",
@@ -67,7 +71,7 @@ const pages: Page[] = [
   },
 ];
 
-function Panel() {
+function FarmerPanel() {
   return (
     <>
       <nav className="w-full px-8 py-3 shadow">
@@ -87,4 +91,4 @@ function Panel() {
   );
 }
 
-export default Panel;
+export default FarmerPanel;

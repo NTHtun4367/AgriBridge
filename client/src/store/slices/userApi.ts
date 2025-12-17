@@ -10,6 +10,7 @@ interface LoginResponse {
   user: {
     id: string;
     role: "farmer" | "merchant" | "admin";
+    verificationStatus: "unverified" | "pending" | "verified";
     merchantId?: string | null;
   };
 }
