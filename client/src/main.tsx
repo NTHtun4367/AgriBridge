@@ -20,6 +20,7 @@ import MarketManager from "./pages/admin/MarketManager.tsx";
 import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
 import AddFarmEntry from "./pages/farmer/AddFarmEntry.tsx";
+import MerchantsView from "./pages/merchant/MerchantView.tsx";
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
           {
             path: "/farmer/dashboard",
             element: <FarmerDashboard />,
+          },
+          {
+            path: "/farmer/merchants",
+            element: <MerchantsView />,
           },
           {
             path: "/farmer/add-entry",

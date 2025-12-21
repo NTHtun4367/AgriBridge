@@ -8,7 +8,7 @@ import {
   CircleDollarSign,
   History,
   //   HandCoins,
-  LayersPlus,
+  // LayersPlus,
   LogOut,
   //   Megaphone,
   Settings,
@@ -23,11 +23,6 @@ const pages: Page[] = [
     name: "Dashboard",
     path: "/farmer/dashboard",
     icon: <ChartLine className="w-5 h-5" />,
-  },
-  {
-    name: "Add Farm Entry",
-    path: "/farmer/add-entry",
-    icon: <LayersPlus className="w-5 h-5" />,
   },
   {
     name: "Market Prices",
@@ -49,16 +44,6 @@ const pages: Page[] = [
     path: "/farmer/history",
     icon: <History className="w-5 h-5" />,
   },
-  //   {
-  //     name: "Announcements",
-  //     path: "/admin/announcements",
-  //     icon: <Megaphone className="w-5 h-5" />,
-  //   },
-  //   {
-  //     name: "User Complaints",
-  //     path: "/admin/complaints",
-  //     icon: <TriangleAlert className="w-5 h-5" />,
-  //   },
   {
     name: "Settings",
     path: "/admin/settings",
