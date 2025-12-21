@@ -16,11 +16,11 @@ import Merchant from "./pages/admin/Merchant.tsx";
 import { PersistGate } from "redux-persist/integration/react";
 import Verification from "./pages/admin/Verification.tsx";
 import VerificationSubmitted from "./pages/VerificationSubmitted.tsx";
-import MarketManager from "./pages/admin/MarketManager.tsx";
 import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
 import AddFarmEntry from "./pages/farmer/AddFarmEntry.tsx";
 import MerchantsView from "./pages/merchant/MerchantView.tsx";
+import MarketPriceUpdate from "./pages/admin/MarketPriceUpdate.tsx";
 
 const router = createBrowserRouter([
   {
@@ -87,7 +87,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/admin/manage-market",
-            element: <MarketManager />,
+            element: <MarketPriceUpdate />,
           },
         ],
       },

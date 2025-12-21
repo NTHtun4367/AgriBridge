@@ -34,7 +34,7 @@ import {
 const MERCHANTS = [
   {
     id: 1,
-    name: "Golden Grain Wholesalers",
+    name: "Golden Grain",
     manager: "U Hla Maung",
     phone: "+95 9 123 456 789",
     location: "Hlaing Township, Yangon",
@@ -56,7 +56,7 @@ const MERCHANTS = [
   },
   {
     id: 3,
-    name: "Green Valley Logistics",
+    name: "Green Valley",
     manager: "Ko Zaw Lin",
     phone: "+95 9 444 555 666",
     location: "Bago Region",
@@ -144,7 +144,7 @@ export default function MerchantsView() {
   );
 
   return (
-    <div className="p-6 space-y-6 animate-in fade-in duration-500">
+    <div className="p-6 space-y-6 animate-in fade-in duration-500 bg-secondary h-screen">
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -174,7 +174,7 @@ export default function MerchantsView() {
               <Card className="cursor-pointer hover:border-lime-500 hover:shadow-lg transition-all duration-300 group">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <Avatar className="h-12 w-12 border border-slate-100">
+                    <Avatar className="w-16 h-16 border border-slate-100">
                       <AvatarFallback className="bg-slate-100 text-slate-600">
                         {merchant.name.charAt(0)}
                       </AvatarFallback>
