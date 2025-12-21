@@ -19,12 +19,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
+// import { ModeToggle } from "@/components/ModeToggle";
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-[#FDFCFB] text-slate-900 font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       {/* --- NAVIGATION --- */}
-      <nav className="fixed top-0 w-full z-50 border-b bg-white/80 backdrop-blur-md">
+      <nav className="fixed top-0 w-full z-50 border-b bg-card/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* <div className="bg-primary p-1.5 rounded-lg">
@@ -65,12 +66,13 @@ const HomePage = () => {
               <Link to={"/login"}>Login</Link>
             </Button>
             <Button className="bg-primary cursor-pointer">Get Started</Button>
+            {/* <ModeToggle /> */}
           </div>
         </div>
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <header className="relative overflow-hidden bg-white py-20 lg:py-32">
+      <header className="relative overflow-hidden bg-white py-20 lg:py-32 animate-in fade-in zoom-in duration-700">
         <div className="mx-auto max-w-7xl px-6 text-center">
           <Badge
             variant="outline"

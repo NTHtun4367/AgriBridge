@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { apiSlice } from "./slices/api";
 import authReducer, { type AuthState } from "./slices/auth";
+import themeReducer from "./slices/theme";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 
@@ -11,6 +12,7 @@ const authPersistConfig = {
 
 export const store = configureStore({
   reducer: {
+    theme: themeReducer,
     auth: persistReducer<AuthState>(authPersistConfig, authReducer),
     [apiSlice.reducerPath]: apiSlice.reducer,
   },

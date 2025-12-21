@@ -58,7 +58,7 @@ function Login() {
   };
 
   return (
-    <div className="max-w-[450px] lg:mx-auto mx-6 mt-32">
+    <div className="max-w-[450px] lg:mx-auto mx-6 mt-32 animate-in fade-in zoom-in duration-700">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-extrabold text-primary italic">

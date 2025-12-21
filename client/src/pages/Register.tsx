@@ -247,7 +247,7 @@ function Register() {
   }, [status, step, ...step4Values]);
 
   return (
-    <div className="max-w-[450px] lg:mx-auto mx-6 mt-12">
+    <div className="max-w-[450px] lg:mx-auto mx-6 mt-12 animate-in fade-in zoom-in duration-700">
       {/* ---------------------------------------
           AUTO-OPEN DIALOG (Farmer / Merchant)
          --------------------------------------- */}

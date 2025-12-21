@@ -12,7 +12,7 @@ import {
 
 function FarmerDashboard() {
   return (
-    <div className="bg-secondary w-full h-screen p-4">
+    <div className="bg-secondary w-full h-screen p-4 animate-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <StatusCard

@@ -126,7 +126,7 @@ const MarketPriceUpdate: React.FC = () => {
   };
 
   return (
-    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6">
+    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
