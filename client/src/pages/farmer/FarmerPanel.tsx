@@ -1,5 +1,5 @@
 import SideBar from "@/common/SideBar";
-import { Outlet } from "react-router";
+import { Link, Outlet } from "react-router";
 import {
   Building2,
   Calculator,
@@ -61,7 +61,7 @@ function FarmerPanel() {
     <>
       <nav className="w-full px-8 py-3 shadow">
         <h1 className="text-3xl text-primary font-extrabold italic">
-          AgriBridge
+          <Link to={"/"}>AgriBridge</Link>
         </h1>
       </nav>
       <section className="grid grid-cols-12">

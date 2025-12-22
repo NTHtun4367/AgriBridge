@@ -32,7 +32,7 @@ const HomePage = () => {
               <Sprout className="text-white" size={24} />
             </div> */}
             <span className="text-3xl italic font-bold text-primary">
-              AgriBridge
+              <Link to={"/"}>AgriBridge</Link>
             </span>
           </div>
 
@@ -133,123 +133,128 @@ const HomePage = () => {
       </div> */}
 
       {/* --- DUAL PATHWAY SECTION --- */}
-      <section className="max-w-7xl mx-auto px-6 pb-24 pt-20">
-        <h2 className="text-3xl font-bold text-center mb-12 text-slate-900">
-          Tailored Experiences for Every Role
-        </h2>
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Farmer Path */}
-          <Card
-            id="farmer"
-            className="border-emerald-100 shadow-xl shadow-emerald-900/5 relative overflow-hidden group"
-          >
-            {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+      <section className="w-full bg-secondary">
+        <div className="max-w-7xl mx-auto px-6 pb-24 pt-20">
+          <h2 className="text-3xl font-bold text-center mb-12 text-slate-900">
+            Tailored Experiences for Every Role
+          </h2>
+          <div className="grid md:grid-cols-2 gap-12">
+            {/* Farmer Path */}
+            <Card
+              id="farmer"
+              className="border-emerald-100 shadow-xl shadow-emerald-900/5 relative overflow-hidden group"
+            >
+              {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
               <Sprout size={120} />
             </div> */}
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center text-primary mb-4">
-                <TrendingUp size={24} />
-              </div>
-              <CardTitle className="text-2xl">Empowering Farmers</CardTitle>
-              <CardDescription>
-                Comprehensive tools to manage your farm as a business.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/15 p-2 rounded-lg text-primary">
-                  <Wallet size={20} />
+              <CardHeader>
+                <div className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center text-primary mb-4">
+                  <TrendingUp size={24} />
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">
-                    Income & Outcome Tracking
-                  </h4>
-                  <p className="text-sm text-slate-500">
-                    Log every expense and sale with our simplified ledger
-                    system.
-                  </p>
+                <CardTitle className="text-2xl">Empowering Farmers</CardTitle>
+                <CardDescription>
+                  Comprehensive tools to manage your farm as a business.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/15 p-2 rounded-lg text-primary">
+                    <Wallet size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">
+                      Income & Outcome Tracking
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      Log every expense and sale with our simplified ledger
+                      system.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/15 p-2 rounded-lg text-primary">
-                  <BarChart3 size={20} />
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/15 p-2 rounded-lg text-primary">
+                    <BarChart3 size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">
+                      Market Price Analytics
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      See benchmark prices updated by regional administrators.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">Market Price Analytics</h4>
-                  <p className="text-sm text-slate-500">
-                    See benchmark prices updated by regional administrators.
-                  </p>
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/15 p-2 rounded-lg text-primary">
+                    <LineChart size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Profitability Reports</h4>
+                    <p className="text-sm text-slate-500">
+                      Automated harvest reports to help you plan for the next
+                      season.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/15 p-2 rounded-lg text-primary">
-                  <LineChart size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">Profitability Reports</h4>
-                  <p className="text-sm text-slate-500">
-                    Automated harvest reports to help you plan for the next
-                    season.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Merchant Path */}
-          <Card
-            id="merchant"
-            className="border-blue-100 shadow-xl shadow-blue-900/5 relative overflow-hidden group"
-          >
-            {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            {/* Merchant Path */}
+            <Card
+              id="merchant"
+              className="border-blue-100 shadow-xl shadow-blue-900/5 relative overflow-hidden group"
+            >
+              {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
               <Store size={120} />
             </div> */}
-            <CardHeader>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4">
-                <Store size={24} />
-              </div>
-              <CardTitle className="text-2xl">Merchant Solutions</CardTitle>
-              <CardDescription>
-                Source directly and manage your competitive buying rates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
-                  <ShieldCheck size={20} />
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4">
+                  <Store size={24} />
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">Custom Buying Prices</h4>
-                  <p className="text-sm text-slate-500">
-                    Update your own prices to attract farmers in your vicinity.
-                  </p>
+                <CardTitle className="text-2xl">Merchant Solutions</CardTitle>
+                <CardDescription>
+                  Source directly and manage your competitive buying rates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Custom Buying Prices</h4>
+                    <p className="text-sm text-slate-500">
+                      Update your own prices to attract farmers in your
+                      vicinity.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
-                  <LineChart size={20} />
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                    <LineChart size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Benchmark Feeds</h4>
+                    <p className="text-sm text-slate-500">
+                      Compare your offers against admin-verified market rates.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">Benchmark Feeds</h4>
-                  <p className="text-sm text-slate-500">
-                    Compare your offers against admin-verified market rates.
-                  </p>
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                    <ChevronRight size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Digital Procurement</h4>
+                    <p className="text-sm text-slate-500">
+                      Streamline how you receive and verify produce from your
+                      farmers.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
-                  <ChevronRight size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">Digital Procurement</h4>
-                  <p className="text-sm text-slate-500">
-                    Streamline how you receive and verify produce from your
-                    farmers.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 

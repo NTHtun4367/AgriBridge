@@ -1,5 +1,5 @@
 import SideBar from "@/common/SideBar";
-import { Outlet } from "react-router";
+import { Link, Outlet } from "react-router";
 import {
   ChartLine,
   ChartNoAxesCombined,
@@ -51,8 +51,8 @@ const pages: Page[] = [
     icon: <Megaphone className="w-5 h-5" />,
   },
   {
-    name: "User Complaints",
-    path: "/admin/complaints",
+    name: "User Disputes",
+    path: "/admin/disputes",
     icon: <TriangleAlert className="w-5 h-5" />,
   },
   {
@@ -72,7 +72,7 @@ function Panel() {
     <>
       <nav className="w-full px-8 py-3 shadow">
         <h1 className="text-3xl text-primary font-extrabold italic">
-          AgriBridge
+          <Link to={"/"}>AgriBridge</Link>
         </h1>
       </nav>
       <section className="grid grid-cols-12">

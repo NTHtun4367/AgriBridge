@@ -12,7 +12,7 @@ import {
 
 function FarmerDashboard() {
   return (
-    <div className="bg-secondary w-full h-screen p-4 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="bg-secondary w-full p-4 animate-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <StatusCard
@@ -89,7 +89,7 @@ function FarmerDashboard() {
             </p>
           </div>
         </div>
-        <Button className="w-full rounded-xl py-6 font-bold">
+        <Button className="w-full font-bold">
           Check Live Prices
         </Button>
       </Card>
