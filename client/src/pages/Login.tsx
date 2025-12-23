@@ -48,7 +48,7 @@ function Login() {
       if (response.user.role === "admin") {
         navigate("/admin/dashboard");
       } else if (response.user.role === "merchant") {
-        navigate("/merchant");
+        navigate("/merchant/dashboard");
       } else {
         navigate("/farmer/dashboard");
       }

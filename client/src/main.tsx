@@ -23,6 +23,8 @@ import MerchantsView from "./pages/merchant/MerchantView.tsx";
 import MarketPriceUpdate from "./pages/admin/MarketPriceUpdate.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
+import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
+import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 
 const router = createBrowserRouter([
   {
@@ -60,6 +62,16 @@ const router = createBrowserRouter([
           {
             path: "/farmer/add-entry",
             element: <AddFarmEntry />,
+          },
+        ],
+      },
+      {
+        path: "/merchant",
+        element: <MerchantPanel />,
+        children: [
+          {
+            path: "/merchant/dashboard",
+            element: <MerchantDashboard />,
           },
         ],
       },
