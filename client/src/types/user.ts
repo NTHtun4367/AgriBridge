@@ -2,7 +2,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: "farmer";
+  role: "farmer" | "merchant" | "admin";
   status: "active" | "ban";
   verificationStatus: "unverified" | "verified" | "pending";
   homeAddress: string;

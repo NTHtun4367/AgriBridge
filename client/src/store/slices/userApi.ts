@@ -1,3 +1,4 @@
+import type { User } from "@/types/user";
 import { apiSlice } from "./api";
 
 interface LoginRequest {
@@ -74,6 +75,14 @@ export const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    currentUser: builder.query<User, void>({
+      query: () => ({
+        url: "/me",
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -81,4 +90,5 @@ export const {
   useLoginMutation,
   useRegisterFarmerMutation,
   useRegisterMerchantMutation,
+  useCurrentUserQuery,
 } = authApi;

@@ -12,7 +12,7 @@ import {
 
 function FarmerDashboard() {
   return (
-    <div className="bg-secondary w-full p-4 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 animate-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <StatusCard
@@ -79,7 +79,7 @@ function FarmerDashboard() {
           </div>
         </CardContent>
       </Card>
-      <Card className="border-2 border-slate-200 rounded-xl my-3 p-6 bg-white shadow-none">
+      <Card className="border-2 border-slate-200 rounded-xl my-3 p-6 shadow-none">
         <div className="flex items-center gap-4 mb-4">
           <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl"></div>
           <div>
@@ -89,9 +89,7 @@ function FarmerDashboard() {
             </p>
           </div>
         </div>
-        <Button className="w-full font-bold">
-          Check Live Prices
-        </Button>
+        <Button className="w-full font-bold">Check Live Prices</Button>
       </Card>
     </div>
   );
@@ -101,7 +99,7 @@ export default FarmerDashboard;
 
 function ActivityTile({ title, cat, amount, date, type }: any) {
   return (
-    <div className="flex items-center justify-between p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-primar transition-colors cursor-pointer group">
+    <div className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-2xl hover:border-primar transition-colors cursor-pointer group">
       <div className="flex items-center gap-4">
         <div
           className={`p-3 rounded-xl ${
@@ -117,7 +115,7 @@ function ActivityTile({ title, cat, amount, date, type }: any) {
           )}
         </div>
         <div>
-          <p className="font-bold text-sm text-slate-800">{title}</p>
+          <p className="font-bold text-sm">{title}</p>
           <p className="text-[10px] font-bold text-slate-400 uppercase">
             {cat} • {date}
           </p>

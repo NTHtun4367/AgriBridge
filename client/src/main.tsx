@@ -125,7 +125,7 @@ function ThemeWatcher() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
-      <PersistGate persistor={persistor}>
+      <PersistGate loading={null} persistor={persistor}>
         <ThemeWatcher />
         <RouterProvider router={router} />
       </PersistGate>

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { loginValidator, registerFarmerValidator } from "../validators/farmer";
 import { validateRequest } from "../middlewares/validateRequest";
-import { login, registerFarmer } from "../controllers/farmer";
+import { registerFarmer } from "../controllers/farmer";
+import { login } from "../controllers/common";
 
 const router = Router();
 

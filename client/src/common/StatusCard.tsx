@@ -14,8 +14,8 @@ function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
     >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-gray-600 mb-6">{title}</p>
-          <h3 className="text-2xl font-bold text-gray-900">{value} MMK</h3>
+          <p className="text-sm font-medium mb-6">{title}</p>
+          <h3 className="text-2xl font-bold">{value} MMK</h3>
         </div>
         <div className="p-2 bg-white/50 rounded-lg">{icon} </div>
       </div>
