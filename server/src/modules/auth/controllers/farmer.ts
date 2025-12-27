@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
+import asyncHandler from "../../../shared/utils/asyncHandler";
 import { User } from "../models/user";
-import generateToken from "../utils/generateToken";
+import generateToken from "../../../shared/utils/generateToken";
 
 // @route POST | api/v1/register/farmer
 // @desc Register new user

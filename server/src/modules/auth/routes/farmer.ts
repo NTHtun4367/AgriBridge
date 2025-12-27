@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { loginValidator, registerFarmerValidator } from "../validators/farmer";
-import { validateRequest } from "../middlewares/validateRequest";
+import {
+  loginValidator,
+  registerFarmerValidator,
+} from "../validators/authValidators";
+import { validateRequest } from "../../../shared/middleware/validateRequest";
 import { registerFarmer } from "../controllers/farmer";
 import { login } from "../controllers/common";
 

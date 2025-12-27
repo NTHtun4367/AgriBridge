@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
-import { User } from "../models/user";
-import { Merchant } from "../models/merchant";
+import asyncHandler from "../../../shared/utils/asyncHandler";
+import { User } from "../../auth/models/user";
+import { Merchant } from "../../auth/models/merchant";
 
 // @route POST | api/v1/farmers/all
 // @desc Get all farmers

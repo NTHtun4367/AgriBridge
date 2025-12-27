@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protect } from "../middlewares/authMiddleware";
-import { allowRoles } from "../middlewares/role";
+import { protect } from "../../../shared/middleware/authMiddleware";
+import { allowRoles } from "../../../shared/middleware/role";
 import {
   changeUserStatus,
   getAllFarmersInfo,
@@ -8,8 +8,8 @@ import {
   getMerchantInfoWithMerchantId,
   updateUserVerificationStatus,
 } from "../controllers/admin";
-import { userIdValidator, userStatusValidator } from "../validators/admin";
-import { getUserInfo } from "../controllers/common";
+import { userIdValidator, userStatusValidator } from "../../../validators/admin";
+import { getUserInfo } from "../../auth/controllers/common";
 
 const router = Router();
 

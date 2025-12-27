@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { registerMerchant } from "../controllers/merchant";
-import { upload } from "../utils/upload";
+import { upload } from "../../../shared/utils/upload";
 
 const router = Router();
 

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
+import asyncHandler from "../../../shared/utils/asyncHandler";
 import { User } from "../models/user";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import generateToken from "../utils/generateToken";
+import { AuthRequest } from "../../../shared/middleware/authMiddleware";
+import generateToken from "../../../shared/utils/generateToken";
 
 // @route POST | api/v1/login
 // @desc Login to registered account

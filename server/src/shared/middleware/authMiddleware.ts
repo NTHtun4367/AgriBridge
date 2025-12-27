@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user";
+import { User } from "../../modules/auth/models/user";
 import { Types } from "mongoose";
 import { ENV } from "../utils/env";
 

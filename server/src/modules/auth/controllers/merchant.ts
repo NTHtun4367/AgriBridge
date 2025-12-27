@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import { AnyKeys, HydratedDocument } from "mongoose"; // <-- NEW: Import HydratedDocument
 import { Merchant } from "../models/merchant";
 import { User, IUser } from "../models/user"; // <-- Import IUser for typing
-import asyncHandler from "../utils/asyncHandler";
-import generateToken from "../utils/generateToken";
-import { uploadSingleImage } from "../utils/cloudinary";
+import asyncHandler from "../../../shared/utils/asyncHandler";
+import generateToken from "../../../shared/utils/generateToken";
+import { uploadSingleImage } from "../../../shared/utils/cloudinary";
 
 // @route POST | api/v1/register/merchant
 // @desc Register new user

@@ -1,12 +1,12 @@
 import express, { json } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { ENV } from "./utils/env";
-import { connectDB } from "./db/dbConnect";
-import farmerRoutes from "./routes/farmer";
-import merchantRoutes from "./routes/merchant";
-import adminRoutes from "./routes/admin";
-import errorHandler from "./middlewares/errorHandler";
+import { ENV } from "./shared/utils/env";
+import { connectDB } from "./shared/db/dbConnect"
+import farmerRoutes from "./modules/auth/routes/farmer";
+import merchantRoutes from "./modules/auth/routes/merchant";
+import adminRoutes from "./modules/admin/routes/admin";
+import errorHandler from "./shared/middleware/errorHandler";
 
 const app = express();
 
