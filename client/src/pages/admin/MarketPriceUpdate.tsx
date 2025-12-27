@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Leaf,
   TrendingUp,
+  Store,
 } from "lucide-react";
 
 import {
@@ -26,6 +27,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Types
 interface Crop {
@@ -36,8 +44,18 @@ interface Crop {
 }
 
 type PriceUpdates = Record<number, string>;
+type UnitUpdates = Record<number, string>;
 
 // Mock Data
+const MARKETS = [
+  "Yangon (Bayintnaung)",
+  "Mandalay",
+  "Naypyidaw",
+  "Monywa",
+  "Pathein",
+];
+const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
+
 const CROP_DATA: Crop[] = [
   { id: 1, name: "Pawsanmwe", category: "Rice", currentPrice: 0 },
   { id: 2, name: "Pawsanyin", category: "Rice", currentPrice: 0 },
@@ -74,10 +92,12 @@ const CROP_DATA: Crop[] = [
 ];
 
 const MarketPriceUpdate: React.FC = () => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selectedMarket, setSelectedMarket] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [priceUpdates, setPriceUpdates] = useState<PriceUpdates>({});
+  const [unitUpdates, setUnitUpdates] = useState<UnitUpdates>({});
 
   // Filter crops based on search
   const filteredCrops = useMemo(() => {
@@ -101,58 +121,95 @@ const MarketPriceUpdate: React.FC = () => {
     }));
   };
 
+  const handleUnitChange = (id: number, value: string): void => {
+    setUnitUpdates((prev) => ({ ...prev, [id]: value }));
+  };
+
   const selectedCropsData = CROP_DATA.filter((crop) =>
     selectedIds.includes(crop.id)
   );
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    console.log("Submitting Price Updates:", priceUpdates);
-
-    // Example: Formatting for an API call
-    const payload = Object.entries(priceUpdates).map(([id, price]) => ({
-      cropId: Number(id),
-      newPrice: parseFloat(price),
+    const payload = selectedCropsData.map((crop) => ({
+      market: selectedMarket,
+      cropId: crop.id,
+      name: crop.name,
+      newPrice: parseFloat(priceUpdates[crop.id]),
+      unit: unitUpdates[crop.id] || "Standard",
     }));
 
-    console.log("Payload for API:", payload);
-    alert("Prices updated successfully!");
+    console.log("Final Submission Payload:", payload);
+    alert("Market prices updated successfully!");
 
-    // Reset state
+    // Reset
     setStep(1);
     setSelectedIds([]);
-    setPriceUpdates({});
+    setSelectedMarket("");
   };
 
   return (
-    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      {/* Header Section */}
+    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Market Price Manager
           </h1>
           <p className="text-muted-foreground">
-            Dynamically update crop prices for the current market.
+            {step === 1 && "Start by choosing a marketplace."}
+            {step === 2 && "Select the crops available in this market."}
+            {step === 3 && "Assign current rates and units."}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="px-3 py-1">
-            Step {step} of 2
+            Step {step} of 3
           </Badge>
-          <Badge variant="outline" className="px-3 py-1">
-            {selectedIds.length} Selected
-          </Badge>
+          {selectedMarket && (
+            <Badge className="bg-blue-600">{selectedMarket}</Badge>
+          )}
         </div>
       </div>
 
-      {step === 1 ? (
-        /* STEP 1: DYNAMIC SELECTION */
+      {/* STEP 1: SELECT MARKETPLACE */}
+      {step === 1 && (
         <Card className="border-2 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-primary" />
-              Select Crops
+              <Store className="w-5 h-5 text-primary" /> Select Marketplace
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {MARKETS.map((market) => (
+              <Button
+                key={market}
+                variant={selectedMarket === market ? "default" : "outline"}
+                className="h-20 text-lg font-semibold"
+                onClick={() => setSelectedMarket(market)}
+              >
+                {market}
+              </Button>
+            ))}
+          </CardContent>
+          <CardFooter className="justify-end border-t p-4">
+            <Button
+              disabled={!selectedMarket}
+              onClick={() => setStep(2)}
+              className="px-8"
+            >
+              Continue to Crops <ChevronRight className="w-4 h-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* STEP 2: SELECT CROPS */}
+      {step === 2 && (
+        <Card className="border-2 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Leaf className="w-5 h-5 text-primary" /> Select Crops
             </CardTitle>
             <CardDescription>
               Only selected crops will appear in the next update step.
@@ -160,7 +217,7 @@ const MarketPriceUpdate: React.FC = () => {
             <div className="relative mt-4">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search crops or categories..."
+                placeholder="Search crops..."
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -178,7 +235,7 @@ const MarketPriceUpdate: React.FC = () => {
                   className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     selectedIds.includes(crop.id)
                       ? "bg-primary/5 border-primary shadow-sm"
-                      : "hover:bg-slate-50 border-transparent bg-slate-50/30"
+                      : "hover:bg-primary/15 border-transparent bg-slate-50/30"
                   }`}
                 >
                   <Checkbox
@@ -207,89 +264,79 @@ const MarketPriceUpdate: React.FC = () => {
               ))}
             </div>
           </CardContent>
-          <CardFooter className="bg-slate-50/50 flex justify-end p-4 border-t">
+          <CardFooter className="flex justify-between border-t p-4">
+            <Button variant="outline" onClick={() => setStep(1)}>
+              <ArrowLeft className="w-4 h-4" /> Back to Market
+            </Button>
             <Button
               disabled={selectedIds.length === 0}
-              onClick={() => setStep(2)}
-              className="px-8 shadow-md"
+              onClick={() => setStep(3)}
             >
-              Set New Prices <ChevronRight className="w-4 h-4" />
+              Set Prices & Units <ChevronRight className="w-4 h-4" />
             </Button>
           </CardFooter>
         </Card>
-      ) : (
-        /* STEP 2: PRICE UPDATE FORM */
+      )}
+
+      {/* STEP 3: PRICE & UNIT UPDATE */}
+      {step === 3 && (
         <form onSubmit={handleSubmit}>
           <Card className="border-2 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  Update Market Rates
+                  <TrendingUp className="w-5 h-5 text-blue-600" /> Finalize
+                  Market Rates
                 </CardTitle>
                 <CardDescription>
-                  Enter the final prices for the selected items.
+                  Updating prices for {selectedMarket}
                 </CardDescription>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setStep(1)}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                <ArrowLeft className="w-4 h-4" /> Change Selection
-              </Button>
             </CardHeader>
             <CardContent>
               <div className="rounded-xl border overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b">
+                  <thead className="bg-secondary border-b">
                     <tr>
-                      <th className="p-4 text-left font-semibold">
-                        Crop Detail
-                      </th>
-                      <th className="p-4 text-left font-semibold">
-                        Current Price
-                      </th>
-                      <th className="p-4 text-left font-semibold w-[180px]">
-                        New Market Price
+                      <th className="p-4 text-left">Crop</th>
+                      <th className="p-4 text-left">Unit Type</th>
+                      <th className="p-4 text-left w-[200px]">
+                        New Price (MMK)
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {selectedCropsData.map((crop) => (
-                      <tr
-                        key={crop.id}
-                        className="hover:bg-slate-50/50 transition-colors"
-                      >
+                      <tr key={crop.id}>
+                        <td className="p-4 font-medium">{crop.name}</td>
                         <td className="p-4">
-                          <div className="font-medium text-base">
-                            {crop.name}
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] uppercase font-bold px-1.5 py-0"
+                          <Select
+                            onValueChange={(val) =>
+                              handleUnitChange(crop.id, val)
+                            }
+                            required
                           >
-                            {crop.category}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-muted-foreground font-mono">
-                          {crop.currentPrice.toFixed(2)} MMK
+                            <SelectTrigger className="w-40">
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {UNITS.map((u) => (
+                                <SelectItem key={u} value={u}>
+                                  {u}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="p-4">
-                          <div className="relative group">
-                            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-muted-foreground font-mono">
-                              MMK
-                            </span>
+                          <div className="relative">
                             <Input
                               type="number"
-                              step="0.01"
                               required
                               placeholder="0.00"
-                              className="pl-7 focus-visible:ring-primary font-mono"
+                              className="font-mono"
                               value={priceUpdates[crop.id] || ""}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              onChange={(e) =>
                                 handlePriceChange(crop.id, e.target.value)
                               }
                             />
@@ -301,16 +348,17 @@ const MarketPriceUpdate: React.FC = () => {
                 </table>
               </div>
             </CardContent>
-            <CardFooter className="bg-slate-50/50 flex justify-between p-4 border-t">
+            <CardFooter className="flex justify-between border-t p-4">
               <Button
                 variant="outline"
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
               >
-                Go Back
+                <ArrowLeft className="w-4 h-4" />
+                Back to Crops
               </Button>
-              <Button type="submit" className="px-8 bg-primary shadow-md">
-                <CheckCircle2 className="w-4 h-4" /> Save All Changes
+              <Button type="submit">
+                <CheckCircle2 className="w-4 h-4" /> Publish Prices
               </Button>
             </CardFooter>
           </Card>

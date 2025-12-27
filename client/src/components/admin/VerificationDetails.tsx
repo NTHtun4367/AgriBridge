@@ -57,7 +57,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
 
       <DialogContent className="max-w-[95vw] lg:max-w-[1200px] h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between p-4 border-b bg-slate-50">
+        <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
               {user.name.charAt(0)}
@@ -70,7 +70,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
             </div>
           </div>
           <div className="flex items-center gap-3 pr-8">
-            <Badge variant="outline" className="bg-white">
+            <Badge variant="outline" className="bg-white text-black">
               Merchant Account
             </Badge>
             <Badge className="bg-amber-500">Pending Review</Badge>
@@ -79,7 +79,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
 
         <div className="flex overflow-hidden">
           {/* LEFT SIDE: Information Scroll Area */}
-          <div className="w-full lg:w-2/5 overflow-y-auto p-6 border-r bg-white">
+          <div className="w-full lg:w-2/5 overflow-y-auto p-6 border-r">
             <div className="space-y-8">
               {/* Account Section */}
               <section>
@@ -102,7 +102,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
               </section>
 
               {/* Business Section */}
-              <section className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <section className="bg-secondary p-4 rounded-xl">
                 <div className="flex items-center gap-2 mb-4 text-primary font-bold">
                   <Store className="w-4 h-4" />
                   <span className="text-sm tracking-widest uppercase">
@@ -113,15 +113,13 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                   <p className="text-[10px] text-slate-500 uppercase font-bold">
                     Legal Business Name
                   </p>
-                  <p className="text-lg font-bold text-slate-800">
-                    {merchant?.businessName}
-                  </p>
+                  <p className="text-lg font-bold">{merchant?.businessName}</p>
                 </div>
                 <div className="bg-white p-3 rounded border border-slate-300">
                   <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">
                     NRC Identification
                   </p>
-                  <p className="text-md font-mono font-bold tracking-tighter">
+                  <p className="text-md font-mono font-bold tracking-tighter text-black">
                     {merchant &&
                       `${merchant.nrcRegion}/${merchant.nrcTownship}(${merchant.nrcType})${merchant.nrcNumber}`}
                   </p>
@@ -136,7 +134,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                     Registered Address
                   </span>
                 </div>
-                <div className="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="space-y-1 bg-secondary p-4 rounded-xl">
                   {/* <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="bg-white p-2 rounded border">
                       <p className="text-[10px] text-slate-400">Division</p>
@@ -202,7 +200,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
           </div>
 
           {/* RIGHT SIDE: Document Viewer (The "Evidence" Wall) */}
-          <div className="hidden lg:flex flex-1 bg-slate-100 p-8 flex-col items-center justify-start overflow-y-auto space-y-6">
+          <div className="hidden lg:flex flex-1 p-8 flex-col items-center justify-start overflow-y-auto space-y-6">
             <div className="w-full flex justify-between items-center mb-2">
               <h3 className="text-sm font-bold flex items-center gap-2 text-slate-600 uppercase tracking-widest">
                 <IdCard className="w-4 h-4" /> Identity Verification
