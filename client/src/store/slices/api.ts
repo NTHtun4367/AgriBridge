@@ -1,10 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "..";
 
-const baseUrl =
+const origin =
   import.meta.env.VITE_MODE === "development"
     ? import.meta.env.VITE_LOCAL_API_URL
     : import.meta.env.VITE_API_URL;
+const baseUrl = origin?.endsWith("/api/v1")
+  ? origin
+  : `${origin || "http://localhost:8000"}/api/v1`;
 
 export const apiSlice = createApi({
   reducerPath: "apiSlice",

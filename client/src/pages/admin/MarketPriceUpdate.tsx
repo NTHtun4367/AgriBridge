@@ -34,126 +34,123 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useGetAllCropsQuery,
+  useGetAllMarketsQuery,
+  useUpdateMarketPricesMutation,
+} from "@/store/slices/marketApi";
+import { toast } from "sonner";
 
-// Types
-interface Crop {
-  id: number;
-  name: string;
-  category: string;
-  currentPrice: number;
-}
+type PriceUpdates = Record<string, string>;
+type UnitUpdates = Record<string, string>;
 
-type PriceUpdates = Record<number, string>;
-type UnitUpdates = Record<number, string>;
-
-// Mock Data
-const MARKETS = [
-  "Yangon (Bayintnaung)",
-  "Mandalay",
-  "Naypyidaw",
-  "Monywa",
-  "Pathein",
-];
 const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
-
-const CROP_DATA: Crop[] = [
-  { id: 1, name: "Pawsanmwe", category: "Rice", currentPrice: 0 },
-  { id: 2, name: "Pawsanyin", category: "Rice", currentPrice: 0 },
-  { id: 3, name: "Pawsangyi", category: "Rice", currentPrice: 0 },
-  { id: 4, name: "Pawsanlat", category: "Rice", currentPrice: 0 },
-  { id: 5, name: "Shwepyipawsan", category: "Rice", currentPrice: 0 },
-  { id: 6, name: "Sinthuka", category: "Rice", currentPrice: 0 },
-  { id: 7, name: "Manothuka", category: "Rice", currentPrice: 0 },
-  { id: 8, name: "Yarmying", category: "Rice", currentPrice: 0 },
-  { id: 9, name: "Shwewarthun", category: "Rice", currentPrice: 0 },
-  { id: 10, name: "Thihtatyin", category: "Rice", currentPrice: 0 },
-  { id: 11, name: "Yet 90", category: "Rice", currentPrice: 0 },
-  { id: 12, name: "Shwethway", category: "Rice", currentPrice: 0 },
-  { id: 13, name: "Pakhanshwewa", category: "Rice", currentPrice: 0 },
-  { id: 14, name: "Sanloneshey", category: "Rice", currentPrice: 0 },
-  { id: 15, name: "Sanloneto", category: "Rice", currentPrice: 0 },
-  { id: 16, name: "Shansan", category: "Rice", currentPrice: 0 },
-  { id: 17, name: "Sichosan", category: "Rice", currentPrice: 0 },
-  { id: 18, name: "Yadanatoe", category: "Rice", currentPrice: 0 },
-  { id: 19, name: "Myopwa", category: "Rice", currentPrice: 0 },
-  { id: 20, name: "Meekauk", category: "Rice", currentPrice: 0 },
-  { id: 21, name: "Mithisan", category: "Rice", currentPrice: 0 },
-  { id: 22, name: "Kauknyinsan", category: "Rice", currentPrice: 0 },
-  { id: 23, name: "Lonethwaymwe", category: "Rice", currentPrice: 0 },
-  { id: 24, name: "Matpe", category: "Beans", currentPrice: 0 },
-  { id: 25, name: "Peditsein", category: "Beans", currentPrice: 0 },
-  { id: 26, name: "Padingon", category: "Beans", currentPrice: 0 },
-  { id: 27, name: "Peadautpat", category: "Beans", currentPrice: 0 },
-  { id: 28, name: "Kalape", category: "Beans", currentPrice: 0 },
-  { id: 29, name: "Pegyi", category: "Beans", currentPrice: 0 },
-  { id: 30, name: "Boketpe", category: "Beans", currentPrice: 0 },
-  { id: 31, name: "Sadawpe", category: "Beans", currentPrice: 0 },
-  { id: 32, name: "Penilay", category: "Beans", currentPrice: 0 },
-];
 
 const MarketPriceUpdate: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedMarket, setSelectedMarket] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [priceUpdates, setPriceUpdates] = useState<PriceUpdates>({});
   const [unitUpdates, setUnitUpdates] = useState<UnitUpdates>({});
 
+  // RTK Query hooks
+  const { data: CROP_DATA, isLoading: isLoadingCrops } =
+    useGetAllCropsQuery(undefined);
+  const { data: MARKETS, isLoading: isLoadingMarkets } =
+    useGetAllMarketsQuery(undefined);
+
+  const [updateMarketPrices, { isLoading: isUpdating }] =
+    useUpdateMarketPricesMutation();
+
   // Filter crops based on search
   const filteredCrops = useMemo(() => {
-    return CROP_DATA.filter(
+    return (CROP_DATA || []).filter(
       (crop) =>
         crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         crop.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, CROP_DATA]);
 
-  const toggleCrop = (id: number): void => {
+  const toggleCrop = (_id: string): void => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(_id) ? prev.filter((i) => i !== _id) : [...prev, _id]
     );
   };
 
-  const handlePriceChange = (id: number, value: string): void => {
+  const handlePriceChange = (_id: string, value: string): void => {
     setPriceUpdates((prev) => ({
       ...prev,
-      [id]: value,
+      [_id]: value,
     }));
   };
 
-  const handleUnitChange = (id: number, value: string): void => {
-    setUnitUpdates((prev) => ({ ...prev, [id]: value }));
+  const handleUnitChange = (_id: string, value: string): void => {
+    setUnitUpdates((prev) => ({ ...prev, [_id]: value }));
   };
 
-  const selectedCropsData = CROP_DATA.filter((crop) =>
-    selectedIds.includes(crop.id)
+  const selectedCropsData = (CROP_DATA || []).filter((crop) =>
+    selectedIds.includes(crop._id)
   );
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    const payload = selectedCropsData.map((crop) => ({
-      market: selectedMarket,
-      cropId: crop.id,
-      name: crop.name,
-      newPrice: parseFloat(priceUpdates[crop.id]),
-      unit: unitUpdates[crop.id] || "Standard",
-    }));
 
-    console.log("Final Submission Payload:", payload);
-    alert("Market prices updated successfully!");
+    const market = MARKETS?.find((m) => m.name === selectedMarket);
 
-    // Reset
-    setStep(1);
-    setSelectedIds([]);
-    setSelectedMarket("");
+    if (!market) {
+      toast.warning("Please select a valid market");
+      return;
+    }
+
+    // const payload = selectedCropsData.map((crop) => ({
+    //   market: selectedMarket,
+    //   cropId: crop._id,
+    //   name: crop.name,
+    //   newPrice: parseFloat(priceUpdates[crop._id]),
+    //   unit: unitUpdates[crop._id] || "Standard",
+    // }))
+
+    const payload = {
+      marketId: market._id,
+      updates: selectedCropsData.map((crop) => ({
+        cropId: crop._id,
+        price: parseFloat(priceUpdates[crop._id]),
+        unit: unitUpdates[crop._id],
+      })),
+    };
+
+    try {
+      await updateMarketPrices(payload).unwrap();
+
+      toast.success("Prices published successfully!");
+
+      // reset form
+      setStep(1);
+      setSelectedIds([]);
+      setSelectedMarket("");
+      setPriceUpdates({});
+      setUnitUpdates({});
+    } catch (error) {
+      console.error("Failed to update prices:", error);
+      toast.error("Failed to update market prices.");
+    }
   };
+
+  if (isLoadingCrops || isLoadingMarkets) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading Market Data...
+      </div>
+    );
+  }
 
   return (
     <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight">
             Market Price Manager
           </h1>
           <p className="text-muted-foreground">
@@ -181,14 +178,14 @@ const MarketPriceUpdate: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {MARKETS.map((market) => (
+            {(MARKETS || []).map((market) => (
               <Button
-                key={market}
-                variant={selectedMarket === market ? "default" : "outline"}
+                key={market.name}
+                variant={selectedMarket === market.name ? "default" : "outline"}
                 className="h-20 text-lg font-semibold"
-                onClick={() => setSelectedMarket(market)}
+                onClick={() => setSelectedMarket(market.name)}
               >
-                {market}
+                {market.name}
               </Button>
             ))}
           </CardContent>
@@ -230,23 +227,23 @@ const MarketPriceUpdate: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {filteredCrops.map((crop) => (
                 <div
-                  key={crop.id}
-                  onClick={() => toggleCrop(crop.id)}
+                  key={crop._id}
+                  onClick={() => toggleCrop(crop._id)}
                   className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedIds.includes(crop.id)
+                    selectedIds.includes(crop._id)
                       ? "bg-primary/5 border-primary shadow-sm"
                       : "hover:bg-primary/15 border-transparent bg-slate-50/30"
                   }`}
                 >
                   <Checkbox
-                    id={`crop-${crop.id}`}
-                    checked={selectedIds.includes(crop.id)}
-                    onCheckedChange={() => toggleCrop(crop.id)}
+                    id={`crop-${crop._id}`}
+                    checked={selectedIds.includes(crop._id)}
+                    onCheckedChange={() => toggleCrop(crop._id)}
                     className="data-[state=checked]:bg-primary"
                   />
                   <div className="flex-1">
                     <Label
-                      htmlFor={`crop-${crop.id}`}
+                      htmlFor={`crop-${crop._id}`}
                       className="font-semibold cursor-pointer"
                     >
                       {crop.name}
@@ -255,11 +252,11 @@ const MarketPriceUpdate: React.FC = () => {
                       {crop.category}
                     </p>
                   </div>
-                  <div className="text-right">
+                  {/* <div className="text-right">
                     <p className="font-mono font-bold">
                       {crop.currentPrice} MMK
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               ))}
             </div>
@@ -282,16 +279,14 @@ const MarketPriceUpdate: React.FC = () => {
       {step === 3 && (
         <form onSubmit={handleSubmit}>
           <Card className="border-2 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" /> Finalize
-                  Market Rates
-                </CardTitle>
-                <CardDescription>
-                  Updating prices for {selectedMarket}
-                </CardDescription>
-              </div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-600" /> Finalize Market
+                Rates
+              </CardTitle>
+              <CardDescription>
+                Updating prices for {selectedMarket}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-xl border overflow-hidden">
@@ -307,12 +302,12 @@ const MarketPriceUpdate: React.FC = () => {
                   </thead>
                   <tbody className="divide-y">
                     {selectedCropsData.map((crop) => (
-                      <tr key={crop.id}>
+                      <tr key={crop._id}>
                         <td className="p-4 font-medium">{crop.name}</td>
                         <td className="p-4">
                           <Select
                             onValueChange={(val) =>
-                              handleUnitChange(crop.id, val)
+                              handleUnitChange(crop._id, val)
                             }
                             required
                           >
@@ -329,18 +324,16 @@ const MarketPriceUpdate: React.FC = () => {
                           </Select>
                         </td>
                         <td className="p-4">
-                          <div className="relative">
-                            <Input
-                              type="number"
-                              required
-                              placeholder="0.00"
-                              className="font-mono"
-                              value={priceUpdates[crop.id] || ""}
-                              onChange={(e) =>
-                                handlePriceChange(crop.id, e.target.value)
-                              }
-                            />
-                          </div>
+                          <Input
+                            type="number"
+                            required
+                            placeholder="0.00"
+                            className="font-mono"
+                            value={priceUpdates[crop._id] || ""}
+                            onChange={(e) =>
+                              handlePriceChange(crop._id, e.target.value)
+                            }
+                          />
                         </td>
                       </tr>
                     ))}
@@ -354,10 +347,9 @@ const MarketPriceUpdate: React.FC = () => {
                 type="button"
                 onClick={() => setStep(2)}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Crops
+                <ArrowLeft className="w-4 h-4" /> Back to Crops
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isUpdating}>
                 <CheckCircle2 className="w-4 h-4" /> Publish Prices
               </Button>
             </CardFooter>

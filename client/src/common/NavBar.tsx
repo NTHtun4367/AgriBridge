@@ -1,10 +1,11 @@
 import { ModeToggle } from "@/components/ModeToggle";
+import { useNotifications } from "@/hooks/useNotification";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { Bell } from "lucide-react";
-// import { Link } from "react-router";
 
 function NavBar() {
   const { data: user } = useCurrentUserQuery();
+  useNotifications();
 
   return (
     <nav className="w-full flex items-center justify-between px-8 py-3 shadow">

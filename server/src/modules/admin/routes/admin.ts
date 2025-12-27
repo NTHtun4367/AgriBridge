@@ -8,7 +8,7 @@ import {
   getMerchantInfoWithMerchantId,
   updateUserVerificationStatus,
 } from "../controllers/admin";
-import { userIdValidator, userStatusValidator } from "../../../validators/admin";
+import { userIdValidator, userStatusValidator } from "../validators/admin";
 import { getUserInfo } from "../../auth/controllers/common";
 
 const router = Router();
