@@ -59,7 +59,6 @@ export class AuthService {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      //   res.status(400);
       throw new Error("Email already registered.");
     }
 
@@ -190,6 +189,10 @@ export class AuthService {
         merchantId: merchant._id,
       },
     };
+  }
+
+  async getAllUsers() {
+    return await User.find({}, "_id");
   }
 }
 
