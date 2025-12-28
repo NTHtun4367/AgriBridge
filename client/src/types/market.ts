@@ -18,3 +18,13 @@ export interface MarketPrice {
   price: number;
   unit: string;
 }
+
+// types/market.ts
+export interface MarketPriceData {
+  _id: string;
+  marketId: { _id: string; name: string }; // Assuming you populate these
+  cropId: { _id: string; name: string; image?: string };
+  price: number;
+  unit: string;
+  createdAt: string;
+}

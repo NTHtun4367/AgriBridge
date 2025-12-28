@@ -6,8 +6,6 @@ import { connectDB } from "./shared/db/dbConnect";
 import farmerRoutes from "./modules/auth/routes/farmer";
 import merchantRoutes from "./modules/auth/routes/merchant";
 import adminRoutes from "./modules/admin/routes/admin";
-import marketPriceRoutes from "./modules/market/routes/marketPrice";
-import cropRoutes from "./modules/market/routes/crop";
 import marketRoutes from "./modules/market/routes/market";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";
@@ -49,8 +47,6 @@ app.use(cookieParser());
 app.use("/api/v1", farmerRoutes);
 app.use("/api/v1", merchantRoutes);
 app.use("/api/v1", adminRoutes);
-app.use("/api/v1/market-prices", marketPriceRoutes);
-app.use("/api/v1/crops", cropRoutes);
 app.use("/api/v1/markets", marketRoutes);
 
 // Error handler

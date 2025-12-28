@@ -5,6 +5,7 @@ import { TrendingUp, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
+import { useNavigate } from "react-router";
 
 interface PriceUpdateData {
   message: string;
@@ -17,6 +18,7 @@ const socket = io("http://localhost:8000");
 
 export const useNotifications = () => {
   const userInfo = useSelector((state: RootState) => state.auth.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (userInfo?.role !== "admin") {
@@ -49,7 +51,7 @@ export const useNotifications = () => {
               {/* Green primary button taking most of the space */}
               <Button
                 onClick={() => {
-                  console.log("Navigate to price page");
+                  navigate("/market-prices");
                   toast.dismiss(t);
                 }}
                 className="flex-2"
@@ -67,7 +69,7 @@ export const useNotifications = () => {
               >
                 Dismiss
               </Button>
-            </div>{" "}
+            </div>
           </div>
         ));
       });

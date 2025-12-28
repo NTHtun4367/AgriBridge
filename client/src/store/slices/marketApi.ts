@@ -4,14 +4,14 @@ import type { Crop, Market } from "@/types/market";
 export const marketApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllCrops: builder.query<Crop[], undefined>({
-      query: () => "crops/all",
+      query: () => "/markets/crops",
     }),
     getAllMarkets: builder.query<Market[], undefined>({
-      query: () => "markets/all",
+      query: () => "/markets",
     }),
     updateMarketPrices: builder.mutation({
       query: (body) => ({
-        url: "/market-prices/update",
+        url: "/markets/update",
         method: "POST",
         body,
       }),
