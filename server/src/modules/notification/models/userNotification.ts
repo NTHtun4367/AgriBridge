@@ -10,7 +10,6 @@ interface IUserNotification extends Document {
 const userNotificationSchema = new Schema<IUserNotification>({
   userId: {
     type: Schema.Types.ObjectId,
-    // ref: "User",
     required: true,
   },
   notificationId: {

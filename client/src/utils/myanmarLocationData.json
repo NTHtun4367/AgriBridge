@@ -1,0 +1,204 @@
+{
+  "Ayeyarwady Region": {
+    "Pathein District": [
+      "Pathein",
+      "Thabaung",
+      "Ngapudaw",
+      "Kangyidaunt",
+      "Kyaunggon",
+      "Yegyi"
+    ],
+    "Hinthada District": ["Hinthada", "Zalun", "Lemyethna", "Myanaung"],
+    "Myaungmya District": ["Myaungmya", "Einme", "Wakema"],
+    "Pyapon District": ["Pyapon", "Bogale", "Kyaiklat", "Dedaye"],
+    "Maubin District": [
+      "Maubin",
+      "Pantanaw",
+      "Nyaungdon",
+      "Danubyu",
+      "Mawlamyinegyun"
+    ],
+    "Labutta District": ["Labutta"]
+  },
+  "Bago Region": {
+    "Bago District": [
+      "Bago",
+      "Kawa",
+      "Thanatpin",
+      "Waw",
+      "Daik-U",
+      "Kyauktaga"
+    ],
+    "Toungoo District": ["Toungoo", "Yedashe", "Kyaukkyi", "Phyu", "Okpho"],
+    "Pyay District": ["Pyay", "Padaung", "Paukkhaung", "Thegon"],
+    "Tharrawaddy District": [
+      "Tharrawaddy",
+      "Minhla",
+      "Letpadan",
+      "Zigon",
+      "Nattalin",
+      "Monyo"
+    ]
+  },
+  "Chin State": {
+    "Falam District": ["Falam", "Tiddim"],
+    "Hakha District": ["Hakha", "Thantlang"],
+    "Matupi District": ["Matupi", "Rezua"],
+    "Mindat District": ["Mindat", "Kanpetlet"],
+    "Paletwa District": ["Paletwa"]
+  },
+  "Kachin State": {
+    "Myitkyina District": ["Myitkyina", "Waingmaw", "Injangyang", "Tanai"],
+    "Bhamo District": ["Bhamo", "Mansi", "Momauk", "Shwegu"],
+    "Mohnyin District": ["Mohnyin", "Mogaung", "Phakant"],
+    "Putao District": [
+      "Putao",
+      "Sumprabum",
+      "Machanbaw",
+      "Khaunglanhpu",
+      "Nawngmun"
+    ],
+    "Chipwi District": ["Chipwi", "Tsawlaw"],
+    "Tanai District": ["Tanai"]
+  },
+  "Kayah State": {
+    "Loikaw District": ["Loikaw", "Demoso", "Hpruso", "Shadaw"],
+    "Bawlakhe District": ["Bawlakhe", "Hpasawng", "Mese"]
+  },
+  "Kayin State": {
+    "Hpa-an District": ["Hpa-an", "Hlaingbwe"],
+    "Myawaddy District": ["Myawaddy"],
+    "Kawkareik District": ["Kawkareik"],
+    "Kyainseikgyi District": ["Kyainseikgyi"],
+    "Hpapun District": ["Hpapun"],
+    "Thandaunggyi District": ["Thandaunggyi"]
+  },
+  "Magway Region": {
+    "Magway District": [
+      "Magway",
+      "Yenangyaung",
+      "Chauk",
+      "Taungdwingyi",
+      "Myaing"
+    ],
+    "Minbu (Sagu) District": ["Minbu", "Sagu", "Pwintbyu", "Ngape"],
+    "Thayet District": ["Thayet", "Minhla", "Aunglan", "Sinbaungwe"],
+    "Pakokku District": ["Pakokku", "Yesagyo", "Myaing", "Pauk"],
+    "Gangaw District": ["Gangaw", "Htilin", "Saw"]
+  },
+  "Mandalay Region": {
+    "Mandalay District": [
+      "Aungmyethazan",
+      "Chanayethazan",
+      "Mahaaungmye",
+      "Chanmyathazi",
+      "Pyigyidagun",
+      "Amarapura",
+      "Patheingyi",
+      "Madaya",
+      "Singu"
+    ],
+    "Pyin Oo Lwin District": ["Pyin Oo Lwin", "Mogok", "Thabeikkyin"],
+    "Kyaukse District": ["Kyaukse", "Tada-U", "Myittha", "Sintgaing"],
+    "Myingyan District": ["Myingyan", "Taungtha", "Natogyi", "Ngazun"],
+    "Nyaung-U District": ["Nyaung-U", "Kyaukpadaung"],
+    "Meiktila District": ["Meiktila", "Mahlaing", "Thazi", "Wundwin"],
+    "Yamethin District": ["Yamethin", "Pyawbwe"]
+  },
+  "Mon State": {
+    "Mawlamyine District": ["Mawlamyine", "Kyaikmarraw", "Chaungzon", "Mudon"],
+    "Thaton District": ["Thaton", "Paung"],
+    "Kyaikto District": ["Kyaikto", "Bilin"],
+    "Ye District": ["Ye", "Thanbyuzayat"]
+  },
+  "Rakhine State": {
+    "Maungdaw District": ["Maungdaw", "Buthidaung"],
+    "Sittwe District": ["Sittwe", "Pauktaw", "Ponnagyun", "Rathedaung"],
+    "Mrauk-U District": ["Mrauk-U", "Kyauktaw", "Minbya", "Myebon"],
+    "Kyaukpyu District": ["Kyaukpyu", "Ann", "Manaung", "Ramree"],
+    "Thandwe District": ["Thandwe", "Gwa", "Toungup"]
+  },
+  "Sagaing Region": {
+    "Sagaing District": ["Sagaing", "Mingin", "Myaung"],
+    "Monywa District": ["Monywa", "Budalin", "Ayadaw", "Chaung-U"],
+    "Shwebo District": ["Shwebo", "Tabayin", "Khin-U", "Wetlet", "Taze"],
+    "Katha District": ["Katha", "Indaw", "Banmauk", "Tigyaing"],
+    "Kalay District": ["Kalay", "Kalewa", "Mingin"],
+    "Mawlaik District": ["Mawlaik", "Paungbyin"],
+    "Tamu District": ["Tamu", "Khampat"]
+  },
+  "Shan State": {
+    "Taunggyi District": ["Taunggyi", "Lawksawk"],
+    "Kalaw District": ["Kalaw", "Nyaungshwe", "Pekon"],
+    "Loilen District": ["Loilen", "Lai-Hka", "Mong Kaung"],
+    "Nansang District": ["Nansang", "Kunhing", "Mone"],
+    "Mong Shu District": ["Mong Shu", "Mong Hsat"],
+    "Langkho District": ["Langkho", "Mong Pan", "Mawkmai"],
+    "Lashio District": ["Lashio", "Hsenwi", "Kunlong"],
+    "Tangyan District": ["Tangyan", "Mong Yai"],
+    "Laukkaing District": ["Laukkaing"],
+    "Muse District": ["Muse", "Namhkam"],
+    "Kutkai District": ["Kutkai"],
+    "Kyaukme District": ["Kyaukme", "Nawnghkio", "Hsipaw", "Namtu"],
+    "Momeik District": ["Momeik", "Mabein"],
+    "Hopang District": ["Hopang", "Panwaun", "Mongmau"],
+    "Kengtung District": ["Kengtung", "Mong Khet", "Mong Ping"],
+    "Tachileik District": ["Tachileik", "Mong Hpayak"],
+    "Mong Yang District": ["Mong Yang"]
+  },
+  "Tanintharyi Region": {
+    "Dawei District": ["Dawei", "Launglon", "Thayetchaung", "Yebyu"],
+    "Myeik District": ["Myeik", "Kyunsu", "Palaw"],
+    "Kawthoung District": ["Kawthoung", "Bokpyin"]
+  },
+  "Yangon Region": {
+    "Yangon District": [
+      "Thaketa",
+      "North Dagon",
+      "South Dagon",
+      "East Dagon",
+      "West Dagon",
+      "South Okkalapa",
+      "North Okkalapa",
+      "Yankin",
+      "Ahlone",
+      "Lanmadaw",
+      "Latha",
+      "Sanchaung",
+      "Kamayut",
+      "Kyimyindaing",
+      "Mayangone",
+      "Pazundaung",
+      "Botahtaung",
+      "Mingala Taung Nyunt",
+      "Tamwe",
+      "Dawbon",
+      "Thingangyun",
+      "Shwepyitha",
+      "Pabedan",
+      "Thanlyin",
+      "Hlaing"
+    ],
+    "Insein District": ["Insein", "Hlaingthaya"],
+    "Hlegu District": ["Hlegu", "Taikkyi", "Hmawbi"],
+    "Mingaladon District": ["Mingaladon"],
+    "Thanlyin District": [
+      "Thanlyin",
+      "Thongwa",
+      "Kyauktan",
+      "Kayan",
+      "Cocokyun"
+    ],
+    "Twantay District": [
+      "Twantay",
+      "Kawhmu",
+      "Kungyangon",
+      "Dala",
+      "Seikgyi Kanaungto"
+    ]
+  },
+  "Naypyidaw": {
+    "Ottara District": ["Ottarathiri", "Pobbathiri", "Tatkon", "Zeyarthiri"],
+    "Dekkhina District": ["Dekkhinathiri", "Lewe", "Pyinmana", "Zabuthiri"]
+  }
+}

@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
+import Notification from "./pages/farmer/Notification.tsx";
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
           {
             path: "/farmer/add-entry",
             element: <AddFarmEntry />,
+          },
+          {
+            path: "/farmer/notifications",
+            element: <Notification />,
           },
         ],
       },

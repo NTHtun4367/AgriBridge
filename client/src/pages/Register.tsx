@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -46,6 +46,21 @@ import {
 } from "@/store/slices/userApi";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import myanmarDataRaw from "../utils/myanmarLocationData.json";
+import nrcDataRaw from "../utils/nrcData.json";
+import {
+  Briefcase,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  ShieldCheck,
+  User,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+
+const myanmarData = myanmarDataRaw as Record<string, Record<string, string[]>>;
+const nrcData = nrcDataRaw as Record<string, string[]>;
 
 function Register() {
   const [registerFarmerMutation, { isLoading: farmerLoading }] =
@@ -246,8 +261,66 @@ function Register() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, step, ...step4Values]);
 
+  // Watch values for dynamic filtering
+  const selectedDivision = useWatch({
+    control: form.control,
+    name: "division",
+  });
+  const selectedDistrict = useWatch({
+    control: form.control,
+    name: "district",
+  });
+  const selectedNrcRegion = useWatch({
+    control: form.control,
+    name: "nrcRegion",
+  });
+
+  // Generate NRC Township options based on the chosen Region number
+  const nrcTownshipOptions = useMemo(() => {
+    return selectedNrcRegion ? nrcData[selectedNrcRegion] || [] : [];
+  }, [selectedNrcRegion]);
+
+  // Filter options based on selection
+  const divisionOptions = useMemo(() => Object.keys(myanmarData), []);
+
+  const districtOptions = useMemo(() => {
+    return selectedDivision
+      ? Object.keys(myanmarData[selectedDivision] || {})
+      : [];
+  }, [selectedDivision]);
+
+  const townshipOptions = useMemo(() => {
+    return selectedDivision && selectedDistrict
+      ? myanmarData[selectedDivision][selectedDistrict] || []
+      : [];
+  }, [selectedDivision, selectedDistrict]);
+
+  // Reset child fields when parent changes
+  useEffect(() => {
+    form.setValue("district", "");
+    form.setValue("township", "");
+  }, [selectedDivision, form]);
+  useEffect(() => {
+    form.setValue("township", "");
+  }, [selectedDistrict, form]);
+  useEffect(() => {
+    form.setValue("nrcTownship", "");
+  }, [selectedNrcRegion, form]);
+  // Specific Reset for NRC fields
+  useEffect(() => {
+    form.setValue("nrcTownship", "");
+  }, [selectedNrcRegion, form]);
+
+  // UI Icons for steps
+  const stepsConfig = [
+    { label: "Account", icon: User },
+    { label: "Location", icon: MapPin },
+    { label: "Business", icon: Briefcase },
+    { label: "Identity", icon: ShieldCheck },
+  ];
+
   return (
-    <div className="max-w-[450px] lg:mx-auto mx-6 mt-12 animate-in fade-in zoom-in duration-700">
+    <div className="max-w-[500px] lg:mx-auto mx-6 mt-12 animate-in fade-in zoom-in duration-700">
       {/* ---------------------------------------
           AUTO-OPEN DIALOG (Farmer / Merchant)
          --------------------------------------- */}
@@ -292,10 +365,10 @@ function Register() {
             AgriBridge
           </CardTitle>
           <CardDescription>
-            Enter your information to create account
+            Step {step} of {totalSteps}: {stepsConfig[step - 1].label} info
           </CardDescription>
         </CardHeader>
-        <div className="flex items-center justify-around w-[200px] mx-auto">
+        {/* <div className="flex items-center justify-around w-[200px] mx-auto">
           <Button
             className="cursor-pointer"
             size={"sm"}
@@ -312,21 +385,40 @@ function Register() {
           >
             Merchant
           </Button>
-        </div>
+        </div> */}
+
         <CardContent>
-          {/* ---------------------------------------
-          PROGRESS BAR
-         --------------------------------------- */}
-          <div className="mt-2">
-            <div className="w-full bg-secondary h-2 rounded-full">
-              <div
-                className="bg-primary h-2 rounded-full transition-all"
-                style={{ width: `${(step / totalSteps) * 100}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-center mt-1">
-              Step {step} / {totalSteps}
-            </p>
+          {/* Visual Step Indicator */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            {Array.from({ length: totalSteps }).map((_, i) => {
+              const StepIcon = stepsConfig[i].icon;
+              const isActive = step === i + 1;
+              const isCompleted = step > i + 1;
+              return (
+                <div key={i} className="flex items-center">
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors border-2",
+                      isActive
+                        ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        : isCompleted
+                        ? "bg-primary/20 border-primary/20 text-primary"
+                        : "bg-background border-muted text-muted-foreground"
+                    )}
+                  >
+                    <StepIcon size={18} />
+                  </div>
+                  {i < totalSteps - 1 && (
+                    <div
+                      className={cn(
+                        "w-6 h-0.5 mx-1",
+                        step > i + 1 ? "bg-primary/30" : "bg-muted"
+                      )}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* ---------------------------------------
@@ -419,9 +511,11 @@ function Register() {
                               <SelectValue placeholder="Select division" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">1</SelectItem>
-                              <SelectItem value="2">2</SelectItem>
-                              <SelectItem value="3">3</SelectItem>
+                              {divisionOptions.map((d) => (
+                                <SelectItem key={d} value={d}>
+                                  {d}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -444,9 +538,11 @@ function Register() {
                               <SelectValue placeholder="Select district" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="A">A</SelectItem>
-                              <SelectItem value="B">B</SelectItem>
-                              <SelectItem value="C">C</SelectItem>
+                              {districtOptions.map((d) => (
+                                <SelectItem key={d} value={d}>
+                                  {d}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -469,8 +565,11 @@ function Register() {
                               <SelectValue placeholder="Select township" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="N">N</SelectItem>
-                              <SelectItem value="P">P</SelectItem>
+                              {townshipOptions.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  {t}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -536,13 +635,15 @@ function Register() {
                                   <SelectValue placeholder="1" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="1">1</SelectItem>
-                                  <SelectItem value="2">2</SelectItem>
-                                  <SelectItem value="3">3</SelectItem>
+                                  {Object.keys(nrcData).map((num) => (
+                                    <SelectItem key={num} value={num}>
+                                      {num}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </FormControl>
-                            <FormMessage />
+                            {/* <FormMessage /> */}
                           </FormItem>
                         )}
                       />
@@ -562,13 +663,15 @@ function Register() {
                                   <SelectValue placeholder="Township" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="A">A</SelectItem>
-                                  <SelectItem value="B">B</SelectItem>
-                                  <SelectItem value="C">C</SelectItem>
+                                  {nrcTownshipOptions.map((code) => (
+                                    <SelectItem key={code} value={code}>
+                                      {code}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </FormControl>
-                            <FormMessage />
+                            {/* <FormMessage /> */}
                           </FormItem>
                         )}
                       />
@@ -593,13 +696,12 @@ function Register() {
                                 </SelectContent>
                               </Select>
                             </FormControl>
-                            <FormMessage />
+                            {/* <FormMessage /> */}
                           </FormItem>
                         )}
                       />
                     </div>
                   </div>
-
                   <FormField
                     name="nrcNumber"
                     render={({ field }) => (
@@ -611,37 +713,49 @@ function Register() {
                       </FormItem>
                     )}
                   />
+                  <div className="space-y-3">
+                    <FormLabel>NRC Documents (Images)</FormLabel>
 
-                  <FormLabel>NRC Images (Front & Back)</FormLabel>
-                  <div className="flex gap-4">
-                    <FormField
-                      name="nrcFrontImage"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <ImageUpload
-                              image={field.value}
-                              onChange={(img) => field.onChange(img)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      name="nrcBackImage"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <ImageUpload
-                              image={field.value}
-                              onChange={(img) => field.onChange(img)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Changed flex-around to flex-wrap and justify-center */}
+                    <div className="flex flex-wrap items-start justify-center gap-4 mt-6">
+                      <FormField
+                        name="nrcFrontImage"
+                        render={({ field }) => (
+                          <FormItem className="flex-1 min-w-[140px]">
+                            {/* Added flex-1 and min-width */}
+                            <FormControl>
+                              <ImageUpload
+                                image={field.value}
+                                onChange={(img) => field.onChange(img)}
+                              />
+                            </FormControl>
+                            <p className="text-[10px] text-center text-muted-foreground mt-1">
+                              Front Side
+                            </p>
+                            <FormMessage className="text-center" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        name="nrcBackImage"
+                        render={({ field }) => (
+                          <FormItem className="flex-1 min-w-[140px]">
+                            {/* Added flex-1 and min-width */}
+                            <FormControl>
+                              <ImageUpload
+                                image={field.value}
+                                onChange={(img) => field.onChange(img)}
+                              />
+                            </FormControl>
+                            <p className="text-[10px] text-center text-muted-foreground mt-1">
+                              Back Side
+                            </p>
+                            <FormMessage className="text-center" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -649,9 +763,17 @@ function Register() {
               {/* ----------------------------------------------------
               Navigation Buttons
              ---------------------------------------------------- */}
-              <div className="flex justify-between pt-4">
+              <div
+                className={`flex justify-between pt-4 ${step !== 1 && "gap-4"}`}
+              >
                 {step > 1 ? (
-                  <Button variant="outline" type="button" onClick={prevStep}>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={prevStep}
+                    className="flex-1"
+                  >
+                    <ChevronLeft />
                     Back
                   </Button>
                 ) : (
@@ -659,23 +781,34 @@ function Register() {
                 )}
 
                 {step < totalSteps ? (
-                  <Button type="button" onClick={nextStep}>
-                    Next
+                  <Button type="button" onClick={nextStep} className="flex-1">
+                    Next <ChevronRight />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     disabled={farmerLoading || merchantLoading}
+                    className="flex-1"
                   >
                     {status === "farmer"
                       ? "Create Account"
-                      : "Submit for Verification"}
+                      : "Submit Verification"}
                   </Button>
                 )}
               </div>
             </form>
           </Form>
         </CardContent>
+        <Separator />
+        <p className="text-center text-xs text-muted-foreground">
+          Already have an account?
+          <button
+            onClick={() => navigate("/login")}
+            className="pl-2 text-primary font-semibold hover:underline cursor-pointer"
+          >
+            Login
+          </button>
+        </p>
       </Card>
     </div>
   );

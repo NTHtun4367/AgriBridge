@@ -2,9 +2,11 @@ import { ModeToggle } from "@/components/ModeToggle";
 import { useNotifications } from "@/hooks/useNotification";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { Bell } from "lucide-react";
+import { useNavigate } from "react-router";
 
 function NavBar() {
   const { data: user } = useCurrentUserQuery();
+  const navigate = useNavigate();
   useNotifications();
 
   return (
@@ -14,7 +16,10 @@ function NavBar() {
       </h1>
       <div className="flex items-center gap-4">
         <ModeToggle />
-        <Bell className="cursor-pointer" />
+        <Bell
+          onClick={() => navigate("/farmer/notifications")}
+          className="cursor-pointer"
+        />
         <div>
           {user && (
             <div className="flex items-center gap-2 cursor-pointer">
