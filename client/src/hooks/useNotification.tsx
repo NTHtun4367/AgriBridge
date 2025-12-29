@@ -14,7 +14,7 @@ interface PriceUpdateData {
   updateCount: number;
 }
 
-const socket = io("http://localhost:8000");
+const socket = io("http://localhost:4000");
 
 export const useNotifications = () => {
   const userInfo = useSelector((state: RootState) => state.auth.user);

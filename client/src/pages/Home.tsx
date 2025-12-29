@@ -9,7 +9,6 @@ import {
   LineChart,
   ChevronRight,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,61 +17,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router";
-import { ModeToggle } from "@/components/ModeToggle";
 import { ScrollReveal } from "@/components/ScrollReveal";
-// import { ModeToggle } from "@/components/ModeToggle";
+import Navigation from "@/common/home/Navigation";
+import Footer from "@/common/home/Footer";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router"
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
       {/* --- NAVIGATION --- */}
-      <nav className="fixed top-0 w-full z-50 border-b bg-card/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* <div className="bg-primary p-1.5 rounded-lg">
-              <Sprout className="text-white" size={24} />
-            </div> */}
-            <span className="text-3xl italic font-bold text-primary">
-              <Link to={"/"}>AgriBridge</Link>
-            </span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#market"
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            >
-              Market Prices
-            </a>
-            <a
-              href="#farmer"
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            >
-              For Farmers
-            </a>
-            <a
-              href="#merchant"
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            >
-              For Merchants
-            </a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <ModeToggle />
-            <Button
-              variant={"outline"}
-              className="hidden sm:inline-flex cursor-pointer"
-              asChild
-            >
-              <Link to={"/login"}>Login</Link>
-            </Button>
-            <Button className="bg-primary cursor-pointer">Get Started</Button>
-            {/* <ModeToggle /> */}
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* --- HERO SECTION --- */}
       <header className="relative overflow-hidden py-20 lg:py-32 animate-in slide-in-from-bottom-15 duration-1000">
@@ -82,7 +39,7 @@ const HomePage = () => {
             className="mb-4 px-4 py-2 border-primary bg-primary/15 text-primary"
           >
             Digitalizing the Agriculture Supply Chain
-          </Badge>{" "}
+          </Badge>
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
             Bridging the gap from <br />
             <span className="text-primary">Farm to Market.</span>
@@ -92,48 +49,25 @@ const HomePage = () => {
             clarity and connecting merchants directly to the source. Transparent
             pricing, better profits.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl transition-transform hover:scale-105 sm:w-auto cursor-pointer">
-              I am a Farmer <ArrowRight size={20} />
-            </button>
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-8 py-4 text-lg font-bold text-slate-700 transition-all hover:border-primary hover:bg-primary/15 sm:w-auto cursor-pointer">
-              I am a Merchant
-            </button>
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
+            <Button
+              size="lg"
+              className="rounded-full px-8 bg-primary hover:bg-primary/90 text-md h-12"
+              onClick={() => navigate("/farmers-landing")}
+            >
+              I am Farmer <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 text-md h-12"
+              onClick={() => navigate("/merchants-landing")}
+            >
+              I am Merchant
+            </Button>
           </div>
         </div>
       </header>
-
-      {/* --- MARKET TICKER --- */}
-      {/* <div
-        id="market"
-        className="w-full bg-slate-900 py-4 overflow-hidden border-y border-slate-800"
-      >
-        <div className="flex whitespace-nowrap animate-pulse gap-12 px-6">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-              Live Market Index:
-            </span>
-          </div>
-          {[
-            { crop: "Corn", price: "₱18.50/kg", trend: "+2.1%" },
-            { crop: "Rice (Palay)", price: "₱22.00/kg", trend: "-0.5%" },
-            { crop: "Sugar", price: "₱44.00/kg", trend: "+1.2%" },
-            { crop: "Soybeans", price: "₱31.20/kg", trend: "+4.0%" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-white font-medium">{item.crop}</span>
-              <span className="text-emerald-400 font-bold">{item.price}</span>
-              <span
-                className={`text-[10px] ${
-                  item.trend.includes("+") ? "text-emerald-500" : "text-red-400"
-                }`}
-              >
-                {item.trend}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div> */}
 
       {/* --- DUAL PATHWAY SECTION --- */}
       <ScrollReveal>
@@ -280,38 +214,7 @@ const HomePage = () => {
       </ScrollReveal>
 
       {/* --- FOOTER --- */}
-      <footer className="px-8 py-12 bg-slate-900 text-slate-300">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              {/* <Sprout className="text-emerald-500" size={24} /> */}
-              <span className="text-3xl italic font-bold text-white">
-                AgriBridge
-              </span>
-            </div>
-            <p className="max-w-xs">
-              Making agriculture transparent, profitable, and accessible through
-              technology.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4">Roles</h4>
-            <ul className="space-y-2 text-sm">
-              <li>Farmers</li>
-              <li>Merchants</li>
-              {/* <li>Admin Portal</li> */}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4">Company</h4>
-            <ul className="space-y-2 text-sm">
-              <li>About Us</li>
-              <li>Contact</li>
-              <li>Privacy Policy</li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

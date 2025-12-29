@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import ProfileUploadDialog from "@/components/ProfileUploadDialog";
 
 const myanmarData = myanmarDataRaw as Record<string, Record<string, string[]>>;
 const nrcData = nrcDataRaw as Record<string, string[]>;
@@ -69,6 +70,7 @@ function Register() {
     useRegisterMerchantMutation();
   const [status, setStatus] = useState<"farmer" | "merchant">("farmer");
   const [dialogOpen, setDialogOpen] = useState(true);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1); // ← form step (1–4)
@@ -183,11 +185,13 @@ function Register() {
       }
       toast.success("Register successful.");
 
-      if (status === "farmer") {
-        navigate("/login");
-      } else if (status === "merchant") {
-        navigate("/verification-submitted");
-      }
+      setProfileDialogOpen(true);
+
+      // if (status === "farmer") {
+      //   navigate("/login");
+      // } else if (status === "merchant") {
+      //   navigate("/verification-submitted");
+      // }
     } catch (error: any) {
       toast.error(error?.data?.message);
     }
@@ -358,6 +362,8 @@ function Register() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {profileDialogOpen && <ProfileUploadDialog status={status} />}
 
       <Card>
         <CardHeader className="text-center">

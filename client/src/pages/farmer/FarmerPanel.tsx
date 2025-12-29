@@ -27,7 +27,7 @@ const pages: Page[] = [
   },
   {
     name: "Market Prices",
-    path: "/admin/manage-merchants",
+    path: "/farmer/markets",
     icon: <CircleDollarSign className="w-5 h-5" />,
   },
   {
@@ -41,7 +41,7 @@ const pages: Page[] = [
     icon: <Calculator className="w-5 h-5" />,
   },
   {
-    name: "History",
+    name: "Records",
     path: "/farmer/history",
     icon: <History className="w-5 h-5" />,
   },

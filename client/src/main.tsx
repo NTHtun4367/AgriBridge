@@ -26,6 +26,9 @@ import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 import Notification from "./pages/farmer/Notification.tsx";
+import MarketDashboard from "./pages/market/MarketDashboard.tsx";
+import MarketPriceLanding from "./pages/MarketPriceLanding.tsx";
+import FarmerLanding from "./pages/FarmerLanding.tsx";
 
 const router = createBrowserRouter([
   {
@@ -49,12 +52,24 @@ const router = createBrowserRouter([
         element: <VerificationSubmitted />,
       },
       {
+        path: "/markets",
+        element: <MarketPriceLanding />,
+      },
+      {
+        path: "/farmers-landing",
+        element: <FarmerLanding />,
+      },
+      {
         path: "/farmer",
         element: <FarmerPanel />,
         children: [
           {
             path: "/farmer/dashboard",
             element: <FarmerDashboard />,
+          },
+          {
+            path: "/farmer/markets",
+            element: <MarketDashboard />,
           },
           {
             path: "/farmer/merchants",

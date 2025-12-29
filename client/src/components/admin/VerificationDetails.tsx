@@ -153,19 +153,19 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                     <p className="text-[10px] text-slate-400 uppercase font-bold">
                       Division
                     </p>
-                    <p className="text-sm italic">"Yangon"</p>
+                    <p className="text-sm italic">"{user.division}"</p>
                   </div>
                   <div className="p-2">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">
                       District
                     </p>
-                    <p className="text-sm italic">"Example"</p>
+                    <p className="text-sm italic">"{user.district}"</p>
                   </div>
                   <div className="p-2">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">
                       Township
                     </p>
-                    <p className="text-sm italic">"Hlaing"</p>
+                    <p className="text-sm italic">"{user.township}"</p>
                   </div>
                   <div className="p-2">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">

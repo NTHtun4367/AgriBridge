@@ -1,5 +1,6 @@
 import StatusCard from "@/common/StatusCard";
 import { AddEntryDialog } from "@/components/farmer/AddEntryDialog";
+import ProfileUploadDialog from "@/components/ProfileUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
@@ -9,10 +10,14 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 function FarmerDashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 animate-in slide-in-from-bottom-4 duration-500">
+      <ProfileUploadDialog />
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <StatusCard
@@ -89,7 +94,12 @@ function FarmerDashboard() {
             </p>
           </div>
         </div>
-        <Button className="w-full font-bold">Check Live Prices</Button>
+        <Button
+          className="w-full font-bold"
+          onClick={() => navigate("/farmer/markets")}
+        >
+          Check Live Prices
+        </Button>
       </Card>
     </div>
   );

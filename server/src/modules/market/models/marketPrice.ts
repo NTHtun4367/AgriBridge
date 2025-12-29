@@ -14,7 +14,7 @@ const marketPriceSchema = new Schema<IMarketPrice>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      // ref: "User",
       required: true,
     },
     marketId: {

@@ -5,6 +5,7 @@ import {
   getAllCrops,
   getAllMarkets,
   getLatestPrices,
+  getMarketPrices,
   updateMarketPrices,
 } from "../controllers/market";
 import { validatePriceUpdate } from "../validators/market";
@@ -22,8 +23,8 @@ router.post(
 );
 router.get(
   "/latest",
-  allowRoles("farmer", "merchant", "admin"),
-  getLatestPrices
+  // allowRoles("farmer", "merchant", "admin"),
+  getMarketPrices
 );
 router.get("/crops", protect, allowRoles("admin"), getAllCrops);
 router.get("/", protect, allowRoles("admin"), getAllMarkets);

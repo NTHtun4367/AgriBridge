@@ -86,25 +86,25 @@ const NotificationPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="bg-secondary h-screen p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Notifications</h1>
+          <h1 className="text-2xl font-bold text-slate-8bg-secondary 00">Notifications</h1>
           <p className="text-sm text-slate-500 mt-1">Manage your alerts and merchant updates</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-slate-600 hover:text-green-700">
-          <CheckCheck className="mr-2 h-4 w-4" /> Mark all as read
+        <Button variant="outline" size="sm" onClick={markAllAsRead}>
+          <CheckCheck className="h-4 w-4" /> Mark all as read
         </Button>
       </div>
 
       {/* List */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-w-4xl mx-auto">
         {notifications.map((n) => (
           <Card 
             key={n.id} 
             className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
-              n.isRead ? 'bg-white border-l-slate-200 opacity-80' : 'bg-green-50/40 border-l-green-600 shadow-sm'
+              n.isRead ? 'bg-white border-l-slate-200 opacity-80' : 'bg-green-500/5 border-l-green-600 shadow-sm'
             }`}
             onClick={() => openNotification(n)}
           >
@@ -115,7 +115,7 @@ const NotificationPage = () => {
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className={`text-sm font-semibold truncate ${n.isRead ? 'text-slate-600' : 'text-slate-900'}`}>
+                  <h3 className={`text-sm font-semibold truncate ${n.isRead ? 'text-slate-600' : 'text-green-600'}`}>
                     {n.title}
                   </h3>
                   <span className="text-[11px] font-medium text-slate-400 whitespace-nowrap uppercase tracking-wider">
