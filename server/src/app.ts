@@ -7,7 +7,7 @@ import farmerAuthRoutes from "./modules/auth/routes/farmer";
 import merchantAuthRoutes from "./modules/auth/routes/merchant";
 import adminRoutes from "./modules/admin/routes/admin";
 import marketRoutes from "./modules/market/routes/market";
-import farmerRoutes from "./modules/farmer/routes/entry";
+import farmerRoutes from "./modules/farmer/routes/farmer";
 import notificationRoutes from "./modules/notification/routes/notification";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";

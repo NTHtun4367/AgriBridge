@@ -2,6 +2,7 @@ import StatusCard from "@/common/StatusCard";
 import AddEntryDialog from "@/components/farmer/AddEntryDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { useGetFinanceStatsQuery } from "@/store/slices/farmerApi";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -13,6 +14,7 @@ import { useNavigate } from "react-router";
 
 function FarmerDashboard() {
   const navigate = useNavigate();
+  const { data: finance } = useGetFinanceStatsQuery();
 
   return (
     <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 animate-in slide-in-from-bottom-4 duration-500">
@@ -22,19 +24,19 @@ function FarmerDashboard() {
         <StatusCard
           title="Total Revenue"
           bgColor="bg-blue-500/15"
-          value={123.4}
+          value={finance?.totalIncome!}
           icon={<TrendingUp className="w-6 h-6 text-blue-500" />}
         />
         <StatusCard
           title="Total Cost"
           bgColor="bg-red-500/15"
-          value={123.4}
+          value={finance?.totalExpense!}
           icon={<TrendingDown className="w-6 h-6 text-red-500" />}
         />
         <StatusCard
           title="Net Profit"
           bgColor="bg-primary/15"
-          value={123.4}
+          value={finance?.profit!}
           icon={<DollarSign className="w-6 h-6 text-primary" />}
         />
       </div>

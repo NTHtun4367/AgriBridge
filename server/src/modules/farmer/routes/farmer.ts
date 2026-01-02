@@ -4,6 +4,7 @@ import { entryValidator } from "../validators/entry";
 import { validateRequest } from "../../../shared/middleware/validateRequest";
 import { createEntry } from "../controllers/entry";
 import { protect } from "../../../shared/middleware/authMiddleware";
+import { getStats } from "../controllers/finance";
 
 const router = Router();
 
@@ -16,4 +17,6 @@ router.post(
   validateRequest,
   createEntry
 );
+router.get("/finance/stats", getStats);
+
 export default router;

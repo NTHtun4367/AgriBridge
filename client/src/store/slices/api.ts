@@ -21,6 +21,13 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "MarketPrice", "Merchant","Farmer"],
+  tagTypes: [
+    "User",
+    "MarketPrice",
+    "Merchant",
+    "Farmer",
+    "FinanceStats",
+    "Entries",
+  ],
   endpoints: () => ({}),
 });
