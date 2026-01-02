@@ -1,6 +1,8 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 export interface IEntry extends Document {
+  userId: Types.ObjectId;
+  type: "expense" | "income";
   date: Date;
   category: string;
   quantity?: number;
@@ -12,6 +14,15 @@ export interface IEntry extends Document {
 
 const entrySchema = new Schema<IEntry>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["expense", "income"],
+      required: true,
+    },
     date: {
       type: Date,
       required: true,

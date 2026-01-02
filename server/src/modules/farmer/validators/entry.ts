@@ -2,6 +2,9 @@ import { body } from "express-validator";
 
 export const entryValidator = [
   body("date").isISO8601().withMessage("Valid ISO date is required"),
+  body("type")
+    .isIn(["income", "expense"])
+    .withMessage("Type must be income or expense"),
   body("category")
     .notEmpty()
     .isIn([
@@ -11,6 +14,8 @@ export const entryValidator = [
       "labor",
       "machinery",
       "transport",
+      "crops", // Added for Income
+      "beans", // Added for Income
       "other",
     ])
     .withMessage("Invalid category"),

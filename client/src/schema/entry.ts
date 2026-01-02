@@ -2,6 +2,7 @@ import * as z from "zod";
 
 export const entrySchema = z.object({
   date: z.date(),
+  type: z.string(),
   category: z.string().min(1, "Category is required."),
   quantity: z.string().optional(),
   unit: z.string().optional(),

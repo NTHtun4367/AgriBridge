@@ -1,16 +1,7 @@
-export type Category =
-  | "seeds"
-  | "fertilizer"
-  | "pesticide"
-  | "labor"
-  | "machinery"
-  | "transport"
-  | "other";
-
 export interface Entry {
   _id?: string;
   date: string | Date;
-  category: Category | string;
+  category: string;
   quantity?: string;
   unit?: string;
   value: string | number;
@@ -24,6 +15,3 @@ export interface ApiResponse {
   data?: Entry;
   error?: string;
 }
-
-// Unit Mapping Type
-export type UnitMapping = Record<Category, string[]>;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -51,13 +51,21 @@ const UNIT_OPTIONS: Record<string, string[]> = {
   other: ["none"],
 };
 
+const CROP_OPTIONS: Record<string, string[]> = {
+  crops: ["Bag", "Packet", "Kg", "Grams", "Viss"],
+  beans: ["Bag", "Packet", "Kg", "Grams", "Viss"],
+  other: ["none"],
+};
+
 const AddEntryDialog = () => {
   const [open, setOpen] = useState(false);
+  const [type, setType] = useState<"expense" | "income">("expense");
   const [addEntry, { isLoading }] = useAddEntryMutation();
 
   const form = useForm<EntryFormValues>({
     resolver: zodResolver(entrySchema),
     defaultValues: {
+      type: "",
       category: "",
       quantity: "",
       unit: "",
@@ -70,13 +78,18 @@ const AddEntryDialog = () => {
 
   const selectedCategory = form.watch("category");
   const availableUnits = useMemo(() => {
-    return selectedCategory ? UNIT_OPTIONS[selectedCategory] || [] : [];
+    return selectedCategory
+      ? (type === "expense"
+          ? UNIT_OPTIONS[selectedCategory]
+          : CROP_OPTIONS[selectedCategory]) || []
+      : [];
   }, [selectedCategory]);
 
   const onSubmit = async (data: EntryFormValues) => {
     try {
       const formData = new FormData();
       formData.append("date", data.date.toISOString());
+      formData.append("type", type);
       formData.append("category", data.category);
       formData.append("quantity", data.quantity || "");
       formData.append("unit", data.unit || "");
@@ -84,6 +97,8 @@ const AddEntryDialog = () => {
       formData.append("notes", data.notes || "");
       if (data.billImage) formData.append("billImage", data.billImage);
 
+      console.log(formData);
+      
       await addEntry(formData).unwrap();
       toast.success("Entry added successful!");
       form.reset();
@@ -93,6 +108,10 @@ const AddEntryDialog = () => {
       toast.error("Error saving record.");
     }
   };
+
+  useEffect(() => {
+    form.reset();
+  }, [type]);
 
   return (
     <div className="flex justify-center">
@@ -109,6 +128,34 @@ const AddEntryDialog = () => {
               <Landmark className="h-5 w-5 text-primary" /> Add Expenditure
             </DialogTitle>
           </DialogHeader>
+          {/* The Outer Track (Container) */}
+          <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200">
+            {/* Expense Option */}
+            <div
+              onClick={() => setType("expense")}
+              className={cn(
+                "flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg cursor-pointer transition-all duration-200 font-semibold text-sm",
+                type === "expense"
+                  ? "bg-white text-red-500 shadow-sm" // Active state
+                  : "text-slate-500 hover:text-slate-700" // Inactive state
+              )}
+            >
+              Expense
+            </div>
+
+            {/* Income Option */}
+            <div
+              onClick={() => setType("income")}
+              className={cn(
+                "flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg cursor-pointer transition-all duration-200 font-semibold text-sm",
+                type === "income"
+                  ? "bg-white text-primary shadow-sm" // Active state
+                  : "text-slate-500 hover:text-slate-700" // Inactive state
+              )}
+            >
+              Income
+            </div>
+          </div>
 
           <Form {...form}>
             <form
@@ -173,7 +220,9 @@ const AddEntryDialog = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.keys(UNIT_OPTIONS).map((cat) => (
+                          {Object.keys(
+                            type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS
+                          ).map((cat) => (
                             <SelectItem key={cat} value={cat}>
                               {cat.toUpperCase()}
                             </SelectItem>

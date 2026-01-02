@@ -2,8 +2,8 @@ import { uploadSingleImage } from "../../../shared/utils/cloudinary";
 import { Entry } from "../models/entry";
 
 export class EntryService {
-  async createEntry(body: any, file?: Express.Multer.File) {
-    const { date, category, quantity, unit, value, notes } = body;
+  async createEntry(userId: string, body: any, file?: Express.Multer.File) {
+    const { date, type, category, quantity, unit, value, notes } = body;
 
     let uploadedBill = undefined;
 
@@ -15,7 +15,9 @@ export class EntryService {
     }
 
     const entryData = {
+      userId,
       date: new Date(date),
+      type,
       category,
       quantity: quantity ? Number(quantity) : undefined,
       unit,
@@ -26,7 +28,6 @@ export class EntryService {
     };
 
     const newEntry = await Entry.create(entryData);
-
     return newEntry;
   }
 }
