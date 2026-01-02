@@ -33,7 +33,7 @@ function SideBar({ pages }: SideBarProps) {
   return (
     <nav className="flex flex-col h-screen mx-4">
       {/* Logo */}
-      <h1 className="text-3xl text-primary font-extrabold italic pl-4 pb-4">
+      <h1 className="text-3xl text-primary font-extrabold italic pl-4 pb-4 mt-6">
         <Link to="/">AgriBridge</Link>
       </h1>
 

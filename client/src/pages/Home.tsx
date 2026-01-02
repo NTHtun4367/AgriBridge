@@ -21,7 +21,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router"
+import { useNavigate } from "react-router";
 
 const HomePage = () => {
   const navigate = useNavigate();

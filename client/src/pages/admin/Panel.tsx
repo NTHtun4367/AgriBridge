@@ -66,7 +66,7 @@ function Panel() {
   return (
     <>
       <section className="grid grid-cols-12">
-        <div className="col-span-2 mt-6">
+        <div className="col-span-2 border-r-2 border-r-primary/35">
           <SideBar pages={pages} />
         </div>
         <div className="col-span-10">

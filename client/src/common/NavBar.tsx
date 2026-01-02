@@ -10,7 +10,7 @@ function NavBar() {
   useNotifications();
 
   return (
-    <nav className="w-full flex items-center justify-between px-8 py-3 shadow">
+    <nav className="w-full flex items-center justify-between px-8 py-3 shadow border-b-2 border-b-primary/35">
       <h1 className="text-3xl text-primary font-extrabold italic">
         {/* <Link to={"/"}>AgriBridge</Link> */}
       </h1>

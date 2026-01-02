@@ -229,11 +229,12 @@ const MarketPriceUpdate: React.FC = () => {
                 <div
                   key={crop._id}
                   onClick={() => toggleCrop(crop._id)}
-                  className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedIds.includes(crop._id)
-                      ? "bg-primary/5 border-primary shadow-sm"
-                      : "hover:bg-primary/15 border-transparent bg-slate-50/30"
-                  }`}
+                  // className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  //   selectedIds.includes(crop._id)
+                  //     ? "bg-primary/5 border-primary shadow-sm"
+                  //     : "hover:bg-primary/15 border-transparent bg-slate-50/30"
+                  // }`}
+                  className="flex items-center space-x-3 rounded-xl p-4 cursor-pointer border border-primary hover:bg-primary/10"
                 >
                   <Checkbox
                     id={`crop-${crop._id}`}

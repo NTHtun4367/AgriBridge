@@ -3,10 +3,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ENV } from "./shared/utils/env";
 import { connectDB } from "./shared/db/dbConnect";
-import farmerRoutes from "./modules/auth/routes/farmer";
-import merchantRoutes from "./modules/auth/routes/merchant";
+import farmerAuthRoutes from "./modules/auth/routes/farmer";
+import merchantAuthRoutes from "./modules/auth/routes/merchant";
 import adminRoutes from "./modules/admin/routes/admin";
 import marketRoutes from "./modules/market/routes/market";
+import farmerRoutes from "./modules/farmer/routes/entry";
 import notificationRoutes from "./modules/notification/routes/notification";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";
@@ -45,10 +46,11 @@ app.use(cookieParser());
 // });
 
 // Routes
-app.use("/api/v1", farmerRoutes);
-app.use("/api/v1", merchantRoutes);
+app.use("/api/v1", farmerAuthRoutes);
+app.use("/api/v1", merchantAuthRoutes);
 app.use("/api/v1", adminRoutes);
 app.use("/api/v1/markets", marketRoutes);
+app.use("/api/v1/farmers", farmerRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 
 // Error handler

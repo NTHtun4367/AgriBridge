@@ -48,10 +48,9 @@ export const useNotifications = () => {
               {data.message}
             </p>
             <div className="flex w-full gap-3 mt-2">
-              {/* Green primary button taking most of the space */}
               <Button
                 onClick={() => {
-                  navigate("/market-prices");
+                  navigate("/farmer/markets");
                   toast.dismiss(t);
                 }}
                 className="flex-2"
@@ -60,7 +59,6 @@ export const useNotifications = () => {
                 View Prices
               </Button>
 
-              {/* Dismiss button taking the remaining space */}
               <Button
                 onClick={() => toast.dismiss(t)}
                 variant={"outline"}
