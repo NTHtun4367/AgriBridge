@@ -1,5 +1,6 @@
 import type { Entry } from "@/types/entry";
 import { apiSlice } from "./api";
+import type { MerchantInfo } from "@/types/merchant";
 
 export interface IFinanceStats {
   totalIncome: number;
@@ -29,6 +30,16 @@ export const farmerApi = apiSlice.injectEndpoints({
       query: (id) => `/farmers/entries/${id}`,
       providesTags: ["Entries"],
     }),
+    getMerchants: builder.query<any[], any>({
+      query: (params) => ({
+        url: "/farmers/merchants",
+        params: params, // contains division, district, etc.
+      }),
+    }),
+    getMerchantInfo: builder.query<MerchantInfo, string>({
+      query: (merchantId) => `/farmers/${merchantId}`,
+      providesTags: ["Merchant"],
+    }),
   }),
 });
 
@@ -37,4 +48,6 @@ export const {
   useAddEntryMutation,
   useGetAllEntriesQuery,
   useGetEntryByIdQuery,
+  useGetMerchantsQuery,
+  useGetMerchantInfoQuery,
 } = farmerApi;

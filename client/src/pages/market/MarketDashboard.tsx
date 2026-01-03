@@ -59,7 +59,7 @@ function MarketDashboard() {
                     <Badge variant={"outline"}>{market.unit}</Badge>
                   </TableCell>
                   <TableCell className="text-center font-medium">
-                    {market.price} MMK
+                    {market.currentPrice} MMK
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge

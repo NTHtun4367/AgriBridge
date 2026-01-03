@@ -71,5 +71,8 @@ userSchema.methods.matchPassword = function (enteredPassword: string) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-// Export the model
+// This optimizes queries that filter by role, status, and verification at once
+userSchema.index({ role: 1, verificationStatus: 1, status: 1 });
+userSchema.index({ division: 1, district: 1, township: 1 });
+
 export const User = model<IUser>("User", userSchema);

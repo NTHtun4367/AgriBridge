@@ -15,21 +15,11 @@ const pages: Page[] = [
     path: "/merchant/market-prices",
     icon: <CircleDollarSign className="w-5 h-5" />,
   },
-  //   {
-  //     name: "Merchants",
-  //     path: "/farmer/merchants",
-  //     icon: <Building2 className="w-5 h-5" />,
-  //   },
-  //   {
-  //     name: "Profit Calculator",
-  //     path: "/farmer/profit-calculator",
-  //     icon: <Calculator className="w-5 h-5" />,
-  //   },
-  //   {
-  //     name: "History",
-  //     path: "/farmer/history",
-  //     icon: <History className="w-5 h-5" />,
-  //   },
+  {
+    name: "Market Management",
+    path: "/merchant/manage-market",
+    icon: <CircleDollarSign className="w-5 h-5" />,
+  },
   {
     name: "Settings",
     path: "/merchant/settings",
@@ -41,7 +31,7 @@ function MerchantPanel() {
   return (
     <>
       <section className="grid grid-cols-12">
-        <div className="col-span-2 mt-6">
+        <div className="col-span-2 border-r-2 border-r-primary/35">
           <SideBar pages={pages} />
         </div>
         <div className="col-span-10">

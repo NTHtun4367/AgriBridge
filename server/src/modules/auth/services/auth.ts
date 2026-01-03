@@ -11,6 +11,19 @@ export class AuthService {
     return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
   }
 
+  async getMerchants(filter: any) {
+    return await User.find(filter)
+      .populate({
+        path: "merchantId",
+        // Hide the NRC fields inside the populated merchant object
+        select:
+          "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
+      })
+      // This select only hides fields directly on the User (like password)
+      .select("-password")
+      .sort({ createdAt: -1 });
+  }
+
   async findUserAndUpdate(userId: string, updateData: object) {
     const user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,

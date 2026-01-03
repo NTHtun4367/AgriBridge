@@ -27,7 +27,7 @@ router.get(
   // allowRoles("farmer", "merchant", "admin"),
   getMarketPrices
 );
-router.get("/crops", protect, allowRoles("admin"), getAllCrops);
+router.get("/crops", protect, allowRoles("admin", "merchant"), getAllCrops);
 router.get("/", protect, allowRoles("admin"), getAllMarkets);
 router.get("/analytics/history", getCropPriceHistory);
 
