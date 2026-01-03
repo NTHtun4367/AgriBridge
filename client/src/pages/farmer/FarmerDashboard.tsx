@@ -1,20 +1,19 @@
 import StatusCard from "@/common/StatusCard";
+import ActivityTitle from "@/components/farmer/ActivityTitle";
 import AddEntryDialog from "@/components/farmer/AddEntryDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { useGetFinanceStatsQuery } from "@/store/slices/farmerApi";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  DollarSign,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+  useGetAllEntriesQuery,
+  useGetFinanceStatsQuery,
+} from "@/store/slices/farmerApi";
+import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router";
 
 function FarmerDashboard() {
   const navigate = useNavigate();
   const { data: finance } = useGetFinanceStatsQuery();
+  const { data: entries } = useGetAllEntriesQuery();
 
   return (
     <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 animate-in slide-in-from-bottom-4 duration-500">
@@ -49,37 +48,28 @@ function FarmerDashboard() {
         </CardTitle>
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <ActivityTile
-              title="Fertilizer Purchase"
-              cat="Expenses"
-              amount="85,000"
-              date="2h ago"
-              type="expense"
-            />
-            <ActivityTile
-              title="Paddy Wholesale"
-              cat="Income"
-              amount="420,000"
-              date="5h ago"
-              type="income"
-            />
-            <ActivityTile
-              title="Worker Wages"
-              cat="Labor"
-              amount="30,000"
-              date="Yesterday"
-              type="expense"
-            />
-            <ActivityTile
-              title="Equipment Rental"
-              cat="Logistics"
-              amount="15,000"
-              date="Yesterday"
-              type="expense"
-            />
+            {entries && entries.length === 0 ? (
+              <div>No recent entries.</div>
+            ) : (
+              entries?.map((en) => (
+                <ActivityTitle
+                  key={en._id}
+                  id={en._id}
+                  title={en.category}
+                  cat={en.type}
+                  amount={en.value}
+                  type={en.type}
+                  date={en.createdAt}
+                />
+              ))
+            )}
           </div>
           <div className="flex items-center justify-end">
-            <Button variant={"outline"} className="mt-2">
+            <Button
+              variant={"outline"}
+              className="mt-2"
+              onClick={() => navigate("/farmer/records")}
+            >
               See All
             </Button>
           </div>
@@ -107,41 +97,3 @@ function FarmerDashboard() {
 }
 
 export default FarmerDashboard;
-
-function ActivityTile({ title, cat, amount, date, type }: any) {
-  return (
-    <div className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-2xl hover:border-primar transition-colors cursor-pointer group">
-      <div className="flex items-center gap-4">
-        <div
-          className={`p-3 rounded-xl ${
-            type === "income"
-              ? "bg-emerald-50 text-emerald-600"
-              : "bg-red-100 text-destructive"
-          }`}
-        >
-          {type === "income" ? (
-            <ArrowUpRight size={20} />
-          ) : (
-            <ArrowDownRight size={20} />
-          )}
-        </div>
-        <div>
-          <p className="font-bold text-sm">{title}</p>
-          <p className="text-[10px] font-bold text-slate-400 uppercase">
-            {cat} • {date}
-          </p>
-        </div>
-      </div>
-      <div className="text-right">
-        <p
-          className={`font-black ${
-            type === "income" ? "text-primary" : "text-destructive/70"
-          }`}
-        >
-          {type === "income" ? "+" : "-"}
-          {amount} MMK
-        </p>
-      </div>
-    </div>
-  );
-}

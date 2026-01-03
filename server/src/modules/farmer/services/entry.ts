@@ -30,6 +30,22 @@ export class EntryService {
     const newEntry = await Entry.create(entryData);
     return newEntry;
   }
+
+  async getAllEntries(userId: string) {
+    // Use .find() because one user has many entries.
+    // Adding .sort({ date: -1 }) ensures newest items are at the top.
+    const entries = await Entry.find({ userId }).sort({ date: -1 });
+    return entries;
+  }
+
+  async getEntryById(id: string, userId: string) {
+    const entry = await Entry.findOne({ _id: id, userId });
+
+    if (!entry) {
+      throw new Error("Entry not found.");
+    }
+    return entry;
+  }
 }
 
 export const entryService = new EntryService();

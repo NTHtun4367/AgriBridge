@@ -16,9 +16,12 @@ function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
         <div>
           <p className="text-sm font-medium mb-6">{title}</p>
           <h3
-            className={`text-2xl font-bold ${value < 0 && "text-destructive"}`}
+            className={`text-2xl font-bold italic ${value < 0 && "text-destructive"}`}
           >
-            {value} MMK
+            {value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+            MMK
           </h3>
         </div>
         <div className="p-2 bg-white/50 rounded-lg">{icon} </div>

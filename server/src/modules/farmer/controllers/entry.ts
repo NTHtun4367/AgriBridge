@@ -5,8 +5,6 @@ import { entryService } from "../services/entry";
 
 export const createEntry = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    console.log(req.body);
-
     const userId = req.user?._id;
     const newEntry = await entryService.createEntry(
       userId?.toString()!,
@@ -14,5 +12,22 @@ export const createEntry = asyncHandler(
       req.file
     );
     res.status(201).json(newEntry);
+  }
+);
+
+export const getAllEntries = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+    const entries = await entryService.getAllEntries(userId?.toString()!);
+    res.status(200).json(entries);
+  }
+);
+
+export const getEntryById = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+    const id = req.params.id;
+    const entry = await entryService.getEntryById(id, userId?.toString()!);
+    res.status(200).json(entry);
   }
 );

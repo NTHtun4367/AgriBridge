@@ -42,7 +42,7 @@ const pages: Page[] = [
   },
   {
     name: "Records",
-    path: "/farmer/history",
+    path: "/farmer/records",
     icon: <History className="w-5 h-5" />,
   },
   {

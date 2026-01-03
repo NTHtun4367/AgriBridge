@@ -1,3 +1,4 @@
+import type { Entry } from "@/types/entry";
 import { apiSlice } from "./api";
 
 export interface IFinanceStats {
@@ -20,7 +21,20 @@ export const farmerApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["FinanceStats", "Entries"],
     }),
+    getAllEntries: builder.query<Entry[], void>({
+      query: () => "/farmers/entries",
+      providesTags: ["Entries"],
+    }),
+    getEntryById: builder.query<Entry, string>({
+      query: (id) => `/farmers/entries/${id}`,
+      providesTags: ["Entries"],
+    }),
   }),
 });
 
-export const { useGetFinanceStatsQuery, useAddEntryMutation } = farmerApi;
+export const {
+  useGetFinanceStatsQuery,
+  useAddEntryMutation,
+  useGetAllEntriesQuery,
+  useGetEntryByIdQuery,
+} = farmerApi;

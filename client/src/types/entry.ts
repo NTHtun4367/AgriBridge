@@ -1,6 +1,7 @@
 export interface Entry {
   _id?: string;
   date: string | Date;
+  type: "expense" | "income";
   category: string;
   quantity?: string;
   unit?: string;
@@ -8,10 +9,4 @@ export interface Entry {
   notes?: string;
   billImageUrl?: string;
   createdAt?: string;
-}
-
-export interface ApiResponse {
-  message: string;
-  data?: Entry;
-  error?: string;
 }

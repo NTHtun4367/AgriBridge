@@ -29,6 +29,8 @@ import Notification from "./pages/farmer/Notification.tsx";
 import MarketDashboard from "./pages/market/MarketDashboard.tsx";
 import MarketPriceLanding from "./pages/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/FarmerLanding.tsx";
+import Records from "./pages/farmer/Records.tsx";
+import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -78,6 +80,14 @@ const router = createBrowserRouter([
           {
             path: "/farmer/add-entry",
             element: <AddFarmEntry />,
+          },
+          {
+            path: "/farmer/records",
+            element: <Records />,
+          },
+          {
+            path: "/farmer/records/:id",
+            element: <EntryDetailPage />,
           },
           {
             path: "/farmer/notifications",

@@ -17,6 +17,7 @@ const entrySchema = new Schema<IEntry>(
     userId: {
       type: Schema.Types.ObjectId,
       required: true,
+      index: true,
     },
     type: {
       type: String,
@@ -48,5 +49,8 @@ const entrySchema = new Schema<IEntry>(
   },
   { timestamps: true }
 );
+
+// Create a compound index for faster reports
+entrySchema.index({ userId: 1, type: 1, date: -1 });
 
 export const Entry = model<IEntry>("Entry", entrySchema);
