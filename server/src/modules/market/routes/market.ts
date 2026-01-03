@@ -4,6 +4,7 @@ import { allowRoles } from "../../../shared/middleware/role";
 import {
   getAllCrops,
   getAllMarkets,
+  getCropPriceHistory,
   getLatestPrices,
   getMarketPrices,
   updateMarketPrices,
@@ -28,5 +29,6 @@ router.get(
 );
 router.get("/crops", protect, allowRoles("admin"), getAllCrops);
 router.get("/", protect, allowRoles("admin"), getAllMarkets);
+router.get("/analytics/history", getCropPriceHistory);
 
 export default router;

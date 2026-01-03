@@ -101,7 +101,7 @@ function EntryDetailPage() {
                       )}
                       <span
                         className={`text-6xl font-black tabular-nums ${
-                          isExpense ? "text-slate-900" : "text-primary"
+                          isExpense ? "text-destructive" : "text-primary"
                         }`}
                       >
                         {entry.value.toLocaleString(undefined, {

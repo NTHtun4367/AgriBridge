@@ -64,22 +64,29 @@ export const getAllMarkets = asyncHandler(
   }
 );
 
-export const getMarketPrices = async (req: Request, res: Response) => {
-  try {
+export const getMarketPrices = asyncHandler(
+  async (req: Request, res: Response) => {
     const data = await marketService.getLatestMarketAnalytics();
 
     // Optional: Add logic here if you strictly want to filter out data
     // that wasn't updated "today".
     // However, usually, it's better to return the "last known price"
     // and let the frontend decide if it's stale (e.g., check `updatedAt`).
-
     res.status(200).json({
       success: true,
       count: data.length,
       data,
     });
-  } catch (error) {
-    console.error("Error fetching market prices:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
   }
-};
+);
+
+export const getCropPriceHistory = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { cropId, marketId } = req.query;
+    const prices = await marketService.getCropPriceHistory(
+      cropId as string,
+      marketId as string
+    );
+    res.status(200).json(prices);
+  }
+);

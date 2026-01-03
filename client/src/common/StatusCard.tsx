@@ -18,7 +18,7 @@ function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
           <h3
             className={`text-2xl font-bold italic ${value < 0 && "text-destructive"}`}
           >
-            {value.toLocaleString(undefined, {
+            {value?.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
             MMK

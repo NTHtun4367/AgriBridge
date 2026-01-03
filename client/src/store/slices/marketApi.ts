@@ -9,6 +9,12 @@ export const marketApi = apiSlice.injectEndpoints({
     getAllMarkets: builder.query<Market[], undefined>({
       query: () => "/markets",
     }),
+    getLatestPrices: builder.query<MarketPriceResponse, void>({
+      query: () => "/markets/latest",
+      providesTags: ["MarketPrice"],
+      // Optional: Polling to keep data fresh every 60 seconds
+      // pollingInterval: 60000,
+    }),
     updateMarketPrices: builder.mutation({
       query: (body) => ({
         url: "/markets/update",
@@ -17,11 +23,10 @@ export const marketApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["MarketPrice"],
     }),
-    getLatestPrices: builder.query<MarketPriceResponse, void>({
-      query: () => "/markets/latest",
+    getCropPriceHistory: builder.query({
+      query: ({ cropId, marketId }) =>
+        `/markets/analytics/history?cropId=${cropId}&marketId=${marketId}`,
       providesTags: ["MarketPrice"],
-      // Optional: Polling to keep data fresh every 60 seconds
-      // pollingInterval: 60000,
     }),
   }),
 });
@@ -31,4 +36,5 @@ export const {
   useGetAllMarketsQuery,
   useUpdateMarketPricesMutation,
   useGetLatestPricesQuery,
+  useGetCropPriceHistoryQuery,
 } = marketApi;

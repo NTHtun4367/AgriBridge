@@ -14,9 +14,11 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
+import { useNavigate } from "react-router";
 
 function MarketPriceLanding() {
   const { data: response } = useGetLatestPricesQuery();
+  const navigate = useNavigate();
 
   const marketPricesData = response?.data;
 
@@ -62,7 +64,10 @@ function MarketPriceLanding() {
                   <TableHead className="text-center font-bold py-4">
                     Unit
                   </TableHead>
-                  <TableHead className="w-[100px] text-center font-bold py-4">
+                  <TableHead className="text-center font-bold py-4">
+                    Previous Price
+                  </TableHead>
+                  <TableHead className="text-center font-bold py-4">
                     Current Price
                   </TableHead>
                   <TableHead className="text-right font-bold py-4">
@@ -72,7 +77,14 @@ function MarketPriceLanding() {
               </TableHeader>
               <TableBody>
                 {marketPricesData?.map((market) => (
-                  <TableRow key={market.cropId}>
+                  <TableRow
+                    key={market.cropId}
+                    onClick={() =>
+                      navigate(
+                        `/crop-price-history?cropId=${market.cropId}&marketId=${market.marketId}`
+                      )
+                    }
+                  >
                     <TableCell className="font-medium">
                       {market.cropName}
                     </TableCell>
@@ -82,11 +94,23 @@ function MarketPriceLanding() {
                     <TableCell className="text-center">
                       <Badge variant={"outline"}>{market.unit}</Badge>
                     </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {market.price} MMK
+                    <TableCell className="text-center font-bold italic">
+                      {market.previousPrice} MMK
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
+                    <TableCell className="text-center font-bold">
+                      {market.currentPrice} MMK
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-bold italic ${
+                        market.priceChange < 0
+                          ? "text-destructive"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {/* <TableCell
+                      className="text-right"
+                    > */}
+                      {/* <Badge
                         variant={
                           market.priceChangePercent.toString()[0] === "-"
                             ? "destructive"
@@ -94,7 +118,8 @@ function MarketPriceLanding() {
                         }
                       >
                         {`${market.priceChangePercent.toFixed(2)}%`}
-                      </Badge>
+                      </Badge> */}
+                      {market.priceChange} MMK
                     </TableCell>
                   </TableRow>
                 ))}

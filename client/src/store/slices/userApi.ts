@@ -24,26 +24,6 @@ interface RegisterFarmer extends LoginRequest {
   township: string;
 }
 
-// interface RegisterMerchant extends RegisterFarmer {
-//   businessName: string;
-//   phone: string;
-
-//   nrcRegion: string;
-//   nrcTownship: string;
-//   nrcType: string;
-//   nrcNumber: string;
-
-//   nrcFrontImage: {
-//     url: string;
-//     public_alt?: string;
-//   };
-
-//   nrcBackImage: {
-//     url: string;
-//     public_alt?: string;
-//   };
-// }
-
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({

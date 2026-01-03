@@ -1,7 +1,7 @@
 import { MarketPrice } from "../models/marketPrice";
 import { Market } from "../models/market";
 import { Crop } from "../models/crop";
-import { PipelineStage } from "mongoose"; // Added this import
+import { PipelineStage, Types } from "mongoose"; // Added this import
 
 export class MarketService {
   async updatePrices(marketId: string, updates: any[], userId: string) {
@@ -44,14 +44,16 @@ export class MarketService {
    */
   async getLatestMarketAnalytics() {
     const pipeline: PipelineStage[] = [
-      // 1. Sort by newest first
-      { $sort: { createdAt: -1 } },
+      // STAGE 1: Sort documents so latest ones are on top
+      // This utilizes your compound index for maximum speed
+      { $sort: { marketId: 1, cropId: 1, createdAt: -1 } },
 
-      // 2. Group by Market and Crop
+      // STAGE 2: Group by Market and Crop
+      // We push records into an array; because of the sort, index 0 is latest
       {
         $group: {
           _id: { marketId: "$marketId", cropId: "$cropId" },
-          recentRecords: {
+          records: {
             $push: {
               price: "$price",
               unit: "$unit",
@@ -61,38 +63,39 @@ export class MarketService {
         },
       },
 
-      // 3. Keep only the first 2 items (Latest and Previous)
+      // STAGE 3: Extract specific records from the array
       {
         $project: {
-          latest: { $arrayElemAt: ["$recentRecords", 0] },
-          previous: { $arrayElemAt: ["$recentRecords", 1] },
+          latest: { $arrayElemAt: ["$records", 0] },
+          previous: { $arrayElemAt: ["$records", 1] },
         },
       },
 
-      // 4. Populate Market Details
+      // STAGE 4: Join with Markets collection
       {
         $lookup: {
-          from: "markets", // MongoDB collection name
+          from: "markets",
           localField: "_id.marketId",
           foreignField: "_id",
           as: "marketInfo",
         },
       },
 
-      // 5. Populate Crop Details
+      // STAGE 5: Join with Crops collection
       {
         $lookup: {
-          from: "crops", // MongoDB collection name
+          from: "crops",
           localField: "_id.cropId",
           foreignField: "_id",
           as: "cropInfo",
         },
       },
 
+      // Flatten the joined arrays
       { $unwind: "$marketInfo" },
       { $unwind: "$cropInfo" },
 
-      // 6. Calculate Change and Final Format
+      // STAGE 6: Final Formatting and Calculations
       {
         $project: {
           _id: 0,
@@ -101,29 +104,38 @@ export class MarketService {
           cropId: "$_id.cropId",
           cropName: "$cropInfo.name",
           category: "$cropInfo.category",
-          price: "$latest.price",
+          currentPrice: "$latest.price",
           unit: "$latest.unit",
-          updatedAt: "$latest.createdAt",
-          previousPrice: "$previous.price",
+          lastUpdated: "$latest.createdAt",
+          previousPrice: { $ifNull: ["$previous.price", null] },
+
+          // Calculate raw price difference
           priceChange: {
             $cond: {
-              if: { $ifNull: ["$previous.price", false] },
+              if: { $gt: ["$previous.price", null] }, // Check if previous price exists
               then: { $subtract: ["$latest.price", "$previous.price"] },
               else: 0,
             },
           },
+
+          // Calculate percentage change (with rounding)
           priceChangePercent: {
             $cond: {
-              if: { $ifNull: ["$previous.price", false] },
+              if: { $gt: ["$previous.price", 0] }, // Avoid division by zero
               then: {
-                $multiply: [
+                $round: [
                   {
-                    $divide: [
-                      { $subtract: ["$latest.price", "$previous.price"] },
-                      "$previous.price",
+                    $multiply: [
+                      {
+                        $divide: [
+                          { $subtract: ["$latest.price", "$previous.price"] },
+                          "$previous.price",
+                        ],
+                      },
+                      100,
                     ],
                   },
-                  100,
+                  2, // Round to 2 decimal places
                 ],
               },
               else: 0,
@@ -131,9 +143,32 @@ export class MarketService {
           },
         },
       },
+
+      // Optional: Sort the final output by market name
+      { $sort: { marketName: 1, cropName: 1 } },
     ];
 
     return await MarketPrice.aggregate(pipeline);
+  }
+
+  async getCropPriceHistory(cropId: string, marketId: string) {
+    return await MarketPrice.aggregate([
+      {
+        $match: {
+          cropId: new Types.ObjectId(cropId),
+          marketId: new Types.ObjectId(marketId),
+        },
+      },
+      { $sort: { createdAt: 1 } }, // Sort oldest to newest for the chart
+      { $limit: 30 }, // Get last 30 days/entries
+      {
+        $project: {
+          _id: 0,
+          date: "$createdAt",
+          price: "$price",
+        },
+      },
+    ]);
   }
 }
 

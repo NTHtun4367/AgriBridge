@@ -25,7 +25,7 @@ export interface MarketPriceData {
   cropId: string;
   cropName: string;
   category?: string; // If you added category in aggregation
-  price: number;
+  currentPrice: number;
   unit: string;
   updatedAt: string;
   previousPrice?: number;

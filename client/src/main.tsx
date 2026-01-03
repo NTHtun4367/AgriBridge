@@ -31,6 +31,7 @@ import MarketPriceLanding from "./pages/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
 import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
+import CropPriceHistory from "./pages/CropPriceHistory.tsx";
 
 const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
       {
         path: "/farmers-landing",
         element: <FarmerLanding />,
+      },
+      {
+        path: "/crop-price-history",
+        element: <CropPriceHistory />,
       },
       {
         path: "/farmer",
