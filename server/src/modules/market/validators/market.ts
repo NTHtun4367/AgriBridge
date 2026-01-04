@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 
 export const validatePriceUpdate = [
-  body("marketId").isMongoId().withMessage("Invalid Market ID"),
+  body("marketId").isMongoId().withMessage("Invalid Market ID").optional(),
   body("updates")
     .isArray({ min: 1 })
     .withMessage("Updates must be a non-empty array"),

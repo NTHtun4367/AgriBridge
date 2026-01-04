@@ -1,26 +1,83 @@
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useGetLatestPricesQuery } from "@/store/slices/marketApi";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { useNavigate } from "react-router";
+import { useGetLatestPricesQuery } from "@/store/slices/marketApi";
+import { MarketPriceTable } from "@/components/market/MarketPriceTable";
 
 function MarketPriceLanding() {
   const { data: response } = useGetLatestPricesQuery();
   const navigate = useNavigate();
 
-  const marketPricesData = response?.data;
+  // --- Search, Filter & Sort States ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc" | null;
+  }>({
+    key: "cropName", // Default sort
+    direction: "asc",
+  });
+
+  const rawData = response?.data || [];
+
+  // Generate unique categories for the dropdown
+  const categoryOptions = useMemo(() => {
+    const unique = Array.from(
+      new Set(rawData.map((item: any) => item.category))
+    );
+    return ["all", ...unique];
+  }, [rawData]);
+
+  // Combined logic: Search -> Category Filter -> Sort
+  const processedData = useMemo(() => {
+    let filtered = [...rawData];
+
+    // 1. Search filter
+    if (searchTerm) {
+      filtered = filtered.filter((item) =>
+        item.cropName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // 2. Category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((item) => item.category === selectedCategory);
+    }
+
+    // 3. Sorting logic
+    if (sortConfig.key && sortConfig.direction) {
+      filtered.sort((a: any, b: any) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [rawData, searchTerm, selectedCategory, sortConfig]);
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
     <div>
@@ -36,95 +93,47 @@ function MarketPriceLanding() {
             for your convenience.
           </p>
         </div>
-        <div className="relative mt-16 w-xl mx-auto">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search crops..."
-            className="pl-9"
-            //   value={searchTerm}
-            //   onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            //     setSearchTerm(e.target.value)
-            //   }
-          />
+
+        {/* Combined Search and Select Filter */}
+        <div className="relative mt-16 max-w-3xl mx-auto px-6 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search crops..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full md:w-[220px]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat === "all" ? "All Categories" : cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </header>
-      <div className="max-w-6xl mx-auto mb-32 animate-in slide-in-from-bottom-15 duration-1000">
+
+      <div className="max-w-6xl mx-auto mb-32 animate-in slide-in-from-bottom-15 duration-1000 px-6">
         <Card>
-          <CardContent>
-            <Table>
-              <TableCaption>A list of all merket prices.</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[150px] font-bold py-4">
-                    Crop Name
-                  </TableHead>
-                  <TableHead className="text-center font-bold py-4">
-                    Category
-                  </TableHead>
-                  <TableHead className="text-center font-bold py-4">
-                    Unit
-                  </TableHead>
-                  <TableHead className="text-center font-bold py-4">
-                    Previous Price
-                  </TableHead>
-                  <TableHead className="text-center font-bold py-4">
-                    Current Price
-                  </TableHead>
-                  <TableHead className="text-right font-bold py-4">
-                    Changes
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {marketPricesData?.map((market) => (
-                  <TableRow
-                    key={market.cropId}
-                    onClick={() =>
-                      navigate(
-                        `/crop-price-history?cropId=${market.cropId}&marketId=${market.marketId}`
-                      )
-                    }
-                  >
-                    <TableCell className="font-medium">
-                      {market.cropName}
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {market.category}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={"outline"}>{market.unit}</Badge>
-                    </TableCell>
-                    <TableCell className="text-center font-bold italic">
-                      {market.previousPrice} MMK
-                    </TableCell>
-                    <TableCell className="text-center font-bold">
-                      {market.currentPrice} MMK
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-bold italic ${
-                        market.priceChange < 0
-                          ? "text-destructive"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {/* <TableCell
-                      className="text-right"
-                    > */}
-                      {/* <Badge
-                        variant={
-                          market.priceChangePercent.toString()[0] === "-"
-                            ? "destructive"
-                            : "default"
-                        }
-                      >
-                        {`${market.priceChangePercent.toFixed(2)}%`}
-                      </Badge> */}
-                      {market.priceChange} MMK
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <CardContent className="pt-6">
+            <MarketPriceTable
+              data={processedData}
+              onSort={handleSort}
+              sortConfig={sortConfig}
+              onRowClick={(cropId, marketId) =>
+                navigate(
+                  `/crop-price-history?cropId=${cropId}&marketId=${marketId}`
+                )
+              }
+            />
           </CardContent>
         </Card>
       </div>
