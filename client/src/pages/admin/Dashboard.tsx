@@ -1,8 +1,3 @@
-// <KpiCard title="Total Revenue" value="$45,231.89" icon={DollarSign} trend="+20.1%" description="from last month" />
-// <KpiCard title="Active Farmers" value="+2,350" icon={Sprout} trend="+180" description="new this month" />
-// <KpiCard title="Total Buyers" value="+12,234" icon={Users} trend="+19%" description="active buyers" />
-// <KpiCard title="Pending Disputes" value="7" icon={AlertTriangle} description="requires attention" />
-
 import StatusCard from "@/components/admin/StatusCard";
 import { AlertTriangle, Sprout, Users } from "lucide-react";
 

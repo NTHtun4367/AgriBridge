@@ -33,6 +33,7 @@ import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
 import CropPriceHistory from "./pages/CropPriceHistory.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
+import Announcement from "./pages/admin/Announcement.tsx";
 
 const router = createBrowserRouter([
   {
@@ -142,6 +143,10 @@ const router = createBrowserRouter([
           {
             path: "/admin/manage-market",
             element: <MarketManagement />,
+          },
+          {
+            path: "/admin/announcements",
+            element: <Announcement />,
           },
         ],
       },
