@@ -20,7 +20,6 @@ import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
 import AddFarmEntry from "./pages/farmer/AddFarmEntry.tsx";
 import MerchantsView from "./pages/farmer/MerchantView.tsx";
-import MarketPriceUpdate from "./pages/admin/MarketPriceUpdate.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
@@ -32,6 +31,8 @@ import FarmerLanding from "./pages/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
 import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
 import CropPriceHistory from "./pages/CropPriceHistory.tsx";
+import MarketManagement from "./pages/admin/MarketManagement.tsx";
+import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 
 const router = createBrowserRouter([
   {
@@ -110,7 +111,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/merchant/manage-market",
-            element: <MarketPriceUpdate />,
+            element: <MerchantMarketManagement />,
           },
         ],
       },
@@ -140,7 +141,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/admin/manage-market",
-            element: <MarketPriceUpdate />,
+            element: <MarketManagement />,
           },
         ],
       },
