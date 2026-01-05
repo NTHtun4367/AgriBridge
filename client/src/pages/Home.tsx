@@ -1,13 +1,12 @@
 import {
-  // Sprout,
   Store,
   TrendingUp,
   BarChart3,
   ArrowRight,
   Wallet,
   ShieldCheck,
-  LineChart,
   ChevronRight,
+  LineChart,
 } from "lucide-react";
 import {
   Card,
@@ -23,44 +22,62 @@ import Footer from "@/common/home/Footer";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 
+// --- IMAGE IMPORTS ---
+// Importing from the same directory as Home.tsx
+import heroBg from "./farm_grass_field_sunlight_mountains_trees_under_white_clouds_sky_4k_hd_nature.jpg";
+
 const HomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
       {/* --- NAVIGATION --- */}
       <Navigation />
 
       {/* --- HERO SECTION --- */}
-      <header className="relative overflow-hidden py-20 lg:py-32 animate-in slide-in-from-bottom-15 duration-1000">
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <Badge
-            variant="outline"
-            className="mb-4 px-4 py-2 border-primary bg-primary/15 text-primary"
-          >
-            Digitalizing the Agriculture Supply Chain
-          </Badge>
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
+      <header className="relative min-h-[90vh] flex items-center overflow-hidden py-20 lg:py-32">
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-fixed bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroBg})` }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
+          <div className="animate-in slide-in-from-top-85 duration-800">
+            <Badge
+              variant="outline"
+              className="mb-6 px-4 py-2 border-white/30 bg-white/10 text-white backdrop-blur-md"
+            >
+              Digitalizing the Agriculture Supply Chain
+            </Badge>
+          </div>
+
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-8xl text-white animate-in zoom-in slide-in-from-bottom-8 duration-1500 ease-out">
             Bridging the gap from <br />
-            <span className="text-primary">Farm to Market.</span>
+            <span className="text-primary-foreground drop-shadow-lg">
+              Farm to Market.
+            </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            A specialized digital ecosystem empowerering farmers with financial
+
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-8 text-slate-100 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+            A specialized digital ecosystem empowering farmers with financial
             clarity and connecting merchants directly to the source. Transparent
             pricing, better profits.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
+
+          <div className="flex flex-col sm:flex-row justify-center gap-6 mt-12">
             <Button
               size="lg"
-              className="rounded-full px-8 bg-primary hover:bg-primary/90 text-md h-12"
+              className="rounded-full px-10 bg-primary hover:bg-primary/90 text-md h-14 shadow-xl hover:scale-110 transition-transform animate-in slide-in-from-left-35 duration-1000"
               onClick={() => navigate("/farmers-landing")}
             >
-              I am Farmer <ArrowRight className="h-4 w-4" />
+              I am Farmer <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="rounded-full px-8 text-md h-12"
+              className="rounded-full px-10 text-md h-14 bg-white/10 text-white border-white/40 hover:bg-white/20 backdrop-blur-md hover:scale-110 transition-transform  animate-in slide-in-from-right-35 duration-1000"
               onClick={() => navigate("/merchants-landing")}
             >
               I am Merchant
@@ -213,7 +230,6 @@ const HomePage = () => {
         </section>
       </ScrollReveal>
 
-      {/* --- FOOTER --- */}
       <Footer />
     </div>
   );
