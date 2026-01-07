@@ -15,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
@@ -24,7 +23,7 @@ import { useNavigate } from "react-router";
 
 // --- IMAGE IMPORTS ---
 // Importing from the same directory as Home.tsx
-import heroBg from "./farm_grass_field_sunlight_mountains_trees_under_white_clouds_sky_4k_hd_nature.jpg";
+import heroBg from "../assets/farm.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -45,12 +44,9 @@ const HomePage = () => {
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
           <div className="animate-in slide-in-from-top-85 duration-800">
-            <Badge
-              variant="outline"
-              className="mb-6 px-4 py-2 border-white/30 bg-white/10 text-white backdrop-blur-md"
-            >
+            <p className="mb-6 px-4 py-2 text-white text-sm font-bold">
               Digitalizing the Agriculture Supply Chain
-            </Badge>
+            </p>
           </div>
 
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-8xl text-white animate-in zoom-in slide-in-from-bottom-8 duration-1500 ease-out">

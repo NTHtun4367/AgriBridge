@@ -1,6 +1,6 @@
 import { ModeToggle } from "@/components/ModeToggle";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 
 function Navigation() {
   return (
@@ -16,24 +16,36 @@ function Navigation() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <Link
+          <NavLink
             to={"/markets"}
-            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            className={({ isActive }) =>
+              isActive
+                ? "text-base font-bold text-primary"
+                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            }
           >
             Market Prices
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to={"/farmers-landing"}
-            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            className={({ isActive }) =>
+              isActive
+                ? "text-base font-bold text-primary"
+                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            }
           >
             Farmers
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to={"/merchants-landing"}
-            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            className={({ isActive }) =>
+              isActive
+                ? "text-base font-bold text-primary"
+                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+            }
           >
             Merchants
-          </Link>
+          </NavLink>
         </div>
 
         <div className="flex items-center gap-3">

@@ -22,11 +22,7 @@ router.post(
   validateRequest,
   updateMarketPrices
 );
-router.get(
-  "/latest",
-  // allowRoles("farmer", "merchant", "admin"),
-  getMarketPrices
-);
+router.get("/prices", getMarketPrices);
 router.get("/crops", protect, allowRoles("admin", "merchant"), getAllCrops);
 router.get("/", protect, allowRoles("admin"), getAllMarkets);
 router.get("/analytics/history", getCropPriceHistory);

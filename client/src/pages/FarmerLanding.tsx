@@ -33,13 +33,10 @@ const FarmerLanding = () => {
 
       {/* 1. Hero Section */}
       <section className=" py-20 lg:py-32 text-center animate-in slide-in-from-bottom-15 duration-1000">
-        <Badge
-          variant="outline"
-          className="mb-4 border-primary text-primary px-4 py-1 font-semibold"
-        >
+        <p className="mb-4 text-primary px-4 py-1 font-medium">
           Empowering Farmers
-        </Badge>
-        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
+        </p>
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
           Maximize your harvest <br />
           <span className="text-primary">with data-driven farming.</span>
         </h1>
@@ -48,10 +45,10 @@ const FarmerLanding = () => {
           business. Track finances, monitor national trends, and connect
           directly to the source.
         </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-6">
           <Button
             size="lg"
-            className="rounded-full px-8 bg-primary hover:bg-primary/90 text-md h-12"
+            className="rounded-full px-10 bg-primary hover:bg-primary/90 text-md h-14 shadow-xl hover:scale-110 transition-transform duration-500"
             onClick={() => navigate("/register")}
           >
             Create Account <ArrowRight className="h-4 w-4" />
@@ -59,7 +56,7 @@ const FarmerLanding = () => {
           <Button
             size="lg"
             variant="outline"
-            className="rounded-full px-8 text-md h-12"
+            className="rounded-full px-10 text-md h-14 hover:scale-110 transition-transform duration-500"
             onClick={() => navigate("/markets")}
           >
             View Market Prices
@@ -301,7 +298,7 @@ const FarmerLanding = () => {
             and secure their future.
           </p>
           <Button
-            className="bg-primary px-8 py-7 text-lg rounded-full"
+            className="bg-primary px-8 py-7 text-lg rounded-full hover:scale-110 transition-transform duration-500"
             onClick={() => navigate("/register")}
           >
             Register as a Farmer

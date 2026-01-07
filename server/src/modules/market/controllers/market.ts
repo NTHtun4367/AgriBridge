@@ -7,40 +7,43 @@ import { NotificationModule } from "../../notification";
 
 export const updateMarketPrices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { marketId, updates } = req.body;
+    const { marketId, updates } = req.body; // marketId is optional here
+    const userId = req.user!._id.toString();
 
-    // 1. Save the market prices
+    // 1. Save records via service
     const { savedRecords, marketInfo } = await marketService.updatePrices(
       marketId,
       updates,
-      req.user!._id.toString()
+      userId
     );
 
-    const message = `Market Update: Prices in ${marketInfo.name} have been updated!`;
-    const title = "New Price Update";
+    // 2. Notification logic: ONLY if marketId was provided (Official Update)
+    if (marketId && marketInfo) {
+      const message = `Market Update: Prices in ${marketInfo.name} have been updated!`;
+      const title = "New Price Update";
 
-    // 2. Persist Notification in DB for future reference/microservices
-    // For "all" users, we fetch all user IDs.
-    // Optimization: In a real microservice, this would be a background job.
-    const allUsers = await authService.getAllUsers();
-    const userIds = allUsers.map((u: any) => u._id.toString());
+      // Fetch users and send notifications
+      const allUsers = await authService.getAllUsers();
+      const userIds = allUsers.map((u: any) => u._id.toString());
+      await NotificationModule.send(title, message, userIds);
 
-    await NotificationModule.send(title, message, userIds);
-
-    // 3. Emit real-time notification
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("price_updated", {
-        marketName: marketInfo.name,
-        updateCount: updates.length,
-        timestamp: new Date(),
-        message: message,
-      });
+      // Emit real-time socket event
+      const io = req.app.get("io");
+      if (io) {
+        io.emit("price_updated", {
+          marketName: marketInfo.name,
+          updateCount: updates.length,
+          timestamp: new Date(),
+          message,
+        });
+      }
     }
 
+    // 3. Final Response
     res.status(201).json({
       success: true,
       count: savedRecords.length,
+      notified: !!marketId, // Helper flag for frontend if needed
     });
   }
 );
@@ -66,12 +69,13 @@ export const getAllMarkets = asyncHandler(
 
 export const getMarketPrices = asyncHandler(
   async (req: Request, res: Response) => {
-    const data = await marketService.getLatestMarketAnalytics();
+    const { userId, official } = req.query;
 
-    // Optional: Add logic here if you strictly want to filter out data
-    // that wasn't updated "today".
-    // However, usually, it's better to return the "last known price"
-    // and let the frontend decide if it's stale (e.g., check `updatedAt`).
+    const data = await marketService.getLatestMarketAnalytics({
+      userId: userId as string,
+      official: official === "true",
+    });
+
     res.status(200).json({
       success: true,
       count: data.length,

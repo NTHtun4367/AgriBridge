@@ -9,13 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetLatestPricesQuery } from "@/store/slices/marketApi";
+import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 
 function MarketDashboard() {
-  const { data: response } = useGetLatestPricesQuery();
+  const { data: response } = useGetMarketPricesQuery({ official: true });
 
   const marketPricesData = response?.data;
-  console.log(marketPricesData);
 
   return (
     <div className="bg-secondary w-full h-screen p-4">

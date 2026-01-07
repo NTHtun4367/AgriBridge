@@ -12,11 +12,13 @@ import {
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { useNavigate } from "react-router";
-import { useGetLatestPricesQuery } from "@/store/slices/marketApi";
+// import { useGetLatestPricesQuery } from "@/store/slices/marketApi";
 import { MarketPriceTable } from "@/components/market/MarketPriceTable";
+import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 
 function MarketPriceLanding() {
-  const { data: response } = useGetLatestPricesQuery();
+  const { data: response } = useGetMarketPricesQuery({ official: true });
+
   const navigate = useNavigate();
 
   // --- Search, Filter & Sort States ---
