@@ -32,7 +32,7 @@ export const adminApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Farmer", "Merchant"],
     }),
 
-    getMerchantInfo: builder.query<MerchantInfo, string>({
+    getMerchantInfoForAdmin: builder.query<MerchantInfo, string>({
       query: (merchantId) => `/users/${merchantId}`,
       providesTags: ["Merchant"],
     }),
@@ -44,5 +44,5 @@ export const {
   useChangeUserStatusMutation,
   useGetAllVerificationPendingUsersQuery,
   useUpdateUserVerificationStatusMutation,
-  useGetMerchantInfoQuery,
+  useGetMerchantInfoForAdminQuery,
 } = adminApi;

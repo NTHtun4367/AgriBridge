@@ -30,10 +30,12 @@ import MarketPriceLanding from "./pages/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
 import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
-import CropPriceHistory from "./pages/CropPriceHistory.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 import Announcement from "./pages/admin/Announcement.tsx";
+import MerchantProfile from "./pages/farmer/MerchantProfile.tsx";
+import CropPriceHistoryLanding from "./pages/CropPriceHistoryLanding.tsx";
+import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
 
 const router = createBrowserRouter([
   {
@@ -66,7 +68,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/crop-price-history",
-        element: <CropPriceHistory />,
+        element: <CropPriceHistoryLanding />,
       },
       {
         path: "/farmer",
@@ -85,6 +87,10 @@ const router = createBrowserRouter([
             element: <MerchantsView />,
           },
           {
+            path: "/farmer/merchants/:userId",
+            element: <MerchantProfile />,
+          },
+          {
             path: "/farmer/add-entry",
             element: <AddFarmEntry />,
           },
@@ -99,6 +105,10 @@ const router = createBrowserRouter([
           {
             path: "/farmer/notifications",
             element: <Notification />,
+          },
+          {
+            path: "/farmer/crop-price-history",
+            element: <CropPriceHistoryDashboard />,
           },
         ],
       },

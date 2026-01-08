@@ -3,8 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ENV } from "./shared/utils/env";
 import { connectDB } from "./shared/db/dbConnect";
-import farmerAuthRoutes from "./modules/auth/routes/farmer";
-import merchantAuthRoutes from "./modules/auth/routes/merchant";
+import authRoutes from "./modules/auth/routes/auth";
 import adminRoutes from "./modules/admin/routes/admin";
 import marketRoutes from "./modules/market/routes/market";
 import farmerRoutes from "./modules/farmer/routes/farmer";
@@ -46,9 +45,8 @@ app.use(cookieParser());
 // });
 
 // Routes
-app.use("/api/v1", farmerAuthRoutes);
-app.use("/api/v1", merchantAuthRoutes);
-app.use("/api/v1", adminRoutes);
+app.use("/api/v1/auth", authRoutes);
+// app.use("/api/v1", adminRoutes);
 app.use("/api/v1/markets", marketRoutes);
 app.use("/api/v1/farmers", farmerRoutes);
 app.use("/api/v1/notifications", notificationRoutes);

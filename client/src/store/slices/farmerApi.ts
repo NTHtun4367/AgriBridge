@@ -1,6 +1,5 @@
 import type { Entry } from "@/types/entry";
 import { apiSlice } from "./api";
-import type { MerchantInfo } from "@/types/merchant";
 
 export interface IFinanceStats {
   totalIncome: number;
@@ -36,8 +35,9 @@ export const farmerApi = apiSlice.injectEndpoints({
         params: params, // contains division, district, etc.
       }),
     }),
-    getMerchantInfo: builder.query<MerchantInfo, string>({
-      query: (merchantId) => `/farmers/${merchantId}`,
+    getMerchantInfo: builder.query<any, string>({
+      // Ensure this matches the app.use("/api/v1/farmers") + router path
+      query: (userId) => `/farmers/merchants/${userId}`,
       providesTags: ["Merchant"],
     }),
   }),

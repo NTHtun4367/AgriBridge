@@ -28,8 +28,7 @@ export const getVerifiedMerchants = asyncHandler(
 
 export const getMerchantInfoById = asyncHandler(
   async (req: Request, res: Response) => {
-    const merchant = await authService.getMerchantById(req.params.merchantId);
-    console.log(merchant);
+    const merchant = await authService.getMerchantById(req.params.userId);
     res.status(200).json(merchant);
   }
 );

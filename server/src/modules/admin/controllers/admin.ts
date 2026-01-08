@@ -38,7 +38,7 @@ export const updateUserVerificationStatus = asyncHandler(
 
 export const getMerchantInfoWithMerchantId = asyncHandler(
   async (req: Request, res: Response) => {
-    const merchant = await authService.getMerchantById(req.params.merchantId);
+    const merchant = await authService.getMerchantInfo(req.params.merchantId);
     res.status(200).json(merchant);
   }
 );

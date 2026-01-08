@@ -28,7 +28,7 @@ export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (data) => ({
-        url: "/login",
+        url: "/auth/login",
         method: "POST",
         body: data,
       }),
@@ -37,7 +37,7 @@ export const authApi = apiSlice.injectEndpoints({
 
     registerFarmer: builder.mutation({
       query: (data: RegisterFarmer) => ({
-        url: "/register/farmer",
+        url: "/auth/register/farmer",
         method: "POST",
         body: data,
         headers: {
@@ -49,7 +49,7 @@ export const authApi = apiSlice.injectEndpoints({
 
     registerMerchant: builder.mutation({
       query: (data: FormData) => ({
-        url: "/register/merchant",
+        url: "/auth/register/merchant",
         method: "POST",
         body: data,
       }),
@@ -58,7 +58,7 @@ export const authApi = apiSlice.injectEndpoints({
 
     currentUser: builder.query<User, void>({
       query: () => ({
-        url: "/me",
+        url: "/auth/me",
         method: "GET",
       }),
       providesTags: ["User"],

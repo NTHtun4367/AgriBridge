@@ -30,6 +30,6 @@ router.get("/entries/:id", getEntryById);
 router.get("/merchants", getVerifiedMerchants);
 
 // KEEP THIS AS THE LAST ROUTE
-router.get("/:merchantId", getMerchantInfoById);
+router.get("/merchants/:userId", getMerchantInfoById);
 
 export default router;

@@ -1,5 +1,5 @@
 import {
-  useGetMerchantInfoQuery,
+  useGetMerchantInfoForAdminQuery,
   useUpdateUserVerificationStatusMutation,
 } from "@/store/slices/adminApi";
 import type { User } from "@/types/user";
@@ -32,7 +32,7 @@ interface VerificationDetailsProps {
 function VerificationDetails({ user }: VerificationDetailsProps) {
   const [updateUserVerificationStatus, { isLoading: vLoading }] =
     useUpdateUserVerificationStatusMutation();
-  const { data: merchant, isLoading } = useGetMerchantInfoQuery(
+  const { data: merchant, isLoading } = useGetMerchantInfoForAdminQuery(
     user.merchantId!
   );
 

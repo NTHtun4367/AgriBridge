@@ -9,7 +9,6 @@ import {
   updateUserVerificationStatus,
 } from "../controllers/admin";
 import { userIdValidator, userStatusValidator } from "../validators/admin";
-import { getUserInfo } from "../../auth/controllers/common";
 
 const router = Router();
 
@@ -41,12 +40,6 @@ router.get(
   protect,
   allowRoles("admin"),
   getMerchantInfoWithMerchantId
-);
-router.get(
-  "/me",
-  protect,
-  allowRoles("farmer", "merchant", "admin"),
-  getUserInfo
-);
+)
 
 export default router;

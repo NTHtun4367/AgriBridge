@@ -40,10 +40,25 @@ export class AuthService {
     return user;
   }
 
-  async getMerchantById(merchantId: string) {
+  // for admin
+  async getMerchantInfo(merchantId: string) {
     const merchant = await Merchant.findById(merchantId);
     if (!merchant) throw new Error("Merchant info not found.");
     return merchant;
+  }
+
+  // for farmer
+  async getMerchantById(userId: string) {
+    return await User.findById(userId)
+      .populate({
+        path: "merchantId",
+        // Hide the NRC fields inside the populated merchant object
+        select:
+          "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
+      })
+      // This select only hides fields directly on the User (like password)
+      .select("-password")
+      .sort({ createdAt: -1 });
   }
 
   // Logic for Auth Controllers to use
