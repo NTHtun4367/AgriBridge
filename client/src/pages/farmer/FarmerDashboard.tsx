@@ -16,7 +16,7 @@ function FarmerDashboard() {
   const { data: entries } = useGetAllEntriesQuery();
 
   return (
-    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full h-screen p-4 animate-in slide-in-from-bottom-4 duration-500">
       {/* <ProfileUploadDialog /> */}
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
       <div className="grid grid-cols-3 gap-4 mb-6">

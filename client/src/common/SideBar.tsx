@@ -4,73 +4,104 @@ import { persistor } from "@/store";
 import { apiSlice } from "@/store/slices/api";
 import { clearCredentials } from "@/store/slices/auth";
 import type { Page } from "@/types/sidebar";
-import { LogOut } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { Link, NavLink, useNavigate } from "react-router";
 
 interface SideBarProps {
   pages: Page[];
+  isCollapsed: boolean;
+  closeMobile: () => void;
 }
 
-function SideBar({ pages }: SideBarProps) {
+function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    // clear auth state
     dispatch(clearCredentials());
-
-    // clear RTK query cache
     dispatch(apiSlice.util.resetApiState());
-
-    // clear persisted redux state
     await persistor.purge();
-
-    // redirect to login
     navigate("/login");
   };
 
   return (
-    <nav className="flex flex-col h-screen mx-4">
-      {/* Logo */}
-      <h1 className="text-3xl text-primary font-extrabold italic pl-4 pb-4 mt-6">
-        <Link to="/">AgriBridge</Link>
-      </h1>
+    <div className="flex flex-col h-full bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-6 h-16">
+        <h1
+          className={`text-2xl text-primary font-extrabold italic transition-all duration-300 ${
+            isCollapsed ? "md:hidden" : "block"
+          }`}
+        >
+          <Link to="/">AgriBridge</Link>
+        </h1>
+        {isCollapsed && (
+          <span className="hidden md:block text-primary font-bold text-xl mx-auto">
+            AB
+          </span>
+        )}
 
-      <SelectSeparator />
+        {/* Close button for mobile only */}
+        <button
+          onClick={closeMobile}
+          className="md:hidden p-2 hover:bg-accent rounded"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
 
-      {/* Scrollable menu */}
-      <div className="flex-1 overflow-y-auto mt-4">
+      <div className="px-4">
+        <SelectSeparator />
+      </div>
+
+      {/* Menu Items */}
+      <div className="flex-1 overflow-y-auto mt-4 px-3">
         <div className="flex flex-col gap-1">
           {pages.map((page, index) => (
             <NavLink
               to={page.path}
               key={index}
+              onClick={() => {
+                if (window.innerWidth < 768) closeMobile();
+              }}
               className={({ isActive }) =>
-                `flex items-center gap-2 font-medium text-sm px-4 py-3 rounded ${
+                `flex items-center gap-3 font-medium text-sm px-3 py-3 rounded transition-colors ${
+                  isCollapsed ? "md:justify-center" : ""
+                } ${
                   isActive
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground shadow-md"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`
               }
             >
-              {page.icon}
-              {page.name}
+              <div className="shrink-0">{page.icon}</div>
+              <span
+                className={`transition-all duration-300 ${
+                  isCollapsed ? "md:hidden" : "block"
+                }`}
+              >
+                {page.name}
+              </span>
             </NavLink>
           ))}
         </div>
       </div>
 
-      {/* Logout always visible */}
-      <Button
-        variant="destructive"
-        className="w-full flex items-center gap-2 mt-4 mb-12 cursor-pointer"
-        onClick={() => handleLogout()}
-      >
-        <LogOut size={16} />
-        Logout
-      </Button>
-    </nav>
+      {/* Footer / Logout */}
+      <div className="p-4 border-t border-primary/10">
+        <Button
+          className={`w-full flex items-center gap-2 border-2 border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-white transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm ${
+            isCollapsed ? "md:justify-center px-0" : ""
+          } `}
+          onClick={handleLogout}
+        >
+          <LogOut size={16} />
+          {!isCollapsed && <span className="md:block">Logout</span>}
+          <span className="md:hidden">Logout</span>
+        </Button>
+      </div>
+    </div>
   );
 }
 

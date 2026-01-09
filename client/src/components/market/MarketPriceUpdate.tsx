@@ -146,7 +146,7 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
   }
 
   return (
-    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 space-y-6">
+    <div className="w-full h-screen p-4 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

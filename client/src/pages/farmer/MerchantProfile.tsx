@@ -11,21 +11,94 @@ import {
   User as UserIcon,
   Loader2,
   ShieldCheck,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { MerchantMarketPriceTable } from "@/components/merchant/MerchantMarketPriceTable";
+import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
+import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function MerchantProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { data: response } = useGetMarketPricesQuery({ userId });
 
   const {
     data: merchant,
     isLoading,
     isError,
   } = useGetMerchantInfoQuery(userId as string);
+
+  // --- Search, Filter & Sort States ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc" | null;
+  }>({
+    key: "cropName", // Default sort
+    direction: "asc",
+  });
+
+  const rawData = response?.data || [];
+
+  // Generate unique categories for the dropdown
+  const categoryOptions = useMemo(() => {
+    const unique = Array.from(
+      new Set(rawData.map((item: any) => item.category))
+    );
+    return ["all", ...unique];
+  }, [rawData]);
+
+  // Combined logic: Search -> Category Filter -> Sort
+  const processedData = useMemo(() => {
+    let filtered = [...rawData];
+
+    // 1. Search filter
+    if (searchTerm) {
+      filtered = filtered.filter((item) =>
+        item.cropName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // 2. Category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((item) => item.category === selectedCategory);
+    }
+
+    // 3. Sorting logic
+    if (sortConfig.key && sortConfig.direction) {
+      filtered.sort((a: any, b: any) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [rawData, searchTerm, selectedCategory, sortConfig]);
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   if (isLoading) {
     return (
@@ -258,6 +331,44 @@ function MerchantProfile() {
           </Card>
         </div>
       </div>
+
+      {/* Buying Price */}
+      <Card>
+        <CardContent>
+          <div className="relative flex gap-6 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search crops..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="w-full md:w-[220px]">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat === "all" ? "All Categories" : cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <MerchantMarketPriceTable
+            data={processedData}
+            onSort={handleSort}
+            sortConfig={sortConfig}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
