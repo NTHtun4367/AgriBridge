@@ -17,7 +17,7 @@ function Verification() {
   const { data } = useGetAllVerificationPendingUsersQuery(undefined);
 
   return (
-    <div className="bg-secondary w-full h-screen p-4">
+    <div className="bw-full h-screen p-4">
       <h2 className="text-2xl font-bold mb-6">Verification</h2>
       <Card>
         <CardContent>

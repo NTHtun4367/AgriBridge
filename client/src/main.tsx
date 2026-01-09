@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Main from "./layouts/Main.tsx";
-import Home from "./pages/Home.tsx";
+import Home from "./pages/landing/Home.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import { Provider } from "react-redux";
@@ -15,10 +15,9 @@ import Farmer from "./pages/admin/Farmer.tsx";
 import Merchant from "./pages/admin/Merchant.tsx";
 import { PersistGate } from "redux-persist/integration/react";
 import Verification from "./pages/admin/Verification.tsx";
-import VerificationSubmitted from "./pages/VerificationSubmitted.tsx";
+import VerificationSubmitted from "./pages/landing/VerificationSubmitted.tsx";
 import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
-import AddFarmEntry from "./pages/farmer/AddFarmEntry.tsx";
 import MerchantsView from "./pages/farmer/MerchantView.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
@@ -26,15 +25,15 @@ import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 import Notification from "./pages/farmer/Notification.tsx";
 import MarketDashboard from "./pages/market/MarketDashboard.tsx";
-import MarketPriceLanding from "./pages/MarketPriceLanding.tsx";
-import FarmerLanding from "./pages/FarmerLanding.tsx";
+import MarketPriceLanding from "./pages/landing/MarketPriceLanding.tsx";
+import FarmerLanding from "./pages/landing/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
 import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 import Announcement from "./pages/admin/Announcement.tsx";
 import MerchantProfile from "./pages/farmer/MerchantProfile.tsx";
-import CropPriceHistoryLanding from "./pages/CropPriceHistoryLanding.tsx";
+import CropPriceHistoryLanding from "./pages/landing/CropPriceHistoryLanding.tsx";
 import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
 
 const router = createBrowserRouter([
@@ -89,10 +88,6 @@ const router = createBrowserRouter([
           {
             path: "/farmer/merchants/:userId",
             element: <MerchantProfile />,
-          },
-          {
-            path: "/farmer/add-entry",
-            element: <AddFarmEntry />,
           },
           {
             path: "/farmer/records",

@@ -26,7 +26,7 @@ function MerchantView() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl border shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchants</h1>
           <p className="text-muted-foreground mt-1">
@@ -34,7 +34,7 @@ function MerchantView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-100 p-2 px-4 rounded-full border">
+        <div className="flex items-center gap-3 bg-secondary p-2 px-4 rounded-full border">
           <span className="text-sm font-semibold">Show All Locations</span>
           <Switch checked={showAll} onCheckedChange={setShowAll} />
         </div>

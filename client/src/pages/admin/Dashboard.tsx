@@ -3,7 +3,7 @@ import { AlertTriangle, Sprout, Users } from "lucide-react";
 
 function Dashboard() {
   return (
-    <div className="bg-secondary w-full h-screen p-4">
+    <div className="w-full h-screen p-4">
       <h2 className="text-2xl font-bold mb-6">Dashboard Overview</h2>
       <div className="grid grid-cols-3 gap-4">
         <StatusCard

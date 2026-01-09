@@ -1,25 +1,25 @@
 import NavBar from "@/common/NavBar";
 import SideBar from "@/common/SideBar";
 import type { Page } from "@/types/sidebar";
-import { ChartLine, CircleDollarSign, Settings } from "lucide-react";
 import { useState } from "react";
 import { Outlet } from "react-router";
+import { LayoutDashboard, TrendingUp, Settings, BarChart3 } from "lucide-react";
 
 const pages: Page[] = [
   {
     name: "Dashboard",
     path: "/merchant/dashboard",
-    icon: <ChartLine className="w-5 h-5" />,
+    icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     name: "Market Prices",
     path: "/merchant/market-prices",
-    icon: <CircleDollarSign className="w-5 h-5" />,
+    icon: <TrendingUp className="w-5 h-5" />,
   },
   {
     name: "Market Management",
     path: "/merchant/manage-market",
-    icon: <CircleDollarSign className="w-5 h-5" />,
+    icon: <BarChart3 className="w-5 h-5" />,
   },
   {
     name: "Settings",

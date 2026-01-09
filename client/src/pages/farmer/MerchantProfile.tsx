@@ -14,7 +14,13 @@ import {
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MerchantMarketPriceTable } from "@/components/merchant/MerchantMarketPriceTable";
@@ -28,32 +34,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PreorderDialog } from "@/components/merchant/PreorderDialog";
 
 function MerchantProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { data: response } = useGetMarketPricesQuery({ userId });
 
+  // 1. Manage the Dialog state here
+  const [isPreorderOpen, setIsPreorderOpen] = useState(false);
+
+  const { data: response } = useGetMarketPricesQuery({ userId });
   const {
     data: merchant,
     isLoading,
     isError,
   } = useGetMerchantInfoQuery(userId as string);
 
-  // --- Search, Filter & Sort States ---
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc" | null;
   }>({
-    key: "cropName", // Default sort
+    key: "cropName",
     direction: "asc",
   });
 
   const rawData = response?.data || [];
 
-  // Generate unique categories for the dropdown
   const categoryOptions = useMemo(() => {
     const unique = Array.from(
       new Set(rawData.map((item: any) => item.category))
@@ -61,34 +69,25 @@ function MerchantProfile() {
     return ["all", ...unique];
   }, [rawData]);
 
-  // Combined logic: Search -> Category Filter -> Sort
   const processedData = useMemo(() => {
     let filtered = [...rawData];
-
-    // 1. Search filter
     if (searchTerm) {
       filtered = filtered.filter((item) =>
         item.cropName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // 2. Category filter
     if (selectedCategory !== "all") {
       filtered = filtered.filter((item) => item.category === selectedCategory);
     }
-
-    // 3. Sorting logic
     if (sortConfig.key && sortConfig.direction) {
       filtered.sort((a: any, b: any) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
-
         if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
       });
     }
-
     return filtered;
   }, [rawData, searchTerm, selectedCategory, sortConfig]);
 
@@ -155,9 +154,7 @@ function MerchantProfile() {
 
       {/* Hero Section */}
       <div className="relative group">
-        {/* <div className="absolute inset-0 bg-linear-to-r from-emerald-600 to-teal-500 rounded-4xl blur-xl opacity-10 group-hover:opacity-15 transition-opacity" /> */}
-        <div className="relative border border-slate-100 rounded-4xl p-6 md:p-10 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
-          {/* Business Avatar */}
+        <div className="relative border rounded-4xl p-6 md:p-10 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="shrink-0">
             <div className="w-32 h-32 md:w-40 md:h-40 bg-slate-50 rounded-3xl border-4 border-white shadow-inner flex items-center justify-center relative">
               <Store className="w-16 h-16 text-primary" />
@@ -167,10 +164,9 @@ function MerchantProfile() {
             </div>
           </div>
 
-          {/* Title and Key Details */}
           <div className="flex-1 text-center md:text-left space-y-3">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
                 {merchant.merchantId.businessName}
               </h1>
               <Badge className="bg-primary/15 text-primary border-none px-3">
@@ -188,15 +184,20 @@ function MerchantProfile() {
             </div>
 
             <div className="pt-4 flex flex-wrap justify-center md:justify-start gap-3">
-              <Button className="rounded-full px-8 shadow-md shadow-primary/35">
-                Contact Merchant
-              </Button>
-              {/* <Button
+              <Button
                 variant="outline"
                 className="rounded-full border-slate-200"
               >
-                Share Profile
-              </Button> */}
+                Contact Merchant
+              </Button>
+
+              {/* 2. PASS PROPS TO DIALOG COMPONENT */}
+              <PreorderDialog
+                merchant={merchant}
+                rawData={rawData}
+                isOpen={isPreorderOpen}
+                setIsOpen={setIsPreorderOpen}
+              />
             </div>
           </div>
         </div>
@@ -205,7 +206,7 @@ function MerchantProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sidebar Info */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="overflow-hidden border-slate-100 shadow-sm rounded-2xl">
+          <Card className="overflow-hidden shadow-sm rounded-2xl">
             <CardHeader>
               <CardTitle className="text-sm font-bold uppercase text-slate-500 tracking-widest">
                 Contact Information
@@ -264,7 +265,7 @@ function MerchantProfile() {
 
         {/* Main Details */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border-slate-100 shadow-sm rounded-2xl">
+          <Card className="shadow-sm rounded-2xl">
             <CardHeader>
               <CardTitle className="text-xl font-bold flex items-center gap-2">
                 Business Details
@@ -332,8 +333,24 @@ function MerchantProfile() {
         </div>
       </div>
 
-      {/* Buying Price */}
-      <Card>
+      {/* Buying Price Section */}
+      <Card className="shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold">
+                Live Procurement Rates
+              </CardTitle>
+              <CardDescription className="text-slate-500 mt-1">
+                Current buying prices offered by this merchant.
+              </CardDescription>
+            </div>
+            <Badge className="bg-primary/15 text-primary animate-pulse">
+              ● Live Updates
+            </Badge>
+          </div>
+        </CardHeader>
+
         <CardContent>
           <div className="relative flex gap-6 mb-6">
             <div className="relative flex-1">
@@ -362,6 +379,7 @@ function MerchantProfile() {
               </SelectContent>
             </Select>
           </div>
+
           <MerchantMarketPriceTable
             data={processedData}
             onSort={handleSort}

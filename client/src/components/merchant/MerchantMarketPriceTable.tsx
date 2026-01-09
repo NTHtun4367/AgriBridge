@@ -36,7 +36,10 @@ MerchantMarketPriceTableProps) {
 
   return (
     <Table>
-      <TableCaption>A list of all market prices.</TableCaption>
+      <TableCaption className="italic">
+        * Prices listed are per standard unit (e.g., Viss, Basket) as defined by
+        local trading standards.
+      </TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead

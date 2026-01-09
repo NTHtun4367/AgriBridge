@@ -79,7 +79,7 @@ function MarketDashboard() {
   };
 
   return (
-    <div className="bg-secondary w-full h-screen p-4">
+    <div className="w-full h-screen p-4">
       <h2 className="text-2xl font-bold">Market Prices</h2>
       <p className="text-muted-foreground mb-8 mt-2">
         Real-time updates of the latest market prices.

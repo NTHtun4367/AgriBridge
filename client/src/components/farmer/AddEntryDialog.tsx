@@ -1,8 +1,15 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, PlusCircle, Landmark, Save } from "lucide-react";
+import {
+  CalendarIcon,
+  PlusCircle,
+  Landmark,
+  Save,
+  X,
+  UploadCloud,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -60,36 +67,72 @@ const CROP_OPTIONS: Record<string, string[]> = {
 const AddEntryDialog = () => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"expense" | "income">("expense");
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [addEntry, { isLoading }] = useAddEntryMutation();
 
   const form = useForm<EntryFormValues>({
     resolver: zodResolver(entrySchema),
     defaultValues: {
-      type: "",
+      date: new Date(),
+      type: "expense",
       category: "",
       quantity: "",
       unit: "",
       value: "",
       notes: "",
-      date: new Date(),
       billImage: null,
     },
   });
 
   const selectedCategory = form.watch("category");
+
   const availableUnits = useMemo(() => {
-    return selectedCategory
-      ? (type === "expense"
-          ? UNIT_OPTIONS[selectedCategory]
-          : CROP_OPTIONS[selectedCategory]) || []
-      : [];
-  }, [selectedCategory]);
+    if (!selectedCategory) return [];
+    const options = type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS;
+    return options[selectedCategory] || [];
+  }, [selectedCategory, type]);
+
+  const handleTriggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldOnChange: (file: File | null) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (preview) URL.revokeObjectURL(preview);
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      fieldOnChange(file);
+    }
+  };
+
+  const removeImage = (fieldOnChange: (file: null) => void) => {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    fieldOnChange(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    // Reset form and cleanup preview
+    setTimeout(() => {
+      form.reset();
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview(null);
+    }, 300);
+  };
 
   const onSubmit = async (data: EntryFormValues) => {
     try {
       const formData = new FormData();
       formData.append("date", data.date.toISOString());
-      formData.append("type", type);
+      formData.append("type", type); // Taking type from local state toggle
       formData.append("category", data.category);
       formData.append("quantity", data.quantity || "");
       formData.append("unit", data.unit || "");
@@ -97,12 +140,9 @@ const AddEntryDialog = () => {
       formData.append("notes", data.notes || "");
       if (data.billImage) formData.append("billImage", data.billImage);
 
-      console.log(formData);
-      
       await addEntry(formData).unwrap();
-      toast.success("Entry added successful!");
-      form.reset();
-      setOpen(false);
+      toast.success("Entry added successfully!");
+      handleClose();
     } catch (err) {
       console.error("Failed to save:", err);
       toast.error("Error saving record.");
@@ -110,47 +150,50 @@ const AddEntryDialog = () => {
   };
 
   useEffect(() => {
-    form.reset();
-  }, [type]);
+    form.setValue("category", "");
+    form.setValue("unit", "");
+  }, [type, form]);
 
   return (
     <div className="flex justify-center">
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(val) => (!val ? handleClose() : setOpen(true))}
+      >
         <DialogTrigger asChild>
-          <Button className="shadow-lg">
+          <Button className="shadow-lg bg-primary hover:bg-primary/90 transition-all">
             <PlusCircle className="h-5 w-5 mr-2" /> Add New Entry
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader className="border-b pb-4">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <Landmark className="h-5 w-5 text-primary" /> Add Expenditure
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
+              <Landmark className="h-5 w-5 text-primary" />
+              {type === "expense" ? "Record Expenditure" : "Record Income"}
             </DialogTitle>
           </DialogHeader>
-          {/* The Outer Track (Container) */}
-          <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200">
-            {/* Expense Option */}
+
+          {/* Type Toggle Segment */}
+          <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200 mt-4">
             <div
               onClick={() => setType("expense")}
               className={cn(
-                "flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg cursor-pointer transition-all duration-200 font-semibold text-sm",
+                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "expense"
-                  ? "bg-white text-red-500 shadow-sm" // Active state
-                  : "text-slate-500 hover:text-slate-700" // Inactive state
+                  ? "bg-white text-red-500 shadow-sm"
+                  : "text-slate-500 hover:bg-slate-50"
               )}
             >
               Expense
             </div>
-
-            {/* Income Option */}
             <div
               onClick={() => setType("income")}
               className={cn(
-                "flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg cursor-pointer transition-all duration-200 font-semibold text-sm",
+                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "income"
-                  ? "bg-white text-primary shadow-sm" // Active state
-                  : "text-slate-500 hover:text-slate-700" // Inactive state
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-slate-500 hover:bg-slate-50"
               )}
             >
               Income
@@ -163,20 +206,21 @@ const AddEntryDialog = () => {
               className="space-y-6 py-4"
             >
               <div className="grid grid-cols-2 gap-4">
-                {/* Date */}
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel className="text-slate-600 font-semibold">
+                        Date
+                      </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
                               variant="outline"
                               className={cn(
-                                "pl-3 text-left font-normal",
+                                "pl-3 text-left font-normal border-slate-200",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
@@ -187,11 +231,16 @@ const AddEntryDialog = () => {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent
+                          className="w-auto p-0 rounded-2xl shadow-xl"
+                          align="start"
+                        >
                           <Calendar
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
+                            disabled={(date) => date > new Date()}
+                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -200,13 +249,14 @@ const AddEntryDialog = () => {
                   )}
                 />
 
-                {/* Category */}
                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel className="text-slate-600 font-semibold">
+                        Category
+                      </FormLabel>
                       <Select
                         onValueChange={(val) => {
                           field.onChange(val);
@@ -215,16 +265,20 @@ const AddEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Type" />
+                          <SelectTrigger className="w-full border-slate-200 capitalize">
+                            <SelectValue placeholder="Select Category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {Object.keys(
                             type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS
                           ).map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat.toUpperCase()}
+                            <SelectItem
+                              key={cat}
+                              value={cat}
+                              className="capitalize"
+                            >
+                              {cat}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -235,17 +289,22 @@ const AddEntryDialog = () => {
                 />
               </div>
 
-              {/* Quantity & Unit */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
                   <FormField
                     control={form.control}
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantity</FormLabel>
+                        <FormLabel className="text-slate-600 font-semibold">
+                          Quantity
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="0" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -257,14 +316,16 @@ const AddEntryDialog = () => {
                   name="unit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit</FormLabel>
+                      <FormLabel className="text-slate-600 font-semibold">
+                        Unit
+                      </FormLabel>
                       <Select
                         disabled={!selectedCategory}
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full border-slate-200">
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
                         </FormControl>
@@ -276,37 +337,44 @@ const AddEntryDialog = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Value */}
               <FormField
                 control={form.control}
                 name="value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Value (MMK)</FormLabel>
+                    <FormLabel className="text-slate-600 font-semibold">
+                      Total Value (MMK)
+                    </FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Notes */}
               <FormField
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel className="text-slate-600 font-semibold">
+                      Additional Notes
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Details..."
-                        className="resize-none"
+                        placeholder="e.g. Purchased from Aung Market..."
+                        className="resize-none h-24"
                         {...field}
                       />
                     </FormControl>
@@ -314,34 +382,82 @@ const AddEntryDialog = () => {
                 )}
               />
 
-              {/* File Upload */}
               <FormField
                 control={form.control}
                 name="billImage"
-                render={({ field: { value, onChange, ...fieldProps } }) => (
+                // Destructure 'ref' here to prevent it from being passed into fieldProps
+                render={({
+                  field: { onChange, value: _, ref: fieldRef, ...fieldProps },
+                }) => (
                   <FormItem>
-                    <FormLabel>Bill Attachment</FormLabel>
+                    <FormLabel className="text-slate-600 font-semibold">
+                      Bill Photo / Receipt
+                    </FormLabel>
                     <FormControl>
-                      <div className="flex items-center gap-2">
-                        <Input
+                      <div className="space-y-4">
+                        <input
                           type="file"
+                          // Now you can safely use your custom ref
+                          ref={fileInputRef}
+                          className="hidden"
                           accept="image/*"
-                          onChange={(e) => onChange(e.target.files?.[0])}
+                          onChange={(e) => handleFileChange(e, onChange)}
                           {...fieldProps}
                         />
+
+                        {preview ? (
+                          <div className="relative group w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">
+                            <img
+                              src={preview}
+                              alt="Preview"
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="rounded-full gap-2"
+                                onClick={() => removeImage(onChange)}
+                              >
+                                <X className="h-4 w-4" /> Remove Photo
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={handleTriggerUpload}
+                            className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 bg-slate-50 hover:bg-slate-100 hover:border-primary/50 transition-all cursor-pointer group"
+                          >
+                            <div className="bg-white p-4 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                              <UploadCloud className="h-8 w-8 text-primary" />
+                            </div>
+                            <p className="text-sm font-bold text-slate-700">
+                              Click to upload bill
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              PNG, JPG up to 5MB
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <DialogFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+              <DialogFooter className="pt-4">
+                <Button
+                  type="submit"
+                  className="w-full font-bold shadow-lg shadow-primary/20"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
-                    "Saving..."
+                    "Processing..."
                   ) : (
                     <>
-                      <Save className="h-5 w-5 mr-2" /> Save Record
+                      <Save className="h-5 w-5 mr-2" /> Save Entry
                     </>
                   )}
                 </Button>

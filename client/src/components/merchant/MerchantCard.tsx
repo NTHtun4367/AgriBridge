@@ -6,7 +6,7 @@ import { Link } from "react-router";
 
 export function MerchantCard({ user }: { user: any }) {
   return (
-    <Card className="relative overflow-hidden border-slate-200 hover:border-primary/30 hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row w-full group min-h-[100px]">
+    <Card className="relative overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row w-full group min-h-[100px]">
       {/* Visual Accent Bar */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/10 group-hover:bg-primary transition-colors" />
 
@@ -17,7 +17,7 @@ export function MerchantCard({ user }: { user: any }) {
           <div className="p-1.5 bg-primary/5 rounded-md">
             <Store className="w-4 h-4 text-primary" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+          <h3 className="text-lg font-bold tracking-tight">
             {user.merchantId?.businessName}
           </h3>
           <Badge
@@ -50,11 +50,11 @@ export function MerchantCard({ user }: { user: any }) {
       </div>
 
       {/* 2. Right Section: Action */}
-      <div className="bg-slate-50/40 sm:border-l border-slate-100 p-4 sm:w-52 flex items-center justify-center">
+      <div className="p-4 sm:w-52 flex items-center justify-center">
         <Button
           asChild
           variant="outline"
-          className="w-full sm:w-auto px-6 h-9 text-xs font-semibold group-hover:bg-primary group-hover:text-white transition-all rounded-full"
+          className="w-full sm:w-auto px-6 h-9 text-xs font-semibold hover:bg-primary hover:text-white transition-all rounded-full"
         >
           <Link
             to={`/farmer/merchants/${user._id}`}

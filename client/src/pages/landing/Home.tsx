@@ -23,7 +23,7 @@ import { useNavigate } from "react-router";
 
 // --- IMAGE IMPORTS ---
 // Importing from the same directory as Home.tsx
-import heroBg from "../assets/farm.jpg";
+import heroBg from "@/assets/farm.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();

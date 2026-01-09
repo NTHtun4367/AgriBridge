@@ -1,40 +1,40 @@
 import SideBar from "@/common/SideBar";
 import { Outlet } from "react-router";
-import {
-  ChartLine,
-  ChartNoAxesCombined,
-  CircleDollarSign,
-  HandCoins,
-  Megaphone,
-  Settings,
-  ShieldCheck,
-  TriangleAlert,
-  Wheat,
-} from "lucide-react";
 import type { Page } from "@/types/sidebar";
 import NavBar from "@/common/NavBar";
 import { useState } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  Store,
+  BarChart3,
+  ShieldCheck,
+  FileSearch,
+  Megaphone,
+  Gavel,
+  Settings,
+} from "lucide-react";
 
 const pages: Page[] = [
   {
     name: "Dashboard",
     path: "/admin/dashboard",
-    icon: <ChartLine className="w-5 h-5" />,
+    icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     name: "Farmer Management",
     path: "/admin/manage-farmers",
-    icon: <Wheat className="w-5 h-5" />,
+    icon: <Users className="w-5 h-5" />,
   },
   {
     name: "Merchant Management",
     path: "/admin/manage-merchants",
-    icon: <HandCoins className="w-5 h-5" />,
+    icon: <Store className="w-5 h-5" />,
   },
   {
     name: "Market Management",
     path: "/admin/manage-market",
-    icon: <CircleDollarSign className="w-5 h-5" />,
+    icon: <BarChart3 className="w-5 h-5" />,
   },
   {
     name: "Verification",
@@ -44,7 +44,7 @@ const pages: Page[] = [
   {
     name: "Analytics",
     path: "/admin/analytics",
-    icon: <ChartNoAxesCombined className="w-5 h-5" />,
+    icon: <FileSearch className="w-5 h-5" />,
   },
   {
     name: "Announcements",
@@ -54,7 +54,7 @@ const pages: Page[] = [
   {
     name: "User Disputes",
     path: "/admin/disputes",
-    icon: <TriangleAlert className="w-5 h-5" />,
+    icon: <Gavel className="w-5 h-5" />,
   },
   {
     name: "Settings",

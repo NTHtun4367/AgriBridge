@@ -47,7 +47,7 @@ function Announcement() {
   const onSubmit = async () => {};
 
   return (
-    <div className="bg-secondary h-screen p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="h-screen p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <h1 className="text-2xl font-bold flex items-center gap-2">
         <Megaphone className="w-6 h-6" /> Announcements
       </h1>

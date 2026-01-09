@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Outlet } from "react-router";
 import {
-  Building2,
-  Calculator,
-  ChartLine,
-  CircleDollarSign,
-  History,
+  BookOpenText,
+  LayoutDashboard,
   Settings,
+  Sprout,
+  Store,
+  TrendingUp,
 } from "lucide-react";
 import SideBar from "@/common/SideBar";
 import NavBar from "@/common/NavBar";
@@ -16,27 +16,27 @@ const pages: Page[] = [
   {
     name: "Dashboard",
     path: "/farmer/dashboard",
-    icon: <ChartLine className="w-5 h-5" />,
+    icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     name: "Market Prices",
     path: "/farmer/markets",
-    icon: <CircleDollarSign className="w-5 h-5" />,
+    icon: <TrendingUp className="w-5 h-5" />,
   },
   {
     name: "Merchants",
     path: "/farmer/merchants",
-    icon: <Building2 className="w-5 h-5" />,
+    icon: <Store className="w-5 h-5" />,
   },
   {
     name: "Profit Calculator",
     path: "/farmer/profit-calculator",
-    icon: <Calculator className="w-5 h-5" />,
+    icon: <Sprout className="w-5 h-5" />,
   },
   {
     name: "Records",
     path: "/farmer/records",
-    icon: <History className="w-5 h-5" />,
+    icon: <BookOpenText className="w-5 h-5" />,
   },
   {
     name: "Settings",

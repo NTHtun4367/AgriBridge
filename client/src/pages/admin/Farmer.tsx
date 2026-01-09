@@ -16,7 +16,7 @@ function Farmer() {
   const { data } = useGetAllFarmersQuery(undefined);
 
   return (
-    <div className="bg-secondary w-full h-screen p-4">
+    <div className="w-full h-screen p-4">
       <h2 className="text-2xl font-bold mb-6">Farmers</h2>
       <Card>
         <CardContent>
