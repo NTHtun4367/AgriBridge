@@ -35,6 +35,7 @@ import Announcement from "./pages/admin/Announcement.tsx";
 import MerchantProfile from "./pages/farmer/MerchantProfile.tsx";
 import CropPriceHistoryLanding from "./pages/landing/CropPriceHistoryLanding.tsx";
 import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
+import MerchantPreordersPage from "./pages/merchant/Preorder.tsx";
 
 const router = createBrowserRouter([
   {
@@ -116,8 +117,20 @@ const router = createBrowserRouter([
             element: <MerchantDashboard />,
           },
           {
+            path: "/merchant/markets",
+            element: <MarketDashboard />,
+          },
+          {
+            path: "/merchant/crop-price-history",
+            element: <CropPriceHistoryDashboard />,
+          },
+          {
             path: "/merchant/manage-market",
             element: <MerchantMarketManagement />,
+          },
+          {
+            path: "/merchant/preorders",
+            element: <MerchantPreordersPage />,
           },
         ],
       },

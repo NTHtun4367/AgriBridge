@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,15 +30,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // --- Schema ---
+// Now contains an array of items
 const formSchema = z.object({
-  cropId: z.string().min(1, "Please select a crop"),
-  price: z.string(),
-  quantity: z.string().min(1, "Quantity is required"),
-  unit: z.string(),
-  status: z.enum(["finished", "not_finished"]),
+  items: z
+    .array(
+      z.object({
+        cropId: z.string().min(1, "Required"),
+        price: z.string(),
+        quantity: z.string().min(1, "Required"),
+        unit: z.string(),
+      })
+    )
+    .min(1, "Add at least one crop"),
   day: z.string().min(1, "Day is required"),
   month: z.string().min(1, "Month is required"),
 });
@@ -46,11 +51,7 @@ const formSchema = z.object({
 type PreorderFormValues = z.infer<typeof formSchema>;
 
 interface PreorderDialogProps {
-  merchant: {
-    merchantId: {
-      businessName: string;
-    };
-  };
+  merchant: { merchantId: { businessName: string } };
   rawData: any[];
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
@@ -65,51 +66,50 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   const form = useForm<PreorderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cropId: "",
-      price: "",
-      quantity: "",
-      unit: "",
-      status: "not_finished",
+      items: [{ cropId: "", price: "", quantity: "", unit: "" }],
       day: "",
       month: "",
     },
   });
 
-  const selectedCropId = form.watch("cropId");
-
-  // FIX 1: Change item._id to item.cropId to match your console log
-  useEffect(() => {
-    if (selectedCropId && rawData) {
-      const selectedCrop = rawData.find(
-        (item) => item.cropId === selectedCropId
-      );
-      if (selectedCrop) {
-        form.setValue("price", selectedCrop.currentPrice.toString());
-        form.setValue("unit", selectedCrop.unit);
-      }
-    }
-  }, [selectedCropId, rawData, form]);
+  const { fields, append, remove } = useFieldArray({
+    name: "items",
+    control: form.control,
+  });
 
   const onSubmit = (values: PreorderFormValues) => {
-    console.log("Submitting Preorder:", values);
+    console.log("Submitting Multiple Preorders:", values);
     setIsOpen(false);
     form.reset();
+  };
+
+  // Helper to update price/unit when a specific crop is selected in a row
+  const handleCropChange = (index: number, cropId: string) => {
+    const selectedCrop = rawData.find((item) => item.cropId === cropId);
+    if (selectedCrop) {
+      form.setValue(
+        `items.${index}.price`,
+        selectedCrop.currentPrice.toString()
+      );
+      form.setValue(`items.${index}.unit`, selectedCrop.unit);
+      form.setValue(`items.${index}.cropId`, cropId);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full px-8 shadow-md shadow-primary/35 gap-2">
+        <Button className="rounded-full px-8 shadow-md gap-2">
           <ShoppingCart className="w-4 h-4" /> Preorder Now
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Place Preorder</DialogTitle>
           <DialogDescription>
-            Fill in the details to send a procurement request to{" "}
-            <span className="font-bold text-slate-900">
+            Add multiple crops for{" "}
+            <span className="font-bold">
               {merchant.merchantId.businessName}
             </span>
             .
@@ -119,146 +119,122 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 py-4"
+            className="space-y-6 py-4"
           >
-            <FormField
-              control={form.control}
-              name="cropId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Crop</FormLabel>
-                  {/* FIX 2: Ensure value and onValueChange are properly linked */}
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a crop" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {rawData && rawData.length > 0 ? (
-                        rawData.map((item) => (
-                          // FIX 3: Changed key and value to item.cropId
-                          <SelectItem key={item.cropId} value={item.cropId}>
-                            {item.cropName}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>
-                          No crops available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="p-4 border rounded-lg bg-slate-50 relative space-y-4"
+                >
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-medium text-slate-500">
+                      Crop #{index + 1}
+                    </h4>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Price (Current)</FormLabel>
-                    <FormControl>
-                      <Input {...field} readOnly className="bg-slate-100" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="unit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input {...field} readOnly className="bg-slate-100" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.cropId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Select Crop</FormLabel>
+                        <Select
+                          onValueChange={(val) => handleCropChange(index, val)}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a crop" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {rawData?.map((item) => (
+                              <SelectItem key={item.cropId} value={item.cropId}>
+                                {item.cropName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.quantity`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Qty</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.price`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Price</FormLabel>
+                          <Input {...field} readOnly className="bg-slate-100" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.unit`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit</FormLabel>
+                          <Input {...field} readOnly className="bg-slate-100" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter amount"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-dashed"
+              onClick={() =>
+                append({ cropId: "", price: "", quantity: "", unit: "" })
+              }
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Another Crop
+            </Button>
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="finished" id="finished" />
-                        <label
-                          htmlFor="finished"
-                          className="text-sm cursor-pointer"
-                        >
-                          Finished
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value="not_finished"
-                          id="not_finished"
-                        />
-                        <label
-                          htmlFor="not_finished"
-                          className="text-sm cursor-pointer"
-                        >
-                          Not Finished
-                        </label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {/* Expected Date Section */}
-            <div className="grid gap-2">
-              <FormLabel>Expected Date</FormLabel>
+            <div className="grid gap-2 border-t pt-4">
+              <FormLabel>Expected Delivery Date</FormLabel>
               <div className="flex gap-2">
-                {/* 1st: DAY Select Box */}
                 <FormField
                   control={form.control}
                   name="day"
                   render={({ field }) => (
-                    <FormItem className="w-full">
-                      <Input
-                        type="number"
-                        placeholder="Enter amount"
-                        {...field}
-                      />
+                    <FormItem className="w-24">
+                      <Input type="number" placeholder="DD" {...field} />
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                {/* 2nd: MONTH Select Box */}
                 <FormField
                   control={form.control}
                   name="month"
@@ -270,12 +246,13 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Day" />
+                            <SelectValue placeholder="Month" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="day">Day</SelectItem>
-                          <SelectItem value="month">Month</SelectItem>
+                          <SelectItem value="January">January</SelectItem>
+                          <SelectItem value="February">February</SelectItem>
+                          {/* Add other months */}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -285,9 +262,9 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
               </div>
             </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter>
               <Button type="submit" className="w-full">
-                Confirm Preorder
+                Confirm All Preorders
               </Button>
             </DialogFooter>
           </form>

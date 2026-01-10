@@ -10,7 +10,7 @@ interface StatusCardProps {
 function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
   return (
     <div
-      className={`p-6 rounded-2xl shadow-sm border border-gray-100 ${bgColor} transition-transform hover:scale-105`}
+      className={`p-6 rounded-2xl shadow-sm border border-gray-100 ${bgColor} transition-transform hover:scale-105 duration-300`}
     >
       <div className="flex justify-between items-start">
         <div>

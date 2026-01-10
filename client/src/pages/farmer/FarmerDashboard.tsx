@@ -51,17 +51,20 @@ function FarmerDashboard() {
             {entries && entries.length === 0 ? (
               <div>No recent entries.</div>
             ) : (
-              entries?.map((en) => (
-                <ActivityTitle
-                  key={en._id}
-                  id={en._id}
-                  title={en.category}
-                  cat={en.type}
-                  amount={en.value}
-                  type={en.type}
-                  date={en.createdAt}
-                />
-              ))
+              // We slice the array from index 0 to 6 before mapping
+              entries
+                ?.slice(0, 6)
+                .map((en) => (
+                  <ActivityTitle
+                    key={en._id}
+                    id={en._id}
+                    title={en.category}
+                    cat={en.type}
+                    amount={en.value}
+                    type={en.type}
+                    date={en.createdAt}
+                  />
+                ))
             )}
           </div>
           <div className="flex items-center justify-end">

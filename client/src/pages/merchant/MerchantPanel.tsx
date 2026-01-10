@@ -3,7 +3,13 @@ import SideBar from "@/common/SideBar";
 import type { Page } from "@/types/sidebar";
 import { useState } from "react";
 import { Outlet } from "react-router";
-import { LayoutDashboard, TrendingUp, Settings, BarChart3 } from "lucide-react";
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Settings,
+  BarChart3,
+  ListOrdered,
+} from "lucide-react";
 
 const pages: Page[] = [
   {
@@ -13,13 +19,18 @@ const pages: Page[] = [
   },
   {
     name: "Market Prices",
-    path: "/merchant/market-prices",
+    path: "/merchant/markets",
     icon: <TrendingUp className="w-5 h-5" />,
   },
   {
     name: "Market Management",
     path: "/merchant/manage-market",
     icon: <BarChart3 className="w-5 h-5" />,
+  },
+  {
+    name: "Preorders",
+    path: "/merchant/preorders",
+    icon: <ListOrdered className="w-5 h-5" />,
   },
   {
     name: "Settings",

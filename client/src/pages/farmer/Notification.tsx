@@ -8,7 +8,7 @@ import {
   Calendar,
   ChevronRight,
   Inbox,
-  Sparkles,
+  // Sparkles,
   Circle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -142,12 +142,12 @@ const NotificationPage = () => {
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10 px-6 py-8">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            {/* <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-5 h-5 text-primary animate-pulse" />
               <span className="text-xs font-bold uppercase tracking-widest text-primary/70">
                 Updates Area
               </span>
-            </div>
+            </div> */}
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Notifications
             </h1>

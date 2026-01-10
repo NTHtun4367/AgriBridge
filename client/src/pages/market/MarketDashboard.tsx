@@ -12,8 +12,10 @@ import {
 import { useNavigate } from "react-router";
 import { MarketPriceTable } from "@/components/market/MarketPriceTable";
 import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 
 function MarketDashboard() {
+  const { data: user } = useCurrentUserQuery();
   const { data: response } = useGetMarketPricesQuery({ official: true });
 
   const navigate = useNavigate();
@@ -126,7 +128,7 @@ function MarketDashboard() {
             sortConfig={sortConfig}
             onRowClick={(cropId, marketId) =>
               navigate(
-                `/farmer/crop-price-history?cropId=${cropId}&marketId=${marketId}`
+                `/${user?.role}/crop-price-history?cropId=${cropId}&marketId=${marketId}`
               )
             }
           />
