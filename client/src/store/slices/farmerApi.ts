@@ -36,7 +36,6 @@ export const farmerApi = apiSlice.injectEndpoints({
       }),
     }),
     getMerchantInfo: builder.query<any, string>({
-      // Ensure this matches the app.use("/api/v1/farmers") + router path
       query: (userId) => `/farmers/merchants/${userId}`,
       providesTags: ["Merchant"],
     }),

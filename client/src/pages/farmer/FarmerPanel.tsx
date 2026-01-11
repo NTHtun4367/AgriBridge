@@ -4,6 +4,7 @@ import {
   BookOpenText,
   LayoutDashboard,
   Settings,
+  ShoppingBag,
   Sprout,
   Store,
   TrendingUp,
@@ -37,6 +38,11 @@ const pages: Page[] = [
     name: "Records",
     path: "/farmer/records",
     icon: <BookOpenText className="w-5 h-5" />,
+  },
+  {
+    name: "Preorders",
+    path: "/farmer/preorders",
+    icon: <ShoppingBag className="w-5 h-5" />,
   },
   {
     name: "Settings",
@@ -82,7 +88,7 @@ function FarmerPanel() {
           toggleDesktop={() => setIsCollapsed(!isCollapsed)}
           openMobile={() => setIsMobileOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/5">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary">
           <Outlet />
         </main>
       </div>

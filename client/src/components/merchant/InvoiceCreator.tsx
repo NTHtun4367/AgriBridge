@@ -32,6 +32,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { MOCK_PREORDERS } from "@/types/order";
+import { useNavigate } from "react-router";
+import { useCreateInvoiceMutation } from "@/store/slices/merchantApi";
+import { toast } from "sonner";
 
 // Define Form Schema
 interface InvoiceFormValues {
@@ -56,6 +59,9 @@ export function InvoiceCreator({
   mode: "preorder" | "manual";
 }) {
   const [isPreorderMode, setIsPreorderMode] = useState(mode === "preorder");
+  const navigate = useNavigate();
+
+  const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
 
   const { register, control, handleSubmit, reset, watch } =
     useForm<InvoiceFormValues>({
@@ -105,8 +111,27 @@ export function InvoiceCreator({
     );
   }, [formValues.items]);
 
-  const onSubmit = (data: InvoiceFormValues) => {
-    console.log("Generating PDF for:", data);
+  const onSubmit = async (data: InvoiceFormValues) => {
+    try {
+      // Mapping form data to match the CreateInvoiceRequest interface
+      // Note: In a real app, you'd send the farmerId instead of just name if available
+      const payload = {
+        farmerId: initialData?.farmerId || "65a1...your_logic_here",
+        items: data.items.map((item) => ({
+          ...item,
+          quantity: Number(item.quantity),
+          price: Number(item.price),
+        })),
+        notes: data.notes,
+      };
+
+      await createInvoice(payload).unwrap();
+
+      toast.success("Invoice created successfully!");
+      navigate("/dashboard/invoices"); // Redirect after success
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to create invoice");
+    }
   };
 
   return (
@@ -413,7 +438,6 @@ export function InvoiceCreator({
                 </Button>
               </div>
             </div>
-
             <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
               <div className="h-2 bg-primary w-full" />
               <CardContent className="p-8 flex-1 flex flex-col">
@@ -485,7 +509,7 @@ export function InvoiceCreator({
                                 {(
                                   Number(item.quantity || 0) *
                                   Number(item.price || 0)
-                                ).toLocaleString()}{" "}
+                                ).toLocaleString()}
                                 MMK
                               </td>
                             </tr>
@@ -501,7 +525,7 @@ export function InvoiceCreator({
                     <span className="font-mono text-slate-700">
                       {subtotal.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
-                      })}{" "}
+                      })}
                       MMK
                     </span>
                   </div>
@@ -525,12 +549,21 @@ export function InvoiceCreator({
                 )}
               </CardContent>
             </Card>
-
             <Button
               type="submit"
+              disabled={isCreating}
               className="w-full bg-primary text-white font-black py-7 text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.01] hover:shadow-blue-200 flex items-center gap-2"
             >
-              <Send size={20} /> Complete & Send Invoice
+              {isCreating ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Processing...
+                </span>
+              ) : (
+                <>
+                  <Send size={20} /> Complete & Send Invoice
+                </>
+              )}
             </Button>
           </div>
         </div>

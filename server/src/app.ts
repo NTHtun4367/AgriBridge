@@ -7,6 +7,8 @@ import authRoutes from "./modules/auth/routes/auth";
 import adminRoutes from "./modules/admin/routes/admin";
 import marketRoutes from "./modules/market/routes/market";
 import farmerRoutes from "./modules/farmer/routes/farmer";
+import merchantRoutes from "./modules/merchant/routes/invoice";
+import preorderRoutes from "./modules/preorder/routes/preorder";
 import notificationRoutes from "./modules/notification/routes/notification";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";
@@ -49,6 +51,8 @@ app.use("/api/v1/auth", authRoutes);
 // app.use("/api/v1", adminRoutes);
 app.use("/api/v1/markets", marketRoutes);
 app.use("/api/v1/farmers", farmerRoutes);
+app.use("/api/v1/merchants", merchantRoutes);
+app.use("/api/v1/preorder", preorderRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 
 // Error handler
