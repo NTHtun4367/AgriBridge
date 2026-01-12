@@ -1,16 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import {
   Receipt,
-  Mail,
   Phone,
   MapPin,
   Package,
   Plus,
   Trash2,
   Send,
-  Printer,
-  Download,
+  ShieldCheck,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,18 +30,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { MOCK_PREORDERS } from "@/types/order";
 import { useNavigate } from "react-router";
 import { useCreateInvoiceMutation } from "@/store/slices/merchantApi";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { type RootState } from "@/store";
+import { useGetMerchantPreordersQuery } from "@/store/slices/preorderApi";
 
-// Define Form Schema
+// NRC Data Import
+import nrcDataRaw from "@/utils/nrcData.json";
+const nrcData = nrcDataRaw as Record<string, string[]>;
+
+const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
+
 interface InvoiceFormValues {
+  // Added these two for backend linking logic
+  farmerId: string;
+  preorderId: string;
+
   farmerName: string;
   email: string;
   phone: string;
   address: string;
   notes: string;
+  nrcRegion: string;
+  nrcTownship: string;
+  nrcType: string;
+  nrcNumber: string;
   items: {
     cropName: string;
     quantity: number;
@@ -60,43 +74,86 @@ export function InvoiceCreator({
 }) {
   const [isPreorderMode, setIsPreorderMode] = useState(mode === "preorder");
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const { data: preorders } = useGetMerchantPreordersQuery(user?.id, {
+    skip: !user?.id,
+  });
 
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
 
-  const { register, control, handleSubmit, reset, watch } =
+  const { register, control, handleSubmit, reset, setValue } =
     useForm<InvoiceFormValues>({
       defaultValues: {
+        farmerId: "",
+        preorderId: "",
         farmerName: "",
         email: "",
         phone: "",
         address: "",
         notes: "",
-        items: [{ cropName: "", quantity: 0, unit: "kg", price: 0 }],
+        nrcRegion: "",
+        nrcTownship: "",
+        nrcType: "(N)",
+        nrcNumber: "",
+        items: [{ cropName: "", quantity: 0, unit: "", price: 0 }],
       },
     });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
-  const formValues = watch();
+  // High-performance watch for UI reactivity
+  const formValues = useWatch({ control });
+
+  // Generate a stable Invoice ID for the session
+  const invoiceId = useMemo(
+    () =>
+      `INV-${new Date().getFullYear()}-${Math.floor(
+        1000 + Math.random() * 9000
+      )}`,
+    []
+  );
+
+  // NRC Township Logic
+  const selectedNrcRegion = formValues.nrcRegion;
+  const nrcTownshipOptions = useMemo(() => {
+    return selectedNrcRegion ? nrcData[selectedNrcRegion] || [] : [];
+  }, [selectedNrcRegion]);
+
+  // Reset township when region changes to prevent invalid data
+  useEffect(() => {
+    if (selectedNrcRegion) {
+      setValue("nrcTownship", "");
+    }
+  }, [selectedNrcRegion, setValue]);
 
   useEffect(() => {
     if (initialData) reset(initialData);
   }, [initialData, reset]);
 
   const handleSelectPreorder = (preorderId: string) => {
-    const selected = MOCK_PREORDERS.find((p) => p.id === preorderId);
+    const selected = preorders?.find((p: any) => p._id === preorderId);
     if (selected) {
       reset({
-        ...formValues,
-        farmerName: selected.farmerName,
+        // Logic Change: Injecting the IDs into form state
+        preorderId: selected._id,
+        farmerId: selected.farmerId,
+
+        farmerName: selected.fullName || selected.farmerName,
         email: selected.email || "",
         phone: selected.phone,
-        address: selected.address,
-        items: selected.items.map((item) => ({
-          ...item,
+        address: selected.address || "",
+        nrcRegion: selected.nrc?.region || "",
+        nrcTownship: selected.nrc?.township || "",
+        nrcType: selected.nrc?.type || "(N)",
+        nrcNumber: selected.nrc?.number || "",
+        items: selected.items.map((item: any) => ({
+          cropName: item.cropName,
           quantity: Number(item.quantity),
+          unit: item.unit,
           price: Number(item.price),
         })),
+        notes: "",
       });
     }
   };
@@ -105,7 +162,7 @@ export function InvoiceCreator({
     return (
       formValues.items?.reduce(
         (acc, item) =>
-          acc + Number(item.quantity || 0) * Number(item.price || 0),
+          acc + (Number(item?.quantity) || 0) * (Number(item?.price) || 0),
         0
       ) || 0
     );
@@ -113,25 +170,32 @@ export function InvoiceCreator({
 
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
-      // Mapping form data to match the CreateInvoiceRequest interface
-      // Note: In a real app, you'd send the farmerId instead of just name if available
       const payload = {
-        farmerId: initialData?.farmerId || "65a1...your_logic_here",
-        items: data.items.map((item) => ({
-          ...item,
-          quantity: Number(item.quantity),
-          price: Number(item.price),
-        })),
+        // Updated logic: Using IDs from form data
+        farmerId: data.farmerId || "INTERNAL_ID",
+        preorderId: data.preorderId || undefined,
+        invoiceId: invoiceId,
+        items: data.items,
         notes: data.notes,
+        nrc: {
+          region: data.nrcRegion,
+          township: data.nrcTownship,
+          type: data.nrcType,
+          number: data.nrcNumber,
+        },
       };
 
       await createInvoice(payload).unwrap();
-
       toast.success("Invoice created successfully!");
-      navigate("/dashboard/invoices"); // Redirect after success
+      navigate("/dashboard/invoices");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create invoice");
     }
+  };
+
+  const formatNRC = () => {
+    if (!formValues.nrcRegion || !formValues.nrcNumber) return "N/A";
+    return `${formValues.nrcRegion}/${formValues.nrcTownship}${formValues.nrcType}${formValues.nrcNumber}`;
   };
 
   return (
@@ -140,7 +204,7 @@ export function InvoiceCreator({
       className="w-full max-w-[1600px] mx-auto"
     >
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        {/* LEFT SIDE: FORM INPUTS */}
+        {/* FORM INPUTS */}
         <div className="xl:col-span-7 space-y-6">
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-4">
@@ -191,9 +255,10 @@ export function InvoiceCreator({
                       <SelectValue placeholder="Select a preorder..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {MOCK_PREORDERS.map((po) => (
-                        <SelectItem key={po.id} value={po.id}>
-                          {po.id} — {po.farmerName}
+                      {preorders?.map((po: any) => (
+                        <SelectItem key={po._id} value={po._id}>
+                          {po._id.slice(-6).toUpperCase()} —{" "}
+                          {po.fullName || po.farmerName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -215,19 +280,6 @@ export function InvoiceCreator({
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                    Contact Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3.5 size-4 text-slate-400" />
-                    <Input
-                      {...register("email")}
-                      placeholder="email@example.com"
-                      className="h-11 pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
                     Phone Number
                   </Label>
                   <div className="relative">
@@ -239,7 +291,93 @@ export function InvoiceCreator({
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+
+                {/* NRC ROW */}
+                <div className="md:col-span-2 space-y-3">
+                  <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
+                    <ShieldCheck size={14} /> Identity (NRC)
+                  </Label>
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-3">
+                      <Controller
+                        control={control}
+                        name="nrcRegion"
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="No." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.keys(nrcData).map((reg) => (
+                                <SelectItem key={reg} value={reg}>
+                                  {reg}/
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-4">
+                      <Controller
+                        control={control}
+                        name="nrcTownship"
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            disabled={!selectedNrcRegion}
+                          >
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Township" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {nrcTownshipOptions.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  {t}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Controller
+                        control={control}
+                        name="nrcType"
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger className="h-11 px-2">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="(N)">(N)</SelectItem>
+                              <SelectItem value="(P)">(P)</SelectItem>
+                              <SelectItem value="(E)">(E)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        {...register("nrcNumber")}
+                        placeholder="123456"
+                        className="h-11"
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
                     Address
                   </Label>
@@ -258,7 +396,7 @@ export function InvoiceCreator({
 
               {/* LINE ITEMS SECTION */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold flex items-center gap-2">
                     <Package size={18} className="text-primary" /> Line Items
                   </h3>
@@ -280,36 +418,35 @@ export function InvoiceCreator({
                   </Button>
                 </div>
 
-                {/* TABLE HEADER */}
+                {/* HEADER LABELS */}
                 <div className="grid grid-cols-12 gap-3 px-2">
-                  <div className="col-span-4">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-                      Crop / Item
+                  <div className="col-span-3">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400">
+                      Crop Name
                     </Label>
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest text-center">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Qty
                     </Label>
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                  <div className="col-span-3">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Unit
                     </Label>
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Price
                     </Label>
                   </div>
-                  <div className="col-span-2 text-right">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                  <div className="col-span-2 text-right pr-10">
+                    <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Total
                     </Label>
                   </div>
                 </div>
 
-                {/* FIELDS LOOP */}
                 <div className="space-y-2">
                   {fields.map((field, index) => (
                     <div
@@ -326,11 +463,13 @@ export function InvoiceCreator({
                       <div className="col-span-2">
                         <Input
                           type="number"
-                          {...register(`items.${index}.quantity`)}
+                          {...register(`items.${index}.quantity`, {
+                            valueAsNumber: true,
+                          })}
                           className="h-10 text-center"
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-3">
                         <Controller
                           control={control}
                           name={`items.${index}.unit`}
@@ -340,13 +479,14 @@ export function InvoiceCreator({
                               value={field.value}
                             >
                               <SelectTrigger className="h-10 bg-white">
-                                <SelectValue placeholder="Unit" />
+                                <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="kg">kg</SelectItem>
-                                <SelectItem value="Ton">Ton</SelectItem>
-                                <SelectItem value="lb">lb</SelectItem>
-                                <SelectItem value="Basket">Basket</SelectItem>
+                                {UNITS.map((u) => (
+                                  <SelectItem key={u} value={u}>
+                                    {u}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           )}
@@ -355,20 +495,20 @@ export function InvoiceCreator({
                       <div className="col-span-2">
                         <Input
                           type="number"
-                          {...register(`items.${index}.price`)}
+                          {...register(`items.${index}.price`, {
+                            valueAsNumber: true,
+                          })}
                           className="h-10"
                         />
                       </div>
-                      <div className="col-span-3 flex items-center justify-end gap-2">
+                      <div className="col-span-2 flex items-center justify-end gap-2">
                         <div className="text-right">
-                          <span className="font-mono text-sm font-bold text-slate-700">
+                          <span className="font-mono text-xs font-bold text-slate-700">
                             {(
-                              watch(`items.${index}.quantity`) *
-                              watch(`items.${index}.price`)
+                              (Number(formValues.items?.[index]?.quantity) ||
+                                0) *
+                              (Number(formValues.items?.[index]?.price) || 0)
                             ).toLocaleString()}
-                          </span>
-                          <span className="text-[10px] ml-1 text-slate-400 font-bold uppercase">
-                            MMK
                           </span>
                         </div>
                         <Button
@@ -398,46 +538,24 @@ export function InvoiceCreator({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                  Notes & Payment Terms
+              {/* NOTES SECTION */}
+              <div className="space-y-3">
+                <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
+                  <FileText size={14} /> Notes & Payment Terms
                 </Label>
                 <Textarea
                   {...register("notes")}
-                  placeholder="e.g. Payment due within 30 days..."
-                  className="min-h-[100px] resize-none border-slate-200 focus:border-primary"
+                  placeholder="e.g. Please pay within 7 days. Thank you for your business!"
+                  className="min-h-[100px] bg-slate-50/50 border-slate-200 resize-none"
                 />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* RIGHT SIDE: LIVE PREVIEW */}
+        {/* PREVIEW PANEL */}
         <div className="xl:col-span-5">
           <div className="space-y-6 sticky top-4">
-            <div className="flex justify-between items-center px-2">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">
-                Live Preview
-              </h3>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-white shadow-sm hover:bg-slate-50"
-                >
-                  <Printer size={14} />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-white shadow-sm hover:bg-slate-50"
-                >
-                  <Download size={14} />
-                </Button>
-              </div>
-            </div>
             <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
               <div className="h-2 bg-primary w-full" />
               <CardContent className="p-8 flex-1 flex flex-col">
@@ -449,15 +567,15 @@ export function InvoiceCreator({
                     <h2 className="text-2xl font-black tracking-tighter">
                       INVOICE
                     </h2>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest">
-                      INV-{new Date().getFullYear()}-001
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      {invoiceId}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-lg text-primary italic">
+                    <p className="font-bold text-xl text-primary italic">
                       AgriBridge
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">
                       Farm-to-Market Digital Platform
                     </p>
                   </div>
@@ -470,6 +588,9 @@ export function InvoiceCreator({
                     </p>
                     <p className="font-bold text-slate-900">
                       {formValues.farmerName || "—"}
+                    </p>
+                    <p className="text-[10px] text-primary font-bold mt-1">
+                      {formatNRC()}
                     </p>
                     <p className="text-slate-500">
                       {formValues.address || "No address provided"}
@@ -507,9 +628,9 @@ export function InvoiceCreator({
                               </td>
                               <td className="py-4 text-right font-mono font-bold">
                                 {(
-                                  Number(item.quantity || 0) *
-                                  Number(item.price || 0)
-                                ).toLocaleString()}
+                                  (Number(item.quantity) || 0) *
+                                  (Number(item.price) || 0)
+                                ).toLocaleString()}{" "}
                                 MMK
                               </td>
                             </tr>
@@ -519,46 +640,33 @@ export function InvoiceCreator({
                   </table>
                 </div>
 
-                <div className="mt-8 space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Subtotal</span>
-                    <span className="font-mono text-slate-700">
-                      {subtotal.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                      MMK
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xl font-black pt-4 border-t-2 border-slate-900">
-                    <span>Amount Due</span>
-                    <span className="text-primary">
-                      {subtotal.toLocaleString()} MMK
-                    </span>
-                  </div>
-                </div>
-
+                {/* Notes in Preview */}
                 {formValues.notes && (
-                  <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-widest">
+                  <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                       Notes
                     </p>
                     <p className="text-xs text-slate-600 leading-relaxed italic">
-                      {formValues.notes}
+                      "{formValues.notes}"
                     </p>
                   </div>
                 )}
+
+                <div className="mt-8 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
+                  <span>Amount Due</span>
+                  <span className="text-primary">
+                    {subtotal.toLocaleString()} MMK
+                  </span>
+                </div>
               </CardContent>
             </Card>
             <Button
               type="submit"
               disabled={isCreating}
-              className="w-full bg-primary text-white font-black py-7 text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.01] hover:shadow-blue-200 flex items-center gap-2"
+              className="w-full bg-primary text-white font-black py-7 text-lg shadow-xl flex items-center gap-2"
             >
               {isCreating ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
-                </span>
+                "Processing..."
               ) : (
                 <>
                   <Send size={20} /> Complete & Send Invoice

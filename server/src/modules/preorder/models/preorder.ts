@@ -1,15 +1,23 @@
-import mongoose, { Schema, Document } from "mongoose";
+import { Schema, Document, model, Types } from "mongoose";
 
 export interface IPreorder extends Document {
-  farmerId: mongoose.Types.ObjectId;
-  merchantId: mongoose.Types.ObjectId;
+  farmerId: Types.ObjectId;
+  merchantId: Types.ObjectId;
+  fullName: string;
+  phone: string;
+  address: string; // Added field
+  nrc: {
+    region: string;
+    township: string;
+    type: string;
+    number: string;
+  };
   items: {
-    cropName: string; // Or mongoose.Types.ObjectId if referencing a Crop model
+    cropName: string;
     quantity: number;
     price: number;
     unit: string;
   }[];
-  phone?: string;
   notes?: string;
   deliveryTimeline: {
     count: number;
@@ -20,8 +28,17 @@ export interface IPreorder extends Document {
 
 const PreorderSchema = new Schema<IPreorder>(
   {
-    farmerId: { type: Schema.Types.ObjectId, required: true },
-    merchantId: { type: Schema.Types.ObjectId, required: true },
+    farmerId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    merchantId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true }, // Added field
+    nrc: {
+      region: { type: String, required: true },
+      township: { type: String, required: true },
+      type: { type: String, required: true },
+      number: { type: String, required: true },
+    },
     items: [
       {
         cropName: { type: String, required: true },
@@ -30,7 +47,6 @@ const PreorderSchema = new Schema<IPreorder>(
         unit: { type: String, required: true },
       },
     ],
-    phone: { type: String },
     notes: { type: String },
     deliveryTimeline: {
       count: { type: Number, required: true },
@@ -45,4 +61,4 @@ const PreorderSchema = new Schema<IPreorder>(
   { timestamps: true }
 );
 
-export const Preorder = mongoose.model<IPreorder>("Preorder", PreorderSchema);
+export const Preorder = model<IPreorder>("Preorder", PreorderSchema);

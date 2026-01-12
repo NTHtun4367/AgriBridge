@@ -10,7 +10,6 @@ export const createInvoice = asyncHandler(
       merchantId as string,
       req.body
     );
-
     res.status(201).json(invoice);
   }
 );
@@ -19,7 +18,6 @@ export const getInvoices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const merchantId = req.user?._id;
     const invoices = await invoiceService.getAllInvoices(merchantId as string);
-
     res.status(200).json(invoices);
   }
 );
@@ -28,14 +26,16 @@ export const updateStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status } = req.body;
+    const invoice = await invoiceService.updateInvoiceStatus(id, status);
+    res.status(200).json(invoice);
+  }
+);
 
-    const updatedInvoice = await invoiceService.updateInvoiceStatus(id, status);
-
-    if (!updatedInvoice) {
-      throw new Error("Invoice not found");
-    }
-
-    res.status(200).json(updatedInvoice);
+export const finalizeInvoice = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await invoiceService.completeTransaction(id);
+    res.status(200).json(result);
   }
 );
 
@@ -43,7 +43,6 @@ export const deleteInvoice = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     await invoiceService.deleteInvoice(id);
-
     res.status(200).json({ message: "Invoice deleted successfully" });
   }
 );

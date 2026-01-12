@@ -1,8 +1,10 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface IInvoice extends Document {
+  invoiceId: string;
   farmerId: Types.ObjectId;
   merchantId: Types.ObjectId;
+  preorderId?: Types.ObjectId;
   items: {
     cropName: string;
     quantity: number;
@@ -16,16 +18,10 @@ export interface IInvoice extends Document {
 
 const invoiceSchema = new Schema<IInvoice>(
   {
-    farmerId: {
-      type: Schema.Types.ObjectId,
-      //  ref: "User",
-      required: true,
-    },
-    merchantId: {
-      type: Schema.Types.ObjectId,
-      //   ref: "Merchant",
-      required: true,
-    },
+    invoiceId: { type: String, required: true, unique: true },
+    farmerId: { type: Schema.Types.ObjectId, required: true },
+    merchantId: { type: Schema.Types.ObjectId, required: true },
+    preorderId: { type: Schema.Types.ObjectId }, // Link back to preorder
     items: [
       {
         cropName: { type: String, required: true },
@@ -36,7 +32,7 @@ const invoiceSchema = new Schema<IInvoice>(
     ],
     totalAmount: { type: Number, required: true },
     notes: String,
-    status: { type: String, enum: ["pending", "paid"] },
+    status: { type: String, enum: ["pending", "paid"], default: "pending" },
   },
   { timestamps: true }
 );

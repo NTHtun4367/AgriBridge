@@ -2,6 +2,7 @@ import { apiSlice } from "./api";
 
 export const preorderApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    // Create Preorder
     createPreorder: builder.mutation({
       query: (data) => ({
         url: "/preorder/create-preorder",
@@ -10,14 +11,16 @@ export const preorderApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Preorders"],
     }),
-    // New query to fetch preorders for a specific farmer
+
+    // Fetches preorders for the logged-in farmer
     getMyPreorders: builder.query({
-      query: (farmerId) => ({
-        url: `/preorder/my-preorders?farmerId=${farmerId}`,
+      query: () => ({
+        url: `/preorder/my-preorders`,
         method: "GET",
       }),
       providesTags: ["Preorders"],
     }),
+
     // For Merchant: Get orders received from farmers
     getMerchantPreorders: builder.query({
       query: (merchantId) => `/preorder/merchant?merchantId=${merchantId}`,
@@ -27,7 +30,7 @@ export const preorderApi = apiSlice.injectEndpoints({
     // Update Status (Confirm/Cancel/Delivered)
     updatePreorderStatus: builder.mutation({
       query: ({ id, status }) => ({
-        url: `/${id}/status`,
+        url: `/preorder/${id}/status`,
         method: "PATCH",
         body: { status },
       }),
