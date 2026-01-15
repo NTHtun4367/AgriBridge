@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   CalendarClock,
-  Loader2,
   Package,
   ChevronRight,
   MapPin,
@@ -22,7 +21,12 @@ function PreorderList() {
     skip: !user?.id,
   });
 
-  if (isLoading) return <Loader2 className="animate-spin m-10" />;
+  if (isLoading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
 
   return (
     <div className="space-y-4 p-4 max-w-4xl mx-auto">

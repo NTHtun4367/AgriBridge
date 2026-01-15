@@ -153,8 +153,8 @@ function MerchantProfile() {
       </div>
 
       {/* Hero Section */}
-      <div className="relative group">
-        <div className="relative border rounded-4xl p-6 md:p-10 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
+      <Card className="relative group">
+        <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="shrink-0">
             <div className="w-32 h-32 md:w-40 md:h-40 bg-slate-50 rounded-3xl border-4 border-white shadow-inner flex items-center justify-center relative">
               <Store className="w-16 h-16 text-primary" />
@@ -200,8 +200,8 @@ function MerchantProfile() {
               />
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sidebar Info */}

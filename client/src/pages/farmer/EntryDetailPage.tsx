@@ -36,7 +36,7 @@ function EntryDetailPage() {
   const isExpense = entry.type === "expense";
 
   return (
-    <div className="bg-secondary w-full h-screen overflow-y-scroll p-4 pb-12 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full h-screen p-4 pb-12 animate-in slide-in-from-bottom-4 duration-500">
       {/* Top Navigation Bar */}
       <div>
         <div className="flex items-center justify-between">

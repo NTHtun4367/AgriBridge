@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import * as htmlToImage from "html-to-image"
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +8,7 @@ import {
   Clock,
   X,
   CreditCard,
-  FileDown,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -24,18 +23,13 @@ export default function InvoiceList() {
     useGetFarmerInvoicesQuery();
   const [finalize, { isLoading: isFinalizing }] = useFinalizeInvoiceMutation();
 
-  // State for modal
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
-
-  // Ref for PDF generation
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Merchant Info based on the selected invoice's merchantId
-  // Based on your merchant response, we need to ensure we pass the correct ID string
   const { data: merchant, isLoading: merchantLoading } =
     useGetMerchantInfoQuery(
       selectedInvoice?.merchantId?._id || selectedInvoice?.merchantId,
-      { skip: !selectedInvoice } // Only run query when an invoice is selected
+      { skip: !selectedInvoice }
     );
 
   const handleComplete = async (id: string) => {
@@ -50,32 +44,40 @@ export default function InvoiceList() {
     }
   };
 
-  const handleDownloadPDF = async () => {
+  /**
+   * This generates a high-quality KPay style image.
+   */
+  const handleDownloadImage = async () => {
     if (!invoiceRef.current) return;
 
-    const loadingToast = toast.loading("Generating PDF...");
+    const loadingToast = toast.loading("Generating Receipt Image...");
+    
     try {
-      const element = invoiceRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2, // Higher quality
-        useCORS: true,
-        logging: false,
+      // html-to-image preserves modern CSS better than html2canvas
+      const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
+        quality: 1.0,
+        pixelRatio: 3, // For high-res "KPay style" sharp text
         backgroundColor: "#ffffff",
-        ignoreElements: (el) => el.classList.contains("print-hidden"),
+        // Hides the "Save" button in the final image
+        filter: (node) => {
+          const exclusionClasses = ['print-hidden'];
+          return !exclusionClasses.some(cls => 
+            node instanceof HTMLElement && node.classList.contains(cls)
+          );
+        },
       });
 
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const link = document.createElement("a");
+      link.download = `Receipt_${selectedInvoice.invoiceId}.png`;
+      link.href = dataUrl;
+      link.click();
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice_${selectedInvoice.invoiceId}.pdf`);
       toast.dismiss(loadingToast);
-      toast.success("PDF Downloaded");
+      toast.success("Receipt saved to Photos");
     } catch (error) {
+      console.error("Image Generation Error:", error);
       toast.dismiss(loadingToast);
-      toast.error("Failed to generate PDF");
+      toast.error("Failed to generate image. Please try again.");
     }
   };
 
@@ -137,17 +139,16 @@ export default function InvoiceList() {
             <div className="relative">
               <button
                 onClick={() => setSelectedInvoice(null)}
-                className="absolute -top-12 right-0 text-white flex items-center gap-2 font-bold print:hidden"
+                className="absolute -top-12 right-0 text-white flex items-center gap-2 font-bold print-hidden"
               >
                 <X size={20} /> Close
               </button>
 
-              {/* PDF Wrapper Start */}
+              {/* CAPTURE AREA */}
               <div ref={invoiceRef}>
                 <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
                   <div className="h-2 bg-primary w-full" />
                   <CardContent className="p-8 flex-1 flex flex-col">
-                    {/* Header */}
                     <div className="flex justify-between items-start mb-12">
                       <div>
                         <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4">
@@ -170,7 +171,6 @@ export default function InvoiceList() {
                       </div>
                     </div>
 
-                    {/* Merchant Info - Corrected mapping based on your response object */}
                     <div className="grid grid-cols-2 gap-8 mb-12 text-sm">
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
@@ -181,11 +181,9 @@ export default function InvoiceList() {
                         ) : (
                           <>
                             <p className="font-bold text-slate-900">
-                              {/* Path based on your object: merchantId.businessName */}
                               {merchant?.merchantId?.businessName || "Agri Merchant"}
                             </p>
                             <p className="text-slate-500 text-xs">
-                              {/* Using township and division from your response */}
                               {merchant?.township}, {merchant?.division}
                             </p>
                             <p className="text-slate-500 text-xs">
@@ -218,7 +216,6 @@ export default function InvoiceList() {
                       </div>
                     </div>
 
-                    {/* Table */}
                     <div className="flex-1">
                       <table className="w-full text-sm">
                         <thead>
@@ -255,7 +252,6 @@ export default function InvoiceList() {
                       </table>
                     </div>
 
-                    {/* Total */}
                     <div className="mt-8 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
                       <span>Total Due</span>
                       <span className="text-primary">
@@ -263,7 +259,6 @@ export default function InvoiceList() {
                       </span>
                     </div>
 
-                    {/* Footer Buttons - Hidden in PDF */}
                     <div className="mt-12 flex gap-3 print-hidden">
                       {selectedInvoice.status !== "paid" ? (
                         <Button
@@ -277,9 +272,9 @@ export default function InvoiceList() {
                         <Button
                           variant="outline"
                           className="flex-1 py-6 gap-2 text-green-700 bg-green-50 border-green-200"
-                          onClick={handleDownloadPDF}
+                          onClick={handleDownloadImage}
                         >
-                          <FileDown size={18} /> Download Receipt PDF
+                          <ImageIcon size={18} /> Save Receipt to Photos
                         </Button>
                       )}
                     </div>
