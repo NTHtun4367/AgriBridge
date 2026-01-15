@@ -3,6 +3,7 @@ import {
   createInvoice,
   deleteInvoice,
   getInvoices,
+  getFarmerInvoices, // Added this
   updateStatus,
   finalizeInvoice,
 } from "../controllers/invoice";
@@ -11,24 +12,24 @@ import { allowRoles } from "../../../shared/middleware/role";
 
 const router = Router();
 
-// Global protection: User must be logged in
 router.use(protect);
 
-// --- Merchant Actions ---
-router
-  .route("/invoices")
-  .post(allowRoles("merchant"), createInvoice)
-  .get(allowRoles("merchant"), getInvoices);
+// --- Merchant Specific ---
+router.post("/", allowRoles("merchant"), createInvoice);
+router.get("/merchant", allowRoles("merchant"), getInvoices);
 
+// --- Farmer Specific ---
+router.get("/my-receipts", allowRoles("farmer"), getFarmerInvoices);
+
+// --- Individual Invoice Actions ---
 router
-  .route("/invoices/:id")
+  .route("/:id")
   .patch(allowRoles("merchant"), updateStatus)
   .delete(allowRoles("merchant"), deleteInvoice);
 
-// --- Shared/Farmer Actions ---
-// Finalize is usually triggered by a Farmer clicking 'Download'
+// --- Shared Action ---
 router.patch(
-  "/invoices/:id/finalize",
+  "/:id/finalize",
   allowRoles("farmer", "merchant"),
   finalizeInvoice
 );

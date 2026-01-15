@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router";
-import { useCreateInvoiceMutation } from "@/store/slices/merchantApi";
+import { useCreateInvoiceMutation } from "@/store/slices/invoiceApi";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { type RootState } from "@/store";
@@ -133,6 +133,7 @@ export function InvoiceCreator({
 
   const handleSelectPreorder = (preorderId: string) => {
     const selected = preorders?.find((p: any) => p._id === preorderId);
+    
     if (selected) {
       reset({
         // Logic Change: Injecting the IDs into form state
@@ -169,25 +170,28 @@ export function InvoiceCreator({
   }, [formValues.items]);
 
   const onSubmit = async (data: InvoiceFormValues) => {
+    // Validation: Ensure we have a farmerId to send the notification to
+    if (!data.farmerId && isPreorderMode) {
+      toast.error("Farmer ID is missing. Please re-select the preorder.");
+      return;
+    }
+    
     try {
       const payload = {
-        // Updated logic: Using IDs from form data
-        farmerId: data.farmerId || "INTERNAL_ID",
+        farmerId: data.farmerId,
         preorderId: data.preorderId || undefined,
         invoiceId: invoiceId,
         items: data.items,
         notes: data.notes,
-        nrc: {
-          region: data.nrcRegion,
-          township: data.nrcTownship,
-          type: data.nrcType,
-          number: data.nrcNumber,
-        },
+        totalAmount: subtotal, // Backend calculates this, but good for reference
       };
 
+      // 1. Send to Backend
+      // The Backend Service handles: Saving Invoice + Creating Notification
       await createInvoice(payload).unwrap();
-      toast.success("Invoice created successfully!");
-      navigate("/dashboard/invoices");
+
+      toast.success("Invoice create or sent to farmer successfully!");
+      navigate("/merchant/invoices");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create invoice");
     }

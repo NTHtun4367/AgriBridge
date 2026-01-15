@@ -6,6 +6,7 @@ import asyncHandler from "../../../shared/utils/asyncHandler";
 export const createInvoice = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const merchantId = req.user?._id;
+    // req.body includes farmerId, items, etc.
     const invoice = await invoiceService.createInvoice(
       merchantId as string,
       req.body
@@ -14,10 +15,22 @@ export const createInvoice = asyncHandler(
   }
 );
 
+// For Merchants to see invoices they created
 export const getInvoices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const merchantId = req.user?._id;
     const invoices = await invoiceService.getAllInvoices(merchantId as string);
+    res.status(200).json(invoices);
+  }
+);
+
+// NEW: For Farmers to see invoices sent to them
+export const getFarmerInvoices = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const farmerId = req.user?._id;
+    const invoices = await invoiceService.getInvoicesForFarmer(
+      farmerId as string
+    );
     res.status(200).json(invoices);
   }
 );

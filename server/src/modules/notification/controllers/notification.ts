@@ -10,10 +10,7 @@ export const getMyNotifications = asyncHandler(
       userId?.toString()!
     );
 
-    res.status(200).json({
-      success: true,
-      data: notifications,
-    });
+    res.status(200).json(notifications);
   }
 );
 

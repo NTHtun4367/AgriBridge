@@ -5,18 +5,23 @@ import type {
   UpdateStatusRequest,
 } from "@/types/invoice";
 
-export const merchantApi = apiSlice.injectEndpoints({
+export const invoiceApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // GET Invoices
-    getInvoices: builder.query<IInvoiceResponse[], void>({
-      query: () => "/merchants/invoices",
+    getInvoices: builder.query<any[], void>({
+      query: () => "/invoices/merchant",
+      providesTags: ["Invoice"],
+    }),
+
+    getFarmerInvoices: builder.query<any[], void>({
+      query: () => "/invoices/my-receipts",
       providesTags: ["Invoice"],
     }),
 
     // POST Create Invoice
     createInvoice: builder.mutation<IInvoiceResponse, CreateInvoiceRequest>({
       query: (newInvoice) => ({
-        url: "/merchants/invoices",
+        url: "/invoices",
         method: "POST",
         body: newInvoice,
       }),
@@ -29,7 +34,7 @@ export const merchantApi = apiSlice.injectEndpoints({
       UpdateStatusRequest
     >({
       query: ({ id, status }) => ({
-        url: `/merchants/invoices/${id}`,
+        url: `/invoices/${id}`,
         method: "PATCH",
         body: { status },
       }),
@@ -40,7 +45,7 @@ export const merchantApi = apiSlice.injectEndpoints({
     // This invalidates both tags because it updates the linked Preorder too
     finalizeInvoice: builder.mutation<IInvoiceResponse, string>({
       query: (id) => ({
-        url: `/merchants/invoices/${id}/finalize`,
+        url: `/invoices/${id}/finalize`,
         method: "PATCH",
       }),
       invalidatesTags: ["Invoice", "Preorders"],
@@ -49,7 +54,7 @@ export const merchantApi = apiSlice.injectEndpoints({
     // DELETE Invoice
     deleteInvoice: builder.mutation<{ success: boolean; id: string }, string>({
       query: (id) => ({
-        url: `/merchants/invoices/${id}`,
+        url: `/invoices/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Invoice"],
@@ -59,8 +64,9 @@ export const merchantApi = apiSlice.injectEndpoints({
 
 export const {
   useGetInvoicesQuery,
+  useGetFarmerInvoicesQuery,
   useCreateInvoiceMutation,
   useUpdateInvoiceStatusMutation,
   useFinalizeInvoiceMutation, // Exported for use in the UI
   useDeleteInvoiceMutation,
-} = merchantApi;
+} = invoiceApi;

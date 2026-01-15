@@ -3,9 +3,10 @@ import { Outlet } from "react-router";
 import {
   BookOpenText,
   LayoutDashboard,
+  Receipt,
   Settings,
   ShoppingBag,
-  Sprout,
+  // Sprout,
   Store,
   TrendingUp,
 } from "lucide-react";
@@ -29,11 +30,11 @@ const pages: Page[] = [
     path: "/farmer/merchants",
     icon: <Store className="w-5 h-5" />,
   },
-  {
-    name: "Profit Calculator",
-    path: "/farmer/profit-calculator",
-    icon: <Sprout className="w-5 h-5" />,
-  },
+  // {
+  //   name: "Profit Calculator",
+  //   path: "/farmer/profit-calculator",
+  //   icon: <Sprout className="w-5 h-5" />,
+  // },
   {
     name: "Records",
     path: "/farmer/records",
@@ -43,6 +44,11 @@ const pages: Page[] = [
     name: "Preorders",
     path: "/farmer/preorders",
     icon: <ShoppingBag className="w-5 h-5" />,
+  },
+  {
+    name: "Invoices",
+    path: "/farmer/invoices",
+    icon: <Receipt className="w-5 h-5" />,
   },
   {
     name: "Settings",

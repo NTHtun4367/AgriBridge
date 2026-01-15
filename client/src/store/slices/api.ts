@@ -30,6 +30,7 @@ export const apiSlice = createApi({
     "Entries",
     "Invoice",
     "Preorders",
+    "Notification",
   ], // used for auto re-fetching
   endpoints: () => ({}),
 });

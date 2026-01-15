@@ -2,7 +2,8 @@ import { ModeToggle } from "@/components/ModeToggle";
 import { useNotifications } from "@/hooks/useNotification";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { Bell, Menu, PanelLeftOpen } from "lucide-react";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
+import { NotificationBell } from "./NotificationBell";
 
 interface NavBarProps {
   toggleDesktop: () => void;
@@ -11,13 +12,13 @@ interface NavBarProps {
 
 function NavBar({ toggleDesktop, openMobile }: NavBarProps) {
   const { data: user } = useCurrentUserQuery();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Since this returns 'void', we just call it to trigger side effects.
   useNotifications();
 
   // 2. NOTIFICATION STATE
-  const hasUnread = true;
+  // const hasUnread = true;
 
   return (
     <nav className="w-full flex items-center justify-between px-4 md:px-8 py-2.5 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-40 border-b-2 border-b-primary/35 shadow-sm">
@@ -43,7 +44,7 @@ function NavBar({ toggleDesktop, openMobile }: NavBarProps) {
         <ModeToggle />
 
         {/* Beautiful Notification Bell */}
-        <button
+        {/* <button
           onClick={() => navigate("/farmer/notifications")}
           className="relative p-2.5 rounded-full hover:bg-accent transition-all duration-200 group active:scale-90"
         >
@@ -55,7 +56,8 @@ function NavBar({ toggleDesktop, openMobile }: NavBarProps) {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive border-2 border-background"></span>
             </span>
           )}
-        </button>
+        </button> */}
+        <NotificationBell />
 
         {/* Beautiful User Profile */}
         {user && (

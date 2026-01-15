@@ -23,7 +23,6 @@ import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
-import Notification from "./pages/farmer/Notification.tsx";
 import MarketDashboard from "./pages/market/MarketDashboard.tsx";
 import MarketPriceLanding from "./pages/landing/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/landing/FarmerLanding.tsx";
@@ -37,6 +36,9 @@ import CropPriceHistoryLanding from "./pages/landing/CropPriceHistoryLanding.tsx
 import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
 import PreorderList from "./pages/farmer/PreorderList.tsx";
 import { MerchantOrderList } from "./pages/merchant/MerchantOrderList.tsx";
+import { Notification } from "./pages/farmer/Notification.tsx";
+import InvoiceList from "./pages/farmer/InvoiceList.tsx";
+import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
 
 const router = createBrowserRouter([
   {
@@ -104,6 +106,10 @@ const router = createBrowserRouter([
             element: <PreorderList />,
           },
           {
+            path: "/farmer/invoices",
+            element: <InvoiceList />,
+          },
+          {
             path: "/farmer/notifications",
             element: <Notification />,
           },
@@ -136,6 +142,10 @@ const router = createBrowserRouter([
           {
             path: "/merchant/preorders",
             element: <MerchantOrderList />,
+          },
+          {
+            path: "/merchant/invoices",
+            element: <MerchantInvoices />,
           },
         ],
       },

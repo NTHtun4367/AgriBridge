@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { Invoice } from "../models/invoice";
 import { preorderService } from "../../preorder/services/preorder";
+import { notificationService } from "../../notification/services/notification";
 
 export class InvoiceService {
   async createInvoice(
@@ -16,10 +17,12 @@ export class InvoiceService {
     const { farmerId, preorderId, invoiceId, items, notes } = invoiceData;
 
     const totalAmount = items.reduce(
-      (acc: number, item: any) => acc + (Number(item.quantity) * Number(item.price)),
+      (acc: number, item: any) =>
+        acc + Number(item.quantity) * Number(item.price),
       0
-    );
-
+    )
+        
+    // 1. Create Invoice
     const invoice = new Invoice({
       invoiceId,
       merchantId: new Types.ObjectId(merchantId),
@@ -31,16 +34,30 @@ export class InvoiceService {
       status: "pending",
     });
 
-    return await invoice.save();
+    const savedInvoice = await invoice.save();
+
+    // 2. "Send" to Farmer via Notification Service
+    // This creates the Notification AND the UserNotification link
+    await notificationService.createNotification(
+      "New Invoice Received",
+      `Merchant has sent you invoice ${invoiceId} for ${totalAmount.toLocaleString()} MMK.`,
+      [farmerId],
+      "farmer"
+    );
+
+    return savedInvoice;
   }
 
   async getAllInvoices(merchantId: string) {
-    return await Invoice.find({ merchantId })
-      .populate("farmerId", "fullName phone") // Optional: useful for the list view
-      .sort({ createdAt: -1 });
+    return await Invoice.find({ merchantId }).sort({ createdAt: -1 });
   }
 
-  // Update status manually (e.g., Merchant marks as Cancelled)
+  async getInvoicesForFarmer(farmerId: string) {
+    return await Invoice.find({ farmerId: new Types.ObjectId(farmerId) }).sort({
+      createdAt: -1,
+    });
+  }
+
   async updateInvoiceStatus(invoiceId: string, status: string) {
     const invoice = await Invoice.findByIdAndUpdate(
       invoiceId,
@@ -51,9 +68,7 @@ export class InvoiceService {
     return invoice;
   }
 
-  // Logic for when Farmer downloads/completes the receipt
   async completeTransaction(invoiceId: string) {
-    // 1. Update Invoice to paid
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoiceId,
       { status: "paid" },
@@ -62,18 +77,12 @@ export class InvoiceService {
 
     if (!updatedInvoice) throw new Error("Invoice not found");
 
-    // 2. If it came from a preorder, mark preorder as delivered/completed
+    // Link back to preorder status
     if (updatedInvoice.preorderId) {
-      try {
-        await preorderService.updatePreorderStatus(
-          updatedInvoice.preorderId.toString(),
-          "delivered"
-        );
-      } catch (error) {
-        console.error("Failed to update linked preorder status:", error);
-        // We don't necessarily want to fail the whole invoice completion 
-        // if the preorder link fails, but you could throw here if strictly required.
-      }
+      await preorderService.updatePreorderStatus(
+        updatedInvoice.preorderId.toString(),
+        "delivered"
+      );
     }
 
     return updatedInvoice;
