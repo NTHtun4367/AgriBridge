@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import * as htmlToImage from "html-to-image"
+import * as htmlToImage from "html-to-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,8 @@ import {
   X,
   CreditCard,
   Image as ImageIcon,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -44,25 +46,20 @@ export default function InvoiceList() {
     }
   };
 
-  /**
-   * This generates a high-quality KPay style image.
-   */
   const handleDownloadImage = async () => {
     if (!invoiceRef.current) return;
 
     const loadingToast = toast.loading("Generating Receipt Image...");
-    
+
     try {
-      // html-to-image preserves modern CSS better than html2canvas
       const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
         quality: 1.0,
-        pixelRatio: 3, // For high-res "KPay style" sharp text
+        pixelRatio: 3,
         backgroundColor: "#ffffff",
-        // Hides the "Save" button in the final image
         filter: (node) => {
-          const exclusionClasses = ['print-hidden'];
-          return !exclusionClasses.some(cls => 
-            node instanceof HTMLElement && node.classList.contains(cls)
+          const exclusionClasses = ["print-hidden"];
+          return !exclusionClasses.some(
+            (cls) => node instanceof HTMLElement && node.classList.contains(cls)
           );
         },
       });
@@ -82,54 +79,121 @@ export default function InvoiceList() {
   };
 
   if (invoicesLoading)
-    return <div className="p-10 text-center">Loading receipts...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="mt-4 text-slate-500 animate-pulse">
+          Loading your receipts...
+        </p>
+      </div>
+    );
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">My Digital Receipts</h1>
-        <Receipt className="text-primary" />
+    <div className="max-w-4xl mx-auto p-4 space-y-8">
+      {/* --- ENHANCED HEADER --- */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6">
+        <div>
+          <div className="flex items-center gap-2 text-primary mb-1">
+            <Receipt size={20} />
+            <span className="text-xs font-bold uppercase tracking-widest">
+              Billing History
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            Digital Receipts
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            View, pay, and download your transaction records.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+          <div className="px-3 py-1.5 bg-white shadow-sm rounded-md text-xs font-bold text-slate-700">
+            All Invoices ({invoices?.length || 0})
+          </div>
+        </div>
       </div>
 
-      {/* --- INVOICE LIST --- */}
+      {/* --- ENHANCED INVOICE LIST --- */}
       <div className="grid gap-4">
-        {invoices?.map((inv: any) => (
-          <Card
-            key={inv._id}
-            className="border-l-4 border-l-primary hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedInvoice(inv)}
-          >
-            <CardContent className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`p-3 rounded-full ${
-                    inv.status === "paid" ? "bg-green-100" : "bg-amber-100"
-                  }`}
-                >
-                  {inv.status === "paid" ? (
-                    <CheckCircle className="text-green-600" />
-                  ) : (
-                    <Clock className="text-amber-600" />
-                  )}
+        {invoices?.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
+              <Search className="text-slate-300" size={32} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              No receipts yet
+            </h3>
+            <p className="text-slate-500 max-w-xs mx-auto text-sm">
+              When you complete a purchase or receive an invoice, it will appear
+              here.
+            </p>
+          </div>
+        ) : (
+          invoices?.map((inv: any) => (
+            <Card
+              key={inv._id}
+              className="group border-none shadow-sm hover:shadow-md transition-all cursor-pointer bg-white overflow-hidden relative"
+              onClick={() => setSelectedInvoice(inv)}
+            >
+              {/* Status Side-Bar Color */}
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                  inv.status === "paid" ? "bg-green-500" : "bg-amber-500"
+                }`}
+              />
+
+              <CardContent className="p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div
+                    className={`p-3 rounded-2xl shrink-0 ${
+                      inv.status === "paid"
+                        ? "bg-green-50 text-green-600"
+                        : "bg-amber-50 text-amber-600"
+                    }`}
+                  >
+                    {inv.status === "paid" ? (
+                      <CheckCircle size={24} />
+                    ) : (
+                      <Clock size={24} />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-lg leading-tight group-hover:text-primary transition-colors">
+                      {merchant?.merchantId?.businessName || "Agri Merchant"}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">
+                        #{inv.invoiceId}
+                      </span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        {new Date(inv.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">
-                    {inv.merchantId?.businessName || "Agri Merchant"}
-                  </h3>
-                  <p className="text-sm text-slate-500">#{inv.invoiceId}</p>
+
+                <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-6 border-t md:border-none pt-4 md:pt-0">
+                  <div className="text-left md:text-right">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                      Amount Due
+                    </p>
+                    <span className="text-xl font-black text-slate-900 tracking-tight">
+                      {inv.totalAmount.toLocaleString()}{" "}
+                      <span className="text-xs font-bold text-slate-400">
+                        MMK
+                      </span>
+                    </span>
+                  </div>
+                  <ChevronRight className="text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-black text-primary">
-                  {inv.totalAmount.toLocaleString()} MMK
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
-      {/* --- MODAL --- */}
+      {/* --- MODAL (Kept exactly as requested) --- */}
       <Dialog
         open={!!selectedInvoice}
         onOpenChange={() => setSelectedInvoice(null)}
@@ -181,7 +245,7 @@ export default function InvoiceList() {
                         ) : (
                           <>
                             <p className="font-bold text-slate-900">
-                              {merchant?.merchantId?.businessName || "Agri Merchant"}
+                              {merchant?.merchantId?.businessName}
                             </p>
                             <p className="text-slate-500 text-xs">
                               {merchant?.township}, {merchant?.division}
@@ -230,7 +294,7 @@ export default function InvoiceList() {
                           {selectedInvoice.items?.map(
                             (item: any, i: number) => (
                               <tr key={i} className="border-b border-slate-50">
-                                <td className="py-4 font-medium">
+                                <td className="py-4 font-medium text-slate-900">
                                   {item.cropName}
                                 </td>
                                 <td className="py-4 text-center">
@@ -239,7 +303,7 @@ export default function InvoiceList() {
                                 <td className="py-4 text-right">
                                   {item.price.toLocaleString()}
                                 </td>
-                                <td className="py-4 text-right font-bold">
+                                <td className="py-4 text-right font-bold text-slate-900">
                                   {(
                                     item.quantity * item.price
                                   ).toLocaleString()}{" "}
@@ -274,7 +338,7 @@ export default function InvoiceList() {
                           className="flex-1 py-6 gap-2 text-green-700 bg-green-50 border-green-200"
                           onClick={handleDownloadImage}
                         >
-                          <ImageIcon size={18} /> Save Receipt to Photos
+                          <ImageIcon size={18} /> Save Receipt to Gallery
                         </Button>
                       )}
                     </div>

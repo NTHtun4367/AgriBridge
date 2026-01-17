@@ -92,9 +92,6 @@ function MerchantDashboard() {
                   </span>
                 </div>
               </div>
-              <Button>
-                Complete & Send Invoice
-              </Button>
             </div>
 
             <InvoiceCreator

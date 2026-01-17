@@ -46,7 +46,7 @@ import { useNavigate } from "react-router";
 
 const formatNRC = (nrc: any) => {
   if (!nrc) return "N/A";
-  return `${nrc.region}/${nrc.township}(${nrc.type})${nrc.number}`;
+  return `${nrc.region}/${nrc.township}${nrc.type}${nrc.number}`;
 };
 
 export function MerchantOrderList() {
@@ -121,8 +121,8 @@ export function MerchantOrderList() {
         {/* Search and Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">
-              Merchant Dashboard
+            <h1 className="text-2xl font-black tracking-tight">
+              Preorders
             </h1>
             <p className="text-sm text-slate-500 font-medium">
               Review and manage farmer preorders
@@ -134,7 +134,7 @@ export function MerchantOrderList() {
               size={18}
             />
             <Input
-              placeholder="Search farmer name or NRC..."
+              placeholder="Search with farmer name..."
               className="pl-10 bg-white border-slate-200"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -142,10 +142,10 @@ export function MerchantOrderList() {
           </div>
         </div>
 
-        <Card className="border-none shadow-xl overflow-hidden bg-white">
+        <Card className="border-none shadow-xl overflow-hidden">
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-secondary">
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="pl-6 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     Order ID
@@ -178,7 +178,7 @@ export function MerchantOrderList() {
                         #{order._id.slice(-6).toUpperCase()}
                       </TableCell>
                       <TableCell>
-                        <span className="font-bold text-slate-900 text-sm">
+                        <span className="font-bold text-sm">
                           {order.fullName}
                         </span>
                       </TableCell>

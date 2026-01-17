@@ -7,8 +7,15 @@ export interface IInvoiceItem {
 
 export interface IInvoiceResponse {
   _id: string;
+  invoiceId: string; // The custom ID (e.g., INV-2024-1234)
   farmerId: string;
   merchantId: string;
+  preorderId?: string;
+  // Saved Metadata
+  farmerName: string;
+  farmerPhone: string;
+  farmerAddress: string;
+  farmerNRC: string;
   items: IInvoiceItem[];
   totalAmount: number;
   notes?: string;
@@ -17,14 +24,19 @@ export interface IInvoiceResponse {
   updatedAt: string;
 }
 
-// Data required to create a new invoice
 export interface CreateInvoiceRequest {
+  invoiceId: string;
   farmerId: string;
+  preorderId?: string;
+  // Added metadata fields for the request
+  farmerName: string;
+  farmerPhone: string;
+  farmerAddress: string;
+  farmerNRC: string;
   items: IInvoiceItem[];
   notes?: string;
 }
 
-// Data required to update status
 export interface UpdateStatusRequest {
   id: string;
   status: "pending" | "paid";

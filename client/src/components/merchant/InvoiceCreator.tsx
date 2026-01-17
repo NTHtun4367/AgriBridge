@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import {
   Receipt,
@@ -10,6 +10,7 @@ import {
   Send,
   ShieldCheck,
   FileText,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +45,8 @@ const nrcData = nrcDataRaw as Record<string, string[]>;
 const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
 
 interface InvoiceFormValues {
-  // Added these two for backend linking logic
   farmerId: string;
   preorderId: string;
-
   farmerName: string;
   email: string;
   phone: string;
@@ -76,9 +75,14 @@ export function InvoiceCreator({
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const { data: preorders } = useGetMerchantPreordersQuery(user?.id, {
+  const invoicePreviewRef = useRef<HTMLDivElement>(null);
+
+  const { data } = useGetMerchantPreordersQuery(user?.id, {
     skip: !user?.id,
   });
+
+  const preorders =
+    data && data.filter((order: any) => order.status == "confirmed");
 
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
 
@@ -101,11 +105,8 @@ export function InvoiceCreator({
     });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
-
-  // High-performance watch for UI reactivity
   const formValues = useWatch({ control });
 
-  // Generate a stable Invoice ID for the session
   const invoiceId = useMemo(
     () =>
       `INV-${new Date().getFullYear()}-${Math.floor(
@@ -114,13 +115,11 @@ export function InvoiceCreator({
     []
   );
 
-  // NRC Township Logic
   const selectedNrcRegion = formValues.nrcRegion;
   const nrcTownshipOptions = useMemo(() => {
     return selectedNrcRegion ? nrcData[selectedNrcRegion] || [] : [];
   }, [selectedNrcRegion]);
 
-  // Reset township when region changes to prevent invalid data
   useEffect(() => {
     if (selectedNrcRegion) {
       setValue("nrcTownship", "");
@@ -133,13 +132,10 @@ export function InvoiceCreator({
 
   const handleSelectPreorder = (preorderId: string) => {
     const selected = preorders?.find((p: any) => p._id === preorderId);
-    
     if (selected) {
       reset({
-        // Logic Change: Injecting the IDs into form state
         preorderId: selected._id,
         farmerId: selected.farmerId,
-
         farmerName: selected.fullName || selected.farmerName,
         email: selected.email || "",
         phone: selected.phone,
@@ -170,27 +166,26 @@ export function InvoiceCreator({
   }, [formValues.items]);
 
   const onSubmit = async (data: InvoiceFormValues) => {
-    // Validation: Ensure we have a farmerId to send the notification to
-    if (!data.farmerId && isPreorderMode) {
-      toast.error("Farmer ID is missing. Please re-select the preorder.");
+    if (!data.farmerId) {
+      toast.error("Farmer identification is required.");
       return;
     }
-    
     try {
+      const fullNRC = `${data.nrcRegion}/${data.nrcTownship}${data.nrcType}${data.nrcNumber}`;
       const payload = {
         farmerId: data.farmerId,
         preorderId: data.preorderId || undefined,
         invoiceId: invoiceId,
+        farmerName: data.farmerName,
+        farmerPhone: data.phone,
+        farmerAddress: data.address,
+        farmerNRC: fullNRC,
         items: data.items,
         notes: data.notes,
-        totalAmount: subtotal, // Backend calculates this, but good for reference
+        totalAmount: subtotal,
       };
-
-      // 1. Send to Backend
-      // The Backend Service handles: Saving Invoice + Creating Notification
       await createInvoice(payload).unwrap();
-
-      toast.success("Invoice create or sent to farmer successfully!");
+      toast.success("Invoice sent to farmer successfully!");
       navigate("/merchant/invoices");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create invoice");
@@ -202,14 +197,49 @@ export function InvoiceCreator({
     return `${formValues.nrcRegion}/${formValues.nrcTownship}${formValues.nrcType}${formValues.nrcNumber}`;
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="w-full max-w-[1600px] mx-auto"
     >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @media print {
+          body * { visibility: hidden; }
+          #invoice-print-area, #invoice-print-area * { 
+            visibility: visible; 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+          }
+          
+          #invoice-print-area {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: auto;
+            margin: 0;
+            padding: 40px;
+            box-shadow: none !important;
+            border: none !important;
+          }
+
+          .no-print { display: none !important; }
+          
+          @page { margin: 0; size: auto; }
+        }
+      `,
+        }}
+      />
+
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* FORM INPUTS */}
-        <div className="xl:col-span-7 space-y-6">
+        <div className="xl:col-span-7 space-y-6 no-print">
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -270,7 +300,6 @@ export function InvoiceCreator({
                 </div>
               )}
 
-              {/* FARMER INFO */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
@@ -296,7 +325,6 @@ export function InvoiceCreator({
                   </div>
                 </div>
 
-                {/* NRC ROW */}
                 <div className="md:col-span-2 space-y-3">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
                     <ShieldCheck size={14} /> Identity (NRC)
@@ -398,7 +426,6 @@ export function InvoiceCreator({
 
               <Separator />
 
-              {/* LINE ITEMS SECTION */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold flex items-center gap-2">
@@ -422,7 +449,6 @@ export function InvoiceCreator({
                   </Button>
                 </div>
 
-                {/* HEADER LABELS */}
                 <div className="grid grid-cols-12 gap-3 px-2">
                   <div className="col-span-3">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
@@ -542,7 +568,6 @@ export function InvoiceCreator({
                 </div>
               </div>
 
-              {/* NOTES SECTION */}
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
                   <FileText size={14} /> Notes & Payment Terms
@@ -560,12 +585,18 @@ export function InvoiceCreator({
         {/* PREVIEW PANEL */}
         <div className="xl:col-span-5">
           <div className="space-y-6 sticky top-4">
-            <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
-              <div className="h-2 bg-primary w-full" />
+            <Card
+              id="invoice-print-area"
+              ref={invoicePreviewRef}
+              className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col"
+            >
+              {/* THE GREEN HEADER LINE - Removed no-print and changed color */}
+              <div className="h-3 bg-primary w-full" />
+              
               <CardContent className="p-8 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-12">
                   <div>
-                    <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4">
+                    <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4 no-print">
                       <Receipt size={24} />
                     </div>
                     <h2 className="text-2xl font-black tracking-tighter">
@@ -644,7 +675,6 @@ export function InvoiceCreator({
                   </table>
                 </div>
 
-                {/* Notes in Preview */}
                 {formValues.notes && (
                   <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
@@ -664,19 +694,31 @@ export function InvoiceCreator({
                 </div>
               </CardContent>
             </Card>
-            <Button
-              type="submit"
-              disabled={isCreating}
-              className="w-full bg-primary text-white font-black py-7 text-lg shadow-xl flex items-center gap-2"
-            >
-              {isCreating ? (
-                "Processing..."
-              ) : (
-                <>
-                  <Send size={20} /> Complete & Send Invoice
-                </>
-              )}
-            </Button>
+
+            <div className="grid grid-cols-2 gap-4 no-print">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrint}
+                className="py-7 font-bold flex items-center gap-2 border-2"
+              >
+                <Printer size={20} /> Print Preview
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={isCreating}
+                className="bg-primary text-white font-black py-7 text-lg shadow-xl flex items-center gap-2"
+              >
+                {isCreating ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <Send size={20} /> Send Invoice
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

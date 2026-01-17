@@ -17,36 +17,47 @@ export const getMyNotifications = asyncHandler(
 export const markAsRead = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const { id: notificationId } = req.params;
+    const { id: userNotificationId } = req.params; // This is the ID of the UserNotification doc
 
     const updated = await notificationService.markAsRead(
       userId?.toString()!,
-      notificationId
+      userNotificationId
     );
 
     if (!updated) {
       res.status(404);
-      throw new Error("Notification not found.");
+      throw new Error("Notification record not found.");
     }
 
     res.status(200).json({ success: true, data: updated });
   }
 );
 
-// New Delete Handler
 export const deleteNotification = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const { id: notificationId } = req.params;
+    const { id: userNotificationId } = req.params;
 
     await notificationService.deleteNotification(
       userId?.toString()!,
-      notificationId
+      userNotificationId
     );
+
+    res.status(200).json({ success: true, message: "Deleted" });
+  }
+);
+
+export const markAllAsRead = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+console.log("mark all read");
+
+    await notificationService.markAllAsRead(userId?.toString()!);
+console.log("finish");
 
     res.status(200).json({
       success: true,
-      message: "Notification deleted successfully",
+      message: "All notifications marked as read",
     });
   }
 );

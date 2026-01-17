@@ -5,6 +5,11 @@ export interface IInvoice extends Document {
   farmerId: Types.ObjectId;
   merchantId: Types.ObjectId;
   preorderId?: Types.ObjectId;
+  // Metadata fields to save from input
+  farmerName: string;
+  farmerPhone: string;
+  farmerAddress: string;
+  farmerNRC: string;
   items: {
     cropName: string;
     quantity: number;
@@ -21,7 +26,11 @@ const invoiceSchema = new Schema<IInvoice>(
     invoiceId: { type: String, required: true, unique: true },
     farmerId: { type: Schema.Types.ObjectId, required: true },
     merchantId: { type: Schema.Types.ObjectId, required: true },
-    preorderId: { type: Schema.Types.ObjectId }, // Link back to preorder
+    preorderId: { type: Schema.Types.ObjectId },
+    farmerName: { type: String, required: true },
+    farmerPhone: { type: String, required: true },
+    farmerAddress: { type: String },
+    farmerNRC: { type: String },
     items: [
       {
         cropName: { type: String, required: true },

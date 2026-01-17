@@ -39,6 +39,7 @@ import { MerchantOrderList } from "./pages/merchant/MerchantOrderList.tsx";
 import { Notification } from "./pages/farmer/Notification.tsx";
 import InvoiceList from "./pages/farmer/InvoiceList.tsx";
 import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
+import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
 
 const router = createBrowserRouter([
   {
@@ -146,6 +147,14 @@ const router = createBrowserRouter([
           {
             path: "/merchant/invoices",
             element: <MerchantInvoices />,
+          },
+          {
+            path: "/merchant/invoices/create",
+            element: <MerchantInvoiceCreate />,
+          },
+          {
+            path: "/merchant/notifications",
+            element: <Notification />,
           },
         ],
       },

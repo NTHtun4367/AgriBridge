@@ -7,18 +7,16 @@ import type {
 
 export const invoiceApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // GET Invoices
-    getInvoices: builder.query<any[], void>({
+    getInvoices: builder.query<IInvoiceResponse[], void>({
       query: () => "/invoices/merchant",
       providesTags: ["Invoice"],
     }),
 
-    getFarmerInvoices: builder.query<any[], void>({
+    getFarmerInvoices: builder.query<IInvoiceResponse[], void>({
       query: () => "/invoices/my-receipts",
       providesTags: ["Invoice"],
     }),
 
-    // POST Create Invoice
     createInvoice: builder.mutation<IInvoiceResponse, CreateInvoiceRequest>({
       query: (newInvoice) => ({
         url: "/invoices",
@@ -28,7 +26,6 @@ export const invoiceApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Invoice"],
     }),
 
-    // PATCH Update Status (Manual)
     updateInvoiceStatus: builder.mutation<
       IInvoiceResponse,
       UpdateStatusRequest
@@ -38,11 +35,9 @@ export const invoiceApi = apiSlice.injectEndpoints({
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: ["Invoice"],
+      invalidatesTags: ["Invoice", "Preorders"],
     }),
 
-    // NEW: Finalize Invoice (Triggered by Download)
-    // This invalidates both tags because it updates the linked Preorder too
     finalizeInvoice: builder.mutation<IInvoiceResponse, string>({
       query: (id) => ({
         url: `/invoices/${id}/finalize`,
@@ -51,7 +46,6 @@ export const invoiceApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Invoice", "Preorders"],
     }),
 
-    // DELETE Invoice
     deleteInvoice: builder.mutation<{ success: boolean; id: string }, string>({
       query: (id) => ({
         url: `/invoices/${id}`,
@@ -67,6 +61,6 @@ export const {
   useGetFarmerInvoicesQuery,
   useCreateInvoiceMutation,
   useUpdateInvoiceStatusMutation,
-  useFinalizeInvoiceMutation, // Exported for use in the UI
+  useFinalizeInvoiceMutation,
   useDeleteInvoiceMutation,
 } = invoiceApi;

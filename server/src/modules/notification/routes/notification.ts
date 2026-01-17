@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   deleteNotification,
   getMyNotifications,
+  markAllAsRead,
   markAsRead,
 } from "../controllers/notification";
 import { protect } from "../../../shared/middleware/authMiddleware";
@@ -12,6 +13,7 @@ router.use(protect);
 
 router.get("/", getMyNotifications);
 router.patch("/:id/read", markAsRead);
-router.delete("/:id/delete", deleteNotification);
+router.patch("/read-all", markAllAsRead);
+router.delete("/:id", deleteNotification);
 
 export default router;

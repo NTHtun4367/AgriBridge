@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Settings,
   BarChart3,
-  ListOrdered,
+  ShoppingBag,
+  Receipt,
 } from "lucide-react";
 
 const pages: Page[] = [
@@ -30,7 +31,12 @@ const pages: Page[] = [
   {
     name: "Preorders",
     path: "/merchant/preorders",
-    icon: <ListOrdered className="w-5 h-5" />,
+    icon: <ShoppingBag className="w-5 h-5" />,
+  },
+  {
+    name: "Invoices",
+    path: "/merchant/invoices",
+    icon: <Receipt className="w-5 h-5" />,
   },
   {
     name: "Settings",
@@ -76,7 +82,7 @@ function MerchantPanel() {
           toggleDesktop={() => setIsCollapsed(!isCollapsed)}
           openMobile={() => setIsMobileOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/5">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary">
           <Outlet />
         </main>
       </div>

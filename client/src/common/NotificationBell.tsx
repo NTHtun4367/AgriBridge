@@ -7,9 +7,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 
 export const NotificationBell = () => {
   const navigate = useNavigate();
+  const { data: user } = useCurrentUserQuery();
   const { data, isLoading } = useGetNotificationsQuery();
 
   // Your backend returns a raw array as seen in your terminal log
@@ -77,7 +79,7 @@ export const NotificationBell = () => {
 
         {/* This button connects to your Notification Page */}
         <Link
-          to="/farmer/  notifications"
+          to={`/${user?.role}/notifications`}
           className="p-3 text-center text-xs font-bold text-blue-600 hover:bg-gray-50 border-t"
         >
           View All Notifications

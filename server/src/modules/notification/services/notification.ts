@@ -49,12 +49,13 @@ export class NotificationService {
 
   /**
    * Marks a specific notification as read for a user
+   * @param userNotificationId - The _id of the UserNotification document
    */
-  async markAsRead(userId: string, notificationId: string) {
+  async markAsRead(userId: string, userNotificationId: string) {
     return await UserNotification.findOneAndUpdate(
       {
+        _id: new Types.ObjectId(userNotificationId),
         userId: new Types.ObjectId(userId),
-        notificationId: new Types.ObjectId(notificationId),
       },
       { isRead: true },
       { new: true }
@@ -64,11 +65,11 @@ export class NotificationService {
   /**
    * Soft deletes a notification from the user's view
    */
-  async deleteNotification(userId: string, notificationId: string) {
+  async deleteNotification(userId: string, userNotificationId: string) {
     return await UserNotification.findOneAndUpdate(
       {
+        _id: new Types.ObjectId(userNotificationId),
         userId: new Types.ObjectId(userId),
-        notificationId: new Types.ObjectId(notificationId),
       },
       { isDeleted: true },
       { new: true }
@@ -80,7 +81,11 @@ export class NotificationService {
    */
   async markAllAsRead(userId: string) {
     return await UserNotification.updateMany(
-      { userId: new Types.ObjectId(userId), isRead: false },
+      {
+        userId: new Types.ObjectId(userId),
+        isRead: false,
+        isDeleted: false, // Don't update items the user has deleted
+      },
       { isRead: true }
     );
   }
