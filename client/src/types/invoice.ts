@@ -26,7 +26,7 @@ export interface IInvoiceResponse {
 
 export interface CreateInvoiceRequest {
   invoiceId: string;
-  farmerId: string;
+  farmerId?: string;
   preorderId?: string;
   // Added metadata fields for the request
   farmerName: string;
@@ -35,6 +35,7 @@ export interface CreateInvoiceRequest {
   farmerNRC: string;
   items: IInvoiceItem[];
   notes?: string;
+  status?: string;
 }
 
 export interface UpdateStatusRequest {

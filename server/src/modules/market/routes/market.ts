@@ -2,29 +2,41 @@ import { Router } from "express";
 import { protect } from "../../../shared/middleware/authMiddleware";
 import { allowRoles } from "../../../shared/middleware/role";
 import {
+  createCrop,
+  createMarket,
+  deleteCrop,
+  deleteMarket,
   getAllCrops,
   getAllMarkets,
   getCropPriceHistory,
-  getLatestPrices,
   getMarketPrices,
+  updateCrop,
+  updateMarket,
   updateMarketPrices,
 } from "../controllers/market";
-import { validatePriceUpdate } from "../validators/market";
-import { validateRequest } from "../../../shared/middleware/validateRequest";
 
 const router = Router();
 
+// --- Price Updates (Admin & Merchant) ---
 router.post(
   "/update",
   protect,
   allowRoles("admin", "merchant"),
-  validatePriceUpdate,
-  validateRequest,
   updateMarketPrices
 );
 router.get("/prices", getMarketPrices);
-router.get("/crops", protect, allowRoles("admin", "merchant"), getAllCrops);
-router.get("/", protect, allowRoles("admin"), getAllMarkets);
 router.get("/analytics/history", getCropPriceHistory);
+
+// --- Crop Management ---
+router.get("/crops", protect, getAllCrops); // Accessible to all logged in users
+router.post("/crops", protect, allowRoles("admin"), createCrop);
+router.put("/crops/:id", protect, allowRoles("admin"), updateCrop);
+router.delete("/crops/:id", protect, allowRoles("admin"), deleteCrop);
+
+// --- Market Management ---
+router.get("/", protect, getAllMarkets);
+router.post("/", protect, allowRoles("admin"), createMarket);
+router.put("/:id", protect, allowRoles("admin"), updateMarket);
+router.delete("/:id", protect, allowRoles("admin"), deleteMarket);
 
 export default router;

@@ -9,6 +9,18 @@ export const getAllFarmersInfo = asyncHandler(
   }
 );
 
+export const getVerifiedMerchants = asyncHandler(
+  async (req: Request, res: Response) => {
+    const merchants = await authService.getVerifiedMerchants();
+
+    if (!merchants || merchants.length === 0) {
+      throw new Error("No verified merchants found");
+    }
+
+    res.status(200).json(merchants);
+  }
+);
+
 export const changeUserStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;

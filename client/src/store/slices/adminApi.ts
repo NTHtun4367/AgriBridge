@@ -9,6 +9,11 @@ export const adminApi = apiSlice.injectEndpoints({
       providesTags: ["Farmer"],
     }),
 
+    getAllMerchants: builder.query<User[], undefined>({
+      query: () => "/merchants/all",
+      providesTags: ["Merchant"],
+    }),
+
     changeUserStatus: builder.mutation({
       query: ({ userId, status }) => ({
         url: `/users/${userId}`,
@@ -41,6 +46,7 @@ export const adminApi = apiSlice.injectEndpoints({
 
 export const {
   useGetAllFarmersQuery,
+  useGetAllMerchantsQuery,
   useChangeUserStatusMutation,
   useGetAllVerificationPendingUsersQuery,
   useUpdateUserVerificationStatusMutation,

@@ -5,6 +5,56 @@ import { marketService } from "../services/market";
 import { authService } from "../../auth/services/auth";
 import { NotificationModule } from "../../notification";
 
+// --- CROP CONTROLLERS ---
+export const createCrop = asyncHandler(async (req: Request, res: Response) => {
+  const crop = await marketService.createCrop(req.body);
+  res.status(201).json({ success: true, data: crop });
+});
+
+export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
+  const crops = await marketService.getCrops();
+  res.status(200).json(crops);
+});
+
+export const updateCrop = asyncHandler(async (req: Request, res: Response) => {
+  const crop = await marketService.updateCrop(req.params.id, req.body);
+  res.status(200).json({ success: true, data: crop });
+});
+
+export const deleteCrop = asyncHandler(async (req: Request, res: Response) => {
+  await marketService.deleteCrop(req.params.id);
+  res.status(200).json({ success: true, message: "Crop deleted" });
+});
+
+// --- MARKET CONTROLLERS ---
+export const createMarket = asyncHandler(
+  async (req: Request, res: Response) => {
+    const market = await marketService.createMarket(req.body);
+    res.status(201).json({ success: true, data: market });
+  }
+);
+
+export const getAllMarkets = asyncHandler(
+  async (req: Request, res: Response) => {
+    const markets = await marketService.getMarkets();
+    res.status(200).json(markets);
+  }
+);
+
+export const updateMarket = asyncHandler(
+  async (req: Request, res: Response) => {
+    const market = await marketService.updateMarket(req.params.id, req.body);
+    res.status(200).json({ success: true, data: market });
+  }
+);
+
+export const deleteMarket = asyncHandler(
+  async (req: Request, res: Response) => {
+    await marketService.deleteMarket(req.params.id);
+    res.status(200).json({ success: true, message: "Market deleted" });
+  }
+);
+
 export const updateMarketPrices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { marketId, updates } = req.body; // marketId is optional here
@@ -52,18 +102,6 @@ export const getLatestPrices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const latest = await marketService.getLatestPrices();
     res.status(200).json(latest);
-  }
-);
-
-export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
-  const crops = await marketService.getCrops();
-  res.status(200).json(crops);
-});
-
-export const getAllMarkets = asyncHandler(
-  async (req: Request, res: Response) => {
-    const markets = await marketService.getMarkets();
-    res.status(200).json(markets);
   }
 );
 

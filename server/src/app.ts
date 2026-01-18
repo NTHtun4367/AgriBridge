@@ -48,7 +48,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-// app.use("/api/v1", adminRoutes);
+app.use("/api/v1", adminRoutes);
 app.use("/api/v1/markets", marketRoutes);
 app.use("/api/v1/farmers", farmerRoutes);
 app.use("/api/v1/invoices", merchantRoutes);

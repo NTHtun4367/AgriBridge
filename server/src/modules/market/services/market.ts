@@ -4,6 +4,54 @@ import { Crop } from "../models/crop";
 import { PipelineStage, Types } from "mongoose"; // Added this import
 
 export class MarketService {
+  // --- CROP CRUD ---
+  async getCrops() {
+    return await Crop.find().sort({ category: 1, name: 1 });
+  }
+
+  async createCrop(data: { name: string; category: "rice" | "beans" }) {
+    return await Crop.create(data);
+  }
+
+  async updateCrop(
+    id: string,
+    data: Partial<{ name: string; category: "rice" | "beans" }>
+  ) {
+    const crop = await Crop.findByIdAndUpdate(id, data, { new: true });
+    if (!crop) throw new Error("Crop not found");
+    return crop;
+  }
+
+  async deleteCrop(id: string) {
+    // Check if crop is being used in prices before deleting (Optional)
+    const inUse = await MarketPrice.findOne({ cropId: id });
+    if (inUse) throw new Error("Cannot delete crop that has price history");
+    return await Crop.findByIdAndDelete(id);
+  }
+
+  // --- MARKET CRUD ---
+  async getMarkets() {
+    return await Market.find().sort({ name: 1 });
+  }
+
+  async createMarket(data: {
+    name: string;
+    region: string;
+    isActive?: boolean;
+  }) {
+    return await Market.create(data);
+  }
+
+  async updateMarket(id: string, data: any) {
+    const market = await Market.findByIdAndUpdate(id, data, { new: true });
+    if (!market) throw new Error("Market not found");
+    return market;
+  }
+
+  async deleteMarket(id: string) {
+    return await Market.findByIdAndDelete(id);
+  }
+
   async updatePrices(
     marketId: string | undefined,
     updates: any[],
@@ -38,14 +86,6 @@ export class MarketService {
       .populate("marketId", "name")
       .populate("cropId", "name")
       .sort({ createdAt: -1 });
-  }
-
-  async getCrops() {
-    return await Crop.find().sort({ category: 1, name: 1 });
-  }
-
-  async getMarkets() {
-    return await Market.find({ isActive: true }).sort({ name: 1 });
   }
 
   async getLatestMarketAnalytics(filters: {

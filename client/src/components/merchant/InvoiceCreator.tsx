@@ -166,14 +166,14 @@ export function InvoiceCreator({
   }, [formValues.items]);
 
   const onSubmit = async (data: InvoiceFormValues) => {
-    if (!data.farmerId) {
+    if (mode === "preorder" && !data.farmerId) {
       toast.error("Farmer identification is required.");
       return;
     }
     try {
       const fullNRC = `${data.nrcRegion}/${data.nrcTownship}${data.nrcType}${data.nrcNumber}`;
       const payload = {
-        farmerId: data.farmerId,
+        farmerId: mode === "preorder" ? data.farmerId : undefined,
         preorderId: data.preorderId || undefined,
         invoiceId: invoiceId,
         farmerName: data.farmerName,
@@ -183,6 +183,7 @@ export function InvoiceCreator({
         items: data.items,
         notes: data.notes,
         totalAmount: subtotal,
+        status: mode === "preorder" ? "pending" : "paid",
       };
       await createInvoice(payload).unwrap();
       toast.success("Invoice sent to farmer successfully!");
@@ -460,7 +461,7 @@ export function InvoiceCreator({
                       Qty
                     </Label>
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Unit
                     </Label>
@@ -470,7 +471,7 @@ export function InvoiceCreator({
                       Price
                     </Label>
                   </div>
-                  <div className="col-span-2 text-right pr-10">
+                  <div className="col-span-3 text-right pr-10">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
                       Total
                     </Label>
@@ -499,7 +500,7 @@ export function InvoiceCreator({
                           className="h-10 text-center"
                         />
                       </div>
-                      <div className="col-span-3">
+                      <div className="col-span-2">
                         <Controller
                           control={control}
                           name={`items.${index}.unit`}
@@ -531,7 +532,7 @@ export function InvoiceCreator({
                           className="h-10"
                         />
                       </div>
-                      <div className="col-span-2 flex items-center justify-end gap-2">
+                      <div className="col-span-3 flex items-center justify-end gap-2">
                         <div className="text-right">
                           <span className="font-mono text-xs font-bold text-slate-700">
                             {(
@@ -592,7 +593,7 @@ export function InvoiceCreator({
             >
               {/* THE GREEN HEADER LINE - Removed no-print and changed color */}
               <div className="h-3 bg-primary w-full" />
-              
+
               <CardContent className="p-8 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-12">
                   <div>

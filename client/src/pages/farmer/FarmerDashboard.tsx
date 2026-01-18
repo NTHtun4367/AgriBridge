@@ -49,7 +49,9 @@ function FarmerDashboard() {
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {entries && entries.length === 0 ? (
-              <div>No recent entries.</div>
+              <div>
+                No recent entries.
+              </div>
             ) : (
               // We slice the array from index 0 to 6 before mapping
               entries

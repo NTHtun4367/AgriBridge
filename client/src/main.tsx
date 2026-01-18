@@ -40,6 +40,8 @@ import { Notification } from "./pages/farmer/Notification.tsx";
 import InvoiceList from "./pages/farmer/InvoiceList.tsx";
 import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
 import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
+import CropManagement from "./pages/admin/CropManagement.tsx";
+import MarketPlaceManagement from "./pages/admin/MarketLocationManagement.tsx";
 
 const router = createBrowserRouter([
   {
@@ -184,6 +186,18 @@ const router = createBrowserRouter([
           },
           {
             path: "/admin/manage-market",
+            element: <MarketManagement />,
+          },
+          {
+            path: "/admin/manage-market/crops",
+            element: <CropManagement />,
+          },
+          {
+            path: "/admin/manage-market/markets",
+            element: <MarketPlaceManagement />,
+          },
+          {
+            path: "/admin/manage-market/prices",
             element: <MarketManagement />,
           },
           {

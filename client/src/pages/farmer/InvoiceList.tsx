@@ -11,55 +11,78 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Search,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useFinalizeInvoiceMutation,
   useGetFarmerInvoicesQuery,
 } from "@/store/slices/invoiceApi";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useGetMerchantInfoQuery } from "@/store/slices/farmerApi";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  useGetMerchantInfoQuery,
+  useAddEntryMutation,
+} from "@/store/slices/farmerApi";
+
+// Utility to convert base64/dataUrl to a File object for FormData
+const dataURLtoFile = (dataurl: string, filename: string) => {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
 
 export default function InvoiceList() {
+  // Queries & Mutations
   const { data: invoices, isLoading: invoicesLoading } =
     useGetFarmerInvoicesQuery();
   const [finalize, { isLoading: isFinalizing }] = useFinalizeInvoiceMutation();
+  const [addEntry, { isLoading: isAddingEntry }] = useAddEntryMutation();
 
+  // Local State
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const actionButtonsRef = useRef<HTMLDivElement>(null);
 
   const { data: merchant, isLoading: merchantLoading } =
     useGetMerchantInfoQuery(
       selectedInvoice?.merchantId?._id || selectedInvoice?.merchantId,
-      { skip: !selectedInvoice }
+      { skip: !selectedInvoice },
     );
 
-  const handleComplete = async (id: string) => {
-    try {
-      await finalize(id).unwrap();
-      toast.success("Transaction marked as paid!");
-      if (selectedInvoice) {
-        setSelectedInvoice({ ...selectedInvoice, status: "paid" });
-      }
-    } catch (err) {
-      toast.error("Failed to finalize transaction");
-    }
-  };
+  // --- LOGIC HANDLERS ---
 
-  const handleDownloadImage = async () => {
-    if (!invoiceRef.current) return;
+  const generateAndDownloadImage = async (auto = false) => {
+    if (!invoiceRef.current) return null;
 
     const loadingToast = toast.loading("Generating Receipt Image...");
 
+    // 🔴 HARD HIDE BUTTONS (SYNC)
+    if (auto && actionButtonsRef.current) {
+      actionButtonsRef.current.classList.add("print-hidden");
+    }
+
     try {
       const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
-        quality: 1.0,
+        quality: 1,
         pixelRatio: 3,
         backgroundColor: "#ffffff",
         filter: (node) => {
-          const exclusionClasses = ["print-hidden"];
-          return !exclusionClasses.some(
-            (cls) => node instanceof HTMLElement && node.classList.contains(cls)
+          return !(
+            node instanceof HTMLElement &&
+            node.classList.contains("print-hidden")
           );
         },
       });
@@ -70,13 +93,94 @@ export default function InvoiceList() {
       link.click();
 
       toast.dismiss(loadingToast);
-      toast.success("Receipt saved to Photos");
-    } catch (error) {
-      console.error("Image Generation Error:", error);
+      return dataUrl;
+    } catch (err) {
       toast.dismiss(loadingToast);
-      toast.error("Failed to generate image. Please try again.");
+      toast.error("Failed to generate image.");
+      return null;
+    } finally {
+      // 🔵 RESTORE UI
+      if (auto && actionButtonsRef.current) {
+        actionButtonsRef.current.classList.remove("print-hidden");
+      }
     }
   };
+
+  const handleCompleteWorkflow = async (id: string) => {
+    try {
+      await finalize(id).unwrap();
+      toast.success("Transaction marked as paid!");
+
+      if (selectedInvoice) {
+        setSelectedInvoice({ ...selectedInvoice, status: "paid" });
+      }
+
+      // Automatically trigger the download for the user's gallery
+      const imageUrl = await generateAndDownloadImage(true);
+
+      if (imageUrl) {
+        // Show confirmation to save this specific transaction to the ledger
+        setShowSaveConfirm(true);
+      }
+    } catch (err) {
+      toast.error("Failed to finalize transaction");
+    }
+  };
+
+  const handleSaveToIncome = async () => {
+    if (!selectedInvoice || !invoiceRef.current) return;
+
+    try {
+      const items = selectedInvoice.items || [];
+
+      const totalQuantity = items.reduce(
+        (sum: number, item: any) => sum + (Number(item.quantity) || 0),
+        0,
+      );
+
+      const uniqueUnits = Array.from(
+        new Set(items.map((item: any) => item.unit)),
+      );
+      const displayUnit: any =
+        uniqueUnits.length === 1 ? uniqueUnits[0] : "Mixed";
+
+      const displayCategory = "crops";
+
+      const itemSummary = items
+        .map((i: any) => `${i.cropName} (${i.quantity} ${i.unit})`)
+        .join(", ");
+
+      // Re-generate PNG for the ledger entry file
+      const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
+        quality: 0.8,
+      });
+      const imageFile = dataURLtoFile(
+        dataUrl,
+        `receipt_${selectedInvoice.invoiceId}.png`,
+      );
+
+      const formData = new FormData();
+      formData.append("date", new Date().toISOString());
+      formData.append("type", "income");
+      formData.append("category", displayCategory);
+      formData.append("quantity", totalQuantity.toString());
+      formData.append("unit", displayUnit);
+      formData.append("value", selectedInvoice.totalAmount.toString());
+      formData.append(
+        "notes",
+        `Invoice #${selectedInvoice.invoiceId} | Items: ${itemSummary}`,
+      );
+      formData.append("billImage", imageFile);
+
+      await addEntry(formData).unwrap();
+      toast.success("Added to your Income Ledger!");
+      setShowSaveConfirm(false);
+    } catch (err) {
+      toast.error("Failed to save to ledger.");
+    }
+  };
+
+  // --- UI RENDERING ---
 
   if (invoicesLoading)
     return (
@@ -90,7 +194,7 @@ export default function InvoiceList() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8">
-      {/* --- ENHANCED HEADER --- */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6">
         <div>
           <div className="flex items-center gap-2 text-primary mb-1">
@@ -103,7 +207,7 @@ export default function InvoiceList() {
             Digital Receipts
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            View, pay, and download your transaction records.
+            View, pay, and download your records.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
@@ -113,20 +217,14 @@ export default function InvoiceList() {
         </div>
       </div>
 
-      {/* --- ENHANCED INVOICE LIST --- */}
+      {/* INVOICE LIST */}
       <div className="grid gap-4">
         {invoices?.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-            <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
-              <Search className="text-slate-300" size={32} />
-            </div>
+            <Search className="text-slate-300 mx-auto mb-4" size={32} />
             <h3 className="text-lg font-bold text-slate-900">
               No receipts yet
             </h3>
-            <p className="text-slate-500 max-w-xs mx-auto text-sm">
-              When you complete a purchase or receive an invoice, it will appear
-              here.
-            </p>
           </div>
         ) : (
           invoices?.map((inv: any) => (
@@ -135,21 +233,13 @@ export default function InvoiceList() {
               className="group border-none shadow-sm hover:shadow-md transition-all cursor-pointer bg-white overflow-hidden relative"
               onClick={() => setSelectedInvoice(inv)}
             >
-              {/* Status Side-Bar Color */}
               <div
-                className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                  inv.status === "paid" ? "bg-green-500" : "bg-amber-500"
-                }`}
+                className={`absolute left-0 top-0 bottom-0 w-1.5 ${inv.status === "paid" ? "bg-green-500" : "bg-amber-500"}`}
               />
-
               <CardContent className="p-5 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <div
-                    className={`p-3 rounded-2xl shrink-0 ${
-                      inv.status === "paid"
-                        ? "bg-green-50 text-green-600"
-                        : "bg-amber-50 text-amber-600"
-                    }`}
+                    className={`p-3 rounded-2xl shrink-0 ${inv.status === "paid" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"}`}
                   >
                     {inv.status === "paid" ? (
                       <CheckCircle size={24} />
@@ -159,33 +249,29 @@ export default function InvoiceList() {
                   </div>
                   <div>
                     <h3 className="font-black text-slate-900 text-lg leading-tight group-hover:text-primary transition-colors">
-                      {merchant?.merchantId?.businessName || "Agri Merchant"}
+                      {inv.merchantId?.businessName || "Agri Merchant"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">
                         #{inv.invoiceId}
                       </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-xs text-slate-500 font-medium">
+                      <span className="text-xs text-slate-500">
                         {new Date(inv.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-6 border-t md:border-none pt-4 md:pt-0">
                   <div className="text-left md:text-right">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">
                       Amount Due
                     </p>
-                    <span className="text-xl font-black text-slate-900 tracking-tight">
+                    <span className="text-xl font-black text-slate-900">
                       {inv.totalAmount.toLocaleString()}{" "}
-                      <span className="text-xs font-bold text-slate-400">
-                        MMK
-                      </span>
+                      <span className="text-xs">MMK</span>
                     </span>
                   </div>
-                  <ChevronRight className="text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="text-slate-300 group-hover:text-primary transition-all" />
                 </div>
               </CardContent>
             </Card>
@@ -193,7 +279,7 @@ export default function InvoiceList() {
         )}
       </div>
 
-      {/* --- MODAL (Kept exactly as requested) --- */}
+      {/* INVOICE VIEW MODAL */}
       <Dialog
         open={!!selectedInvoice}
         onOpenChange={() => setSelectedInvoice(null)}
@@ -208,7 +294,6 @@ export default function InvoiceList() {
                 <X size={20} /> Close
               </button>
 
-              {/* CAPTURE AREA */}
               <div ref={invoiceRef}>
                 <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
                   <div className="h-2 bg-primary w-full" />
@@ -250,9 +335,6 @@ export default function InvoiceList() {
                             <p className="text-slate-500 text-xs">
                               {merchant?.township}, {merchant?.division}
                             </p>
-                            <p className="text-slate-500 text-xs">
-                              {merchant?.merchantId?.phone}
-                            </p>
                           </>
                         )}
                       </div>
@@ -261,11 +343,7 @@ export default function InvoiceList() {
                           Status
                         </p>
                         <span
-                          className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                            selectedInvoice.status === "paid"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
+                          className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${selectedInvoice.status === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
                         >
                           {selectedInvoice.status}
                         </span>
@@ -274,7 +352,7 @@ export default function InvoiceList() {
                         </p>
                         <p className="font-bold text-xs">
                           {new Date(
-                            selectedInvoice.createdAt
+                            selectedInvoice.createdAt,
                           ).toLocaleDateString()}
                         </p>
                       </div>
@@ -286,7 +364,6 @@ export default function InvoiceList() {
                           <tr className="border-b-2 border-slate-100 text-[10px] uppercase text-slate-400 font-bold">
                             <th className="text-left pb-3">Item</th>
                             <th className="text-center pb-3">Qty</th>
-                            <th className="text-right pb-3">Price</th>
                             <th className="text-right pb-3">Total</th>
                           </tr>
                         </thead>
@@ -300,17 +377,14 @@ export default function InvoiceList() {
                                 <td className="py-4 text-center">
                                   {item.quantity} {item.unit}
                                 </td>
-                                <td className="py-4 text-right">
-                                  {item.price.toLocaleString()}
-                                </td>
-                                <td className="py-4 text-right font-bold text-slate-900">
+                                <td className="py-4 text-right font-bold">
                                   {(
                                     item.quantity * item.price
                                   ).toLocaleString()}{" "}
                                   MMK
                                 </td>
                               </tr>
-                            )
+                            ),
                           )}
                         </tbody>
                       </table>
@@ -323,11 +397,16 @@ export default function InvoiceList() {
                       </span>
                     </div>
 
-                    <div className="mt-12 flex gap-3 print-hidden">
+                    <div
+                      ref={actionButtonsRef}
+                      className="mt-12 flex gap-3 print-hidden"
+                    >
                       {selectedInvoice.status !== "paid" ? (
                         <Button
                           className="flex-1 py-6 gap-2"
-                          onClick={() => handleComplete(selectedInvoice._id)}
+                          onClick={() =>
+                            handleCompleteWorkflow(selectedInvoice._id)
+                          }
                           disabled={isFinalizing}
                         >
                           <CreditCard size={18} /> Pay & Complete
@@ -335,8 +414,8 @@ export default function InvoiceList() {
                       ) : (
                         <Button
                           variant="outline"
-                          className="flex-1 py-6 gap-2 text-green-700 bg-green-50 border-green-200"
-                          onClick={handleDownloadImage}
+                          className="flex-1 py-6 gap-2 text-green-700 bg-green-50"
+                          onClick={() => generateAndDownloadImage(false)}
                         >
                           <ImageIcon size={18} /> Save Receipt to Gallery
                         </Button>
@@ -347,6 +426,40 @@ export default function InvoiceList() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* SAVE TO LEDGER CONFIRMATION */}
+      <Dialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="text-primary" />
+              Save to Income Ledger?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-slate-500 text-sm">
+            Would you like to automatically record this{" "}
+            <strong>{selectedInvoice?.totalAmount.toLocaleString()} MMK</strong>{" "}
+            payment in your income history? We will attach the receipt image for
+            you.
+          </p>
+          <DialogFooter className="flex gap-2 sm:justify-start">
+            <Button
+              className="flex-1"
+              onClick={handleSaveToIncome}
+              disabled={isAddingEntry}
+            >
+              {isAddingEntry ? "Saving..." : "Yes, Save Entry"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => setShowSaveConfirm(false)}
+            >
+              No thanks
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

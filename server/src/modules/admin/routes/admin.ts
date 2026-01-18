@@ -6,6 +6,7 @@ import {
   getAllFarmersInfo,
   getAllVerificationPendingUsers,
   getMerchantInfoWithMerchantId,
+  getVerifiedMerchants,
   updateUserVerificationStatus,
 } from "../controllers/admin";
 import { userIdValidator, userStatusValidator } from "../validators/admin";
@@ -13,6 +14,12 @@ import { userIdValidator, userStatusValidator } from "../validators/admin";
 const router = Router();
 
 router.get("/farmers/all", protect, allowRoles("admin"), getAllFarmersInfo);
+router.get(
+  "/merchants/all",
+  protect,
+  allowRoles("admin"),
+  getVerifiedMerchants
+);
 router.patch(
   "/users/:userId",
   protect,
@@ -40,6 +47,6 @@ router.get(
   protect,
   allowRoles("admin"),
   getMerchantInfoWithMerchantId
-)
+);
 
 export default router;

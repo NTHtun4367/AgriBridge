@@ -35,6 +35,11 @@ const pages: Page[] = [
     name: "Market Management",
     path: "/admin/manage-market",
     icon: <BarChart3 className="w-5 h-5" />,
+    subItems: [
+      { name: "Crops", path: "/admin/manage-market/crops" },
+      { name: "Markets", path: "/admin/manage-market/markets" },
+      { name: "Prices", path: "/admin/manage-market/prices" },
+    ],
   },
   {
     name: "Verification",
@@ -68,11 +73,11 @@ function Panel() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Mobile Overlay (Backdrop) */}
+    <div className="flex h-screen w-full bg-background overflow-hidden font-sans text-foreground">
+      {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-all animate-in fade-in"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -81,7 +86,7 @@ function Panel() {
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 bg-background transition-all duration-300 ease-in-out
-          md:relative md:translate-x-0
+          md:relative md:translate-x-0 whitespace-nowrap
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
           ${isCollapsed ? "md:w-20" : "md:w-64"}
           border-r-2 border-r-primary/35 shadow-sm
@@ -94,14 +99,17 @@ function Panel() {
         />
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <NavBar
           toggleDesktop={() => setIsCollapsed(!isCollapsed)}
           openMobile={() => setIsMobileOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/5">
-          <Outlet />
+        {/* Main background: bg-muted/30 provides a soft contrast to cards in both modes */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-muted/30 dark:bg-muted/10">
+          <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

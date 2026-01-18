@@ -4,4 +4,5 @@ export interface Page {
   name: string;
   path: string;
   icon: React.ReactNode;
+  subItems?: any;
 }

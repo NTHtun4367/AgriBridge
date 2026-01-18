@@ -4,9 +4,10 @@ import { persistor } from "@/store";
 import { apiSlice } from "@/store/slices/api";
 import { clearCredentials } from "@/store/slices/auth";
 import type { Page } from "@/types/sidebar";
-import { LogOut, X } from "lucide-react";
+import { LogOut, X, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, NavLink, useNavigate } from "react-router";
+import { Link, NavLink, useNavigate, useLocation } from "react-router";
 
 interface SideBarProps {
   pages: Page[];
@@ -17,6 +18,24 @@ interface SideBarProps {
 function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
+
+  useEffect(() => {
+    pages.forEach((page) => {
+      if (page.subItems?.some((sub: any) => location.pathname === sub.path)) {
+        if (!openMenus.includes(page.name)) {
+          setOpenMenus((prev) => [...prev, page.name]);
+        }
+      }
+    });
+  }, [location.pathname, pages]);
+
+  const toggleMenu = (name: string) => {
+    setOpenMenus((prev) =>
+      prev.includes(name) ? prev.filter((i) => i !== name) : [...prev, name]
+    );
+  };
 
   const handleLogout = async () => {
     dispatch(clearCredentials());
@@ -26,79 +45,105 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background overflow-hidden border-r border-border">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-6 h-16">
+      <div className="flex items-center justify-between px-6 py-6 h-16 shrink-0 relative">
         <h1
           className={`text-2xl text-primary font-extrabold italic transition-all duration-300 ${
-            isCollapsed ? "md:hidden" : "block"
+            isCollapsed ? "opacity-0 scale-90" : "opacity-100 scale-100"
           }`}
         >
           <Link to="/">AgriBridge</Link>
         </h1>
         {isCollapsed && (
-          <span className="hidden md:block text-primary font-bold text-xl mx-auto">
+          <span className="absolute left-1/2 -translate-x-1/2 hidden md:block text-primary font-black text-xl">
             AB
           </span>
         )}
-
-        {/* Close button for mobile only */}
-        <button
-          onClick={closeMobile}
-          className="md:hidden p-2 hover:bg-accent rounded"
-        >
+        <button onClick={closeMobile} className="md:hidden p-2 hover:bg-accent rounded-full">
           <X className="w-6 h-6" />
         </button>
       </div>
 
       <div className="px-4">
-        <SelectSeparator />
+        <SelectSeparator className="opacity-20" />
       </div>
 
-      {/* Menu Items */}
-      <div className="flex-1 overflow-y-auto mt-4 px-3">
-        <div className="flex flex-col gap-1">
-          {pages.map((page, index) => (
-            <NavLink
-              to={page.path}
-              key={index}
-              onClick={() => {
-                if (window.innerWidth < 768) closeMobile();
-              }}
-              className={({ isActive }) =>
-                `flex items-center gap-3 font-medium text-sm px-3 py-3 rounded transition-colors ${
-                  isCollapsed ? "md:justify-center" : ""
-                } ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                }`
-              }
-            >
-              <div className="shrink-0">{page.icon}</div>
-              <span
-                className={`transition-all duration-300 ${
-                  isCollapsed ? "md:hidden" : "block"
-                }`}
-              >
-                {page.name}
-              </span>
-            </NavLink>
-          ))}
-        </div>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto mt-4 px-3 custom-scrollbar">
+        <nav className="flex flex-col gap-1.5">
+          {pages.map((page, index) => {
+            const isMenuOpen = openMenus.includes(page.name);
+            const isParentActive = page.subItems?.some((sub: any) => location.pathname === sub.path);
+
+            return (
+              <div key={index} className="w-full">
+                {page.subItems ? (
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => toggleMenu(page.name)}
+                      className={`w-full flex items-center justify-between gap-3 font-semibold text-sm px-3 py-2.5 rounded-lg transition-all ${
+                        isParentActive ? "text-primary bg-primary/5" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      } ${isCollapsed ? "md:justify-center" : ""}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="shrink-0">{page.icon}</span>
+                        {!isCollapsed && <span>{page.name}</span>}
+                      </div>
+                      {!isCollapsed && (
+                        <ChevronDown size={14} className={`transition-transform duration-300 ${isMenuOpen ? "rotate-180" : ""}`} />
+                      )}
+                    </button>
+                    {isMenuOpen && !isCollapsed && (
+                      <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-border pl-4 animate-in slide-in-from-top-1">
+                        {page.subItems.map((sub: any) => (
+                          <NavLink
+                            key={sub.path}
+                            to={sub.path}
+                            className={({ isActive }) =>
+                              `text-sm py-2 px-3 rounded-md transition-colors ${
+                                isActive ? "text-primary font-bold bg-primary/5" : "text-muted-foreground hover:text-foreground"
+                              }`
+                            }
+                          >
+                            {sub.name}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <NavLink
+                    to={page.path}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 font-semibold text-sm px-3 py-2.5 rounded-lg transition-all ${
+                        isActive 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      } ${isCollapsed ? "md:justify-center" : ""}`
+                    }
+                  >
+                    <span className="shrink-0">{page.icon}</span>
+                    <span className={isCollapsed ? "md:hidden" : "opacity-100"}>{page.name}</span>
+                  </NavLink>
+                )}
+              </div>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Footer / Logout */}
-      <div className="p-4 border-t border-primary/10">
+      {/* Footer */}
+      <div className="p-4 border-t border-border bg-background">
         <Button
-          className={`w-full flex items-center gap-2 border-2 border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-white transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm ${
-            isCollapsed ? "md:justify-center px-0" : ""
-          } `}
+          variant="ghost"
+          className={`w-full flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all ${
+            isCollapsed ? "justify-center px-0" : "justify-start px-3"
+          }`}
           onClick={handleLogout}
         >
-          <LogOut size={16} />
-          {!isCollapsed && <span className="md:block">Logout</span>}
-          <span className="md:hidden">Logout</span>
+          <LogOut size={18} />
+          {!isCollapsed && <span className="font-bold">Logout</span>}
         </Button>
       </div>
     </div>

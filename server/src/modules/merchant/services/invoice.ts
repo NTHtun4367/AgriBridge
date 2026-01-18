@@ -8,7 +8,7 @@ export class InvoiceService {
   async createInvoice(
     merchantId: string,
     invoiceData: {
-      farmerId: string;
+      farmerId?: string;
       preorderId?: string;
       invoiceId: string;
       farmerName: string;
@@ -17,6 +17,7 @@ export class InvoiceService {
       farmerNRC: string;
       items: any[];
       notes?: string;
+      status?: string;
     }
   ) {
     const {
@@ -29,6 +30,7 @@ export class InvoiceService {
       farmerPhone,
       farmerAddress,
       farmerNRC,
+      status,
     } = invoiceData;
 
     const totalAmount = items.reduce(
@@ -49,7 +51,7 @@ export class InvoiceService {
       items,
       totalAmount,
       notes,
-      status: "pending",
+      status,
     });
 
     const savedInvoice = await invoice.save();

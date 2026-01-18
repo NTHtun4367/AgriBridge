@@ -11,6 +11,19 @@ export class AuthService {
     return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
   }
 
+  async getVerifiedMerchants() {
+    const verifiedUsers = await User.find({
+      role: "merchant",
+      verificationStatus: "verified",
+      status: "active", // Optional: only get active (non-banned) verified merchants
+    })
+      .populate("merchantId") // This fetches the IMerchant document
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    return verifiedUsers;
+  }
+
   async getMerchants(filter: any) {
     return await User.find(filter)
       .populate({
