@@ -1,29 +1,82 @@
 import { Notification } from "../models/notification";
 import { UserNotification } from "../models/userNotification";
 import { Types } from "mongoose";
+import { Announcement } from "../models/announcement";
+import { authService } from "../../auth/services/auth";
 
 export class NotificationService {
   /**
-   * Creates a master notification and links it to specific users.
-   * @param title - The header of the notification
-   * @param message - The body text
-   * @param userIds - Array of User ObjectIds (as strings)
-   * @param role - Who this is intended for (defaults to "all")
+   * ADMIN: Create announcement and notify users
    */
+  async createAnnouncement(data: {
+    title: string;
+    content: string;
+    target: string;
+    adminId?: string;
+  }) {
+    // 1. Save announcement log
+    const announcement = await Announcement.create({
+      title: data.title,
+      content: data.content,
+      target: data.target,
+      adminId: data.adminId ? new Types.ObjectId(data.adminId) : undefined,
+    });
+
+    // 2. Map frontend target → DB role
+    const roleMapping: Record<string, "all" | "farmer" | "merchant"> = {
+      All: "all",
+      Farmers: "farmer",
+      Merchants: "merchant",
+    };
+
+    const targetRole = roleMapping[data.target] || "all";
+
+    // 3. Fetch users CORRECTLY
+    let users;
+    if (targetRole === "all") {
+      users = await authService.getAllUsers(); // ✅ NO ROLE FILTER
+    } else {
+      users = await authService.getAllUsersByRole(targetRole); // ✅ STRING
+    }
+
+    const userIds = users.map((u) => u._id.toString());
+
+    // 4. Create notifications
+    if (userIds.length > 0) {
+      await this.createNotification(
+        data.title,
+        data.content,
+        userIds,
+        targetRole,
+      );
+    }
+
+    return announcement;
+  }
+
+  /**
+   * Admin: Announcement history
+   */
+  async getAnnouncementHistory() {
+    return await Announcement.find().sort({ createdAt: -1 });
+  }
+
+  // ============================================================
+  // ORIGINAL METHODS
+  // ============================================================
+
   async createNotification(
     title: string,
     message: string,
     userIds: string[],
-    role: "all" | "farmer" | "merchant" = "all"
+    role: "all" | "farmer" | "merchant" = "all",
   ) {
-    // 1. Create the master notification content record
     const notification = await Notification.create({
       title,
       message,
       targetRole: role,
     });
 
-    // 2. Prepare the link records for each individual user
     const userLinks = userIds.map((id) => ({
       userId: new Types.ObjectId(id),
       notificationId: notification._id,
@@ -31,26 +84,18 @@ export class NotificationService {
       isDeleted: false,
     }));
 
-    // 3. Bulk insert for performance
     return await UserNotification.insertMany(userLinks);
   }
 
-  /**
-   * Fetches the specific notification inbox for a user
-   */
   async getMyNotifications(userId: string) {
     return await UserNotification.find({
       userId: new Types.ObjectId(userId),
       isDeleted: false,
     })
-      .populate("notificationId") // Merges the title and message from the Notification model
+      .populate("notificationId")
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Marks a specific notification as read for a user
-   * @param userNotificationId - The _id of the UserNotification document
-   */
   async markAsRead(userId: string, userNotificationId: string) {
     return await UserNotification.findOneAndUpdate(
       {
@@ -58,13 +103,10 @@ export class NotificationService {
         userId: new Types.ObjectId(userId),
       },
       { isRead: true },
-      { new: true }
+      { new: true },
     );
   }
 
-  /**
-   * Soft deletes a notification from the user's view
-   */
   async deleteNotification(userId: string, userNotificationId: string) {
     return await UserNotification.findOneAndUpdate(
       {
@@ -72,21 +114,18 @@ export class NotificationService {
         userId: new Types.ObjectId(userId),
       },
       { isDeleted: true },
-      { new: true }
+      { new: true },
     );
   }
 
-  /**
-   * Optional: Marks all notifications as read for a user
-   */
   async markAllAsRead(userId: string) {
     return await UserNotification.updateMany(
       {
         userId: new Types.ObjectId(userId),
         isRead: false,
-        isDeleted: false, // Don't update items the user has deleted
+        isDeleted: false,
       },
-      { isRead: true }
+      { isRead: true },
     );
   }
 }

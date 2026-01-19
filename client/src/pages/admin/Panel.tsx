@@ -9,7 +9,7 @@ import {
   Store,
   BarChart3,
   ShieldCheck,
-  FileSearch,
+  // FileSearch,
   Megaphone,
   Gavel,
   Settings,
@@ -36,9 +36,9 @@ const pages: Page[] = [
     path: "/admin/manage-market",
     icon: <BarChart3 className="w-5 h-5" />,
     subItems: [
-      { name: "Crops", path: "/admin/manage-market/crops" },
-      { name: "Markets", path: "/admin/manage-market/markets" },
-      { name: "Prices", path: "/admin/manage-market/prices" },
+      { name: "Add Crops", path: "/admin/manage-market/crops" },
+      { name: "Add Markets", path: "/admin/manage-market/markets" },
+      { name: "Update Prices", path: "/admin/manage-market/prices" },
     ],
   },
   {
@@ -46,11 +46,11 @@ const pages: Page[] = [
     path: "/admin/verification",
     icon: <ShieldCheck className="w-5 h-5" />,
   },
-  {
-    name: "Analytics",
-    path: "/admin/analytics",
-    icon: <FileSearch className="w-5 h-5" />,
-  },
+  // {
+  //   name: "Analytics",
+  //   path: "/admin/analytics",
+  //   icon: <FileSearch className="w-5 h-5" />,
+  // },
   {
     name: "Announcements",
     path: "/admin/announcements",
@@ -106,7 +106,7 @@ function Panel() {
           openMobile={() => setIsMobileOpen(true)}
         />
         {/* Main background: bg-muted/30 provides a soft contrast to cards in both modes */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-muted/30 dark:bg-muted/10">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-secondary">
           <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
             <Outlet />
           </div>

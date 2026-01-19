@@ -175,16 +175,16 @@ export class AuthService {
 
     const uploadedFront = await uploadSingleImage(
       `data:${frontImage.mimetype};base64,${frontImage.buffer.toString(
-        "base64"
+        "base64",
       )}`,
-      "/agribridge/nrc"
+      "/agribridge/nrc",
     );
 
     const uploadedBack = await uploadSingleImage(
       `data:${backImage.mimetype};base64,${backImage.buffer.toString(
-        "base64"
+        "base64",
       )}`,
-      "/agribridge/nrc"
+      "/agribridge/nrc",
     );
 
     const merchant = await Merchant.create({
@@ -234,6 +234,10 @@ export class AuthService {
 
   async getAllUsers() {
     return await User.find({}, "_id");
+  }
+
+  async getAllUsersByRole(role: any) {
+    return await User.find({ role }, "_id");
   }
 }
 

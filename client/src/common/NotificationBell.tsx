@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { useGetNotificationsQuery } from "@/store/slices/notificationApi";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 
 export const NotificationBell = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { data: user } = useCurrentUserQuery();
   const { data, isLoading } = useGetNotificationsQuery();
 
@@ -61,14 +61,18 @@ export const NotificationBell = () => {
                 className={`p-3 border-b cursor-pointer flex flex-col items-start gap-1 ${
                   !notif.isRead ? "bg-blue-50/50" : ""
                 }`}
-                onClick={() => navigate("/notifications")}
+                // onClick={() => navigate("/notifications")}
               >
                 <p className="text-sm font-semibold text-gray-900 line-clamp-1">
                   {notif.notificationId?.title}
                 </p>
-                <p className="text-xs text-gray-600 line-clamp-2">
-                  {notif.notificationId?.message}
-                </p>
+                {/* Render HTML content using dangerouslySetInnerHTML */}
+                <div
+                  className="text-xs text-gray-600 line-clamp-2 prose prose-sm max-w-full"
+                  dangerouslySetInnerHTML={{
+                    __html: notif.notificationId?.message || "",
+                  }}
+                />
                 <span className="text-[10px] text-gray-400">
                   {new Date(notif.createdAt).toLocaleDateString()}
                 </span>

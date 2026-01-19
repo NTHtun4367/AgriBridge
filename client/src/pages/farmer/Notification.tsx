@@ -89,22 +89,26 @@ export const Notification = () => {
                   : "bg-blue-50/60 border-blue-100 shadow-sm hover:border-blue-300"
               }`}
             >
-              <div className="flex-1 pr-4">
+              <div className="flex-1 pr-4 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   {!item.isRead && (
                     <span className="h-2 w-2 bg-blue-600 rounded-full shrink-0" />
                   )}
                   <h3
-                    className={`font-bold leading-none ${
+                    className={`font-bold leading-none truncate ${
                       item.isRead ? "text-gray-600" : "text-gray-900"
                     }`}
                   >
                     {item.notificationId?.title}
                   </h3>
                 </div>
-                <p className="text-gray-600 text-sm line-clamp-1">
-                  {item.notificationId?.message}
-                </p>
+                {/* HTML content preview for the list */}
+                <div
+                  className="text-gray-600 text-sm line-clamp-1 prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: item.notificationId?.message || "",
+                  }}
+                />
                 <span className="text-[10px] font-bold text-gray-400 uppercase mt-2 block">
                   {new Date(item.createdAt).toLocaleDateString()}
                 </span>
@@ -147,9 +151,13 @@ export const Notification = () => {
               <h2 className="text-xl font-black text-gray-900 mb-2">
                 {selectedNoti.notificationId?.title}
               </h2>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                {selectedNoti.notificationId?.message}
-              </p>
+              {/* HTML content for the Modal Detail */}
+              <div
+                className="text-gray-600 text-sm leading-relaxed mb-6 prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{
+                  __html: selectedNoti.notificationId?.message || "",
+                }}
+              />
               <div className="text-[11px] text-gray-400 border-t pt-4">
                 Received on: {new Date(selectedNoti.createdAt).toLocaleString()}
               </div>
