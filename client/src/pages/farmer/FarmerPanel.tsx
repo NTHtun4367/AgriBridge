@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Receipt,
   Settings,
+  ShieldAlert,
   ShoppingBag,
   // Sprout,
   Store,
@@ -49,6 +50,11 @@ const pages: Page[] = [
     name: "Invoices",
     path: "/farmer/invoices",
     icon: <Receipt className="w-5 h-5" />,
+  },
+  {
+    name: "Disputes",
+    path: "/farmer/disputes",
+    icon: <ShieldAlert className="w-5 h-5" />,
   },
   {
     name: "Settings",

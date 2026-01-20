@@ -69,7 +69,7 @@ export class NotificationService {
     title: string,
     message: string,
     userIds: string[],
-    role: "all" | "farmer" | "merchant" = "all",
+    role: "all" | "farmer" | "admin" | "merchant" = "all",
   ) {
     const notification = await Notification.create({
       title,

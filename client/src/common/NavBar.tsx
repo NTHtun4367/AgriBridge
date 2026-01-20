@@ -1,7 +1,7 @@
 import { ModeToggle } from "@/components/ModeToggle";
 import { useNotifications } from "@/hooks/useNotification";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
-import { Bell, Menu, PanelLeftOpen } from "lucide-react";
+import {  Menu, PanelLeftOpen } from "lucide-react";
 // import { useNavigate } from "react-router";
 import { NotificationBell } from "./NotificationBell";
 

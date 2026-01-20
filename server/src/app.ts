@@ -10,6 +10,7 @@ import farmerRoutes from "./modules/farmer/routes/farmer";
 import merchantRoutes from "./modules/merchant/routes/invoice";
 import preorderRoutes from "./modules/preorder/routes/preorder";
 import notificationRoutes from "./modules/notification/routes/notification";
+import disputeRoutes from "./modules/notification/routes/dispute";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -32,7 +33,7 @@ app.use(
   cors({
     origin: ENV.CLIENT_URL,
     credentials: true,
-  })
+  }),
 );
 app.use(json());
 app.use(cookieParser());
@@ -54,6 +55,7 @@ app.use("/api/v1/farmers", farmerRoutes);
 app.use("/api/v1/invoices", merchantRoutes);
 app.use("/api/v1/preorder", preorderRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/disputes", disputeRoutes);
 
 // Error handler
 app.use(errorHandler);

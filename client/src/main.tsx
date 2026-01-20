@@ -42,6 +42,9 @@ import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
 import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
 import CropManagement from "./pages/admin/CropManagement.tsx";
 import MarketPlaceManagement from "./pages/admin/MarketLocationManagement.tsx";
+import Settings from "./pages/admin/Settings.tsx";
+import Dispute from "./pages/admin/Dispute.tsx";
+import FarmerDisputes from "./pages/farmer/Disputes.tsx";
 
 const router = createBrowserRouter([
   {
@@ -119,6 +122,10 @@ const router = createBrowserRouter([
           {
             path: "/farmer/crop-price-history",
             element: <CropPriceHistoryDashboard />,
+          },
+          {
+            path: "/farmer/disputes",
+            element: <FarmerDisputes />,
           },
         ],
       },
@@ -204,6 +211,14 @@ const router = createBrowserRouter([
             path: "/admin/announcements",
             element: <Announcement />,
           },
+          {
+            path: "/admin/disputes",
+            element: <Dispute />,
+          },
+          {
+            path: "/admin/settings",
+            element: <Settings />,
+          },
         ],
       },
     ],
@@ -231,5 +246,5 @@ createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </PersistGate>
     </Provider>
-  </StrictMode>
+  </StrictMode>,
 );

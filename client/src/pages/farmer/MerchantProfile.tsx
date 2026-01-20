@@ -12,6 +12,8 @@ import {
   Loader2,
   ShieldCheck,
   Search,
+  EllipsisVertical,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +37,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PreorderDialog } from "@/components/merchant/PreorderDialog";
+import { ReportDisputeDialog } from "@/components/merchant/ReportDisputeDialog"; // Import new dialog
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function MerchantProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
 
-  // 1. Manage the Dialog state here
+  // Dialog states
   const [isPreorderOpen, setIsPreorderOpen] = useState(false);
+  const [isDisputeOpen, setIsDisputeOpen] = useState(false); // State for dispute dialog
 
   const { data: response } = useGetMarketPricesQuery({ userId });
   const {
@@ -64,7 +74,7 @@ function MerchantProfile() {
 
   const categoryOptions = useMemo(() => {
     const unique = Array.from(
-      new Set(rawData.map((item: any) => item.category))
+      new Set(rawData.map((item: any) => item.category)),
     );
     return ["all", ...unique];
   }, [rawData]);
@@ -73,7 +83,7 @@ function MerchantProfile() {
     let filtered = [...rawData];
     if (searchTerm) {
       filtered = filtered.filter((item) =>
-        item.cropName.toLowerCase().includes(searchTerm.toLowerCase())
+        item.cropName.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
     if (selectedCategory !== "all") {
@@ -191,7 +201,6 @@ function MerchantProfile() {
                 Contact Merchant
               </Button>
 
-              {/* 2. PASS PROPS TO DIALOG COMPONENT */}
               <PreorderDialog
                 merchant={merchant}
                 rawData={rawData}
@@ -200,6 +209,37 @@ function MerchantProfile() {
               />
             </div>
           </div>
+
+          {/* Report/Dropdown Section */}
+          <div className="absolute top-6 right-6">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                >
+                  <EllipsisVertical className="h-5 w-5 text-slate-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                  onClick={() => setIsDisputeOpen(true)}
+                >
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  <span>Report Merchant Dispute</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Dispute Dialog Component */}
+          <ReportDisputeDialog
+            merchant={merchant}
+            isOpen={isDisputeOpen}
+            setIsOpen={setIsDisputeOpen}
+          />
         </CardContent>
       </Card>
 
