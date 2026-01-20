@@ -3,6 +3,7 @@ import { protect } from "../../../shared/middleware/authMiddleware";
 import { allowRoles } from "../../../shared/middleware/role";
 import {
   changeUserStatus,
+  getAdminOverview,
   getAllFarmersInfo,
   getAllVerificationPendingUsers,
   getMerchantInfoWithMerchantId,
@@ -13,12 +14,13 @@ import { userIdValidator, userStatusValidator } from "../validators/admin";
 
 const router = Router();
 
+router.get("/overview", protect, allowRoles("admin"), getAdminOverview);
 router.get("/farmers/all", protect, allowRoles("admin"), getAllFarmersInfo);
 router.get(
   "/merchants/all",
   protect,
   allowRoles("admin"),
-  getVerifiedMerchants
+  getVerifiedMerchants,
 );
 router.patch(
   "/users/:userId",
@@ -26,13 +28,13 @@ router.patch(
   allowRoles("admin"),
   userIdValidator,
   userStatusValidator,
-  changeUserStatus
+  changeUserStatus,
 );
 router.get(
   "/users/verification/pending",
   protect,
   allowRoles("admin"),
-  getAllVerificationPendingUsers
+  getAllVerificationPendingUsers,
 );
 router.patch(
   "/users/verification/:userId",
@@ -40,13 +42,13 @@ router.patch(
   allowRoles("admin"),
   userIdValidator,
   userStatusValidator,
-  updateUserVerificationStatus
+  updateUserVerificationStatus,
 );
 router.get(
   "/users/:merchantId",
   protect,
   allowRoles("admin"),
-  getMerchantInfoWithMerchantId
+  getMerchantInfoWithMerchantId,
 );
 
 export default router;

@@ -4,6 +4,11 @@ import type { MerchantInfo } from "@/types/merchant";
 
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    getAdminDashboard: builder.query<any, void>({
+      query: () => "/overview",
+      providesTags: ["Dashboard"],
+    }),
+
     getAllFarmers: builder.query<User[], undefined>({
       query: () => "/farmers/all",
       providesTags: ["Farmer"],
@@ -45,6 +50,7 @@ export const adminApi = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetAdminDashboardQuery,
   useGetAllFarmersQuery,
   useGetAllMerchantsQuery,
   useChangeUserStatusMutation,

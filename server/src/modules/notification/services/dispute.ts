@@ -12,6 +12,8 @@ export class DisputeService {
       const admins = await authService.getAllUsersByRole("admin");
       const adminIds = admins.map((u) => u._id.toString());
 
+      console.log(adminIds.length);
+
       if (adminIds.length) {
         await notificationService.createNotification(
           "New Dispute Raised",
@@ -105,6 +107,19 @@ export class DisputeService {
 
   async updateStatus(id: string, status: string) {
     return Dispute.findByIdAndUpdate(id, { status }, { new: true });
+  }
+
+  async getDisputeDashboardStats() {
+    const pendingDisputes = await Dispute.countDocuments({ status: "pending" });
+
+    // Get recent activity logs
+    const recentActivity = await Dispute.find()
+      .populate("farmerId", "name")
+      .populate("merchantId", "name")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    return { pendingDisputes, recentActivity };
   }
 }
 

@@ -36,7 +36,7 @@ import CropPriceHistoryLanding from "./pages/landing/CropPriceHistoryLanding.tsx
 import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
 import PreorderList from "./pages/farmer/PreorderList.tsx";
 import { MerchantOrderList } from "./pages/merchant/MerchantOrderList.tsx";
-import { Notification } from "./pages/farmer/Notification.tsx";
+import { Notification } from "./pages/Notification.tsx";
 import InvoiceList from "./pages/farmer/InvoiceList.tsx";
 import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
 import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
@@ -218,6 +218,10 @@ const router = createBrowserRouter([
           {
             path: "/admin/settings",
             element: <Settings />,
+          },
+          {
+            path: "/admin/notifications",
+            element: <Notification />,
           },
         ],
       },

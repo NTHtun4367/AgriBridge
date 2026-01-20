@@ -6,6 +6,7 @@ import {
   useMarkAsReadMutation,
   useMarkAllAsReadMutation,
 } from "@/store/slices/notificationApi";
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { Trash2, ArrowLeft, BellOff, X, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router";
 
@@ -13,12 +14,17 @@ export const Notification = () => {
   const navigate = useNavigate();
   const [selectedNoti, setSelectedNoti] = useState<any>(null);
 
+  const { data: user } = useCurrentUserQuery();
   const { data, isLoading } = useGetNotificationsQuery();
   const [markRead] = useMarkAsReadMutation();
   const [markAllRead] = useMarkAllAsReadMutation();
   const [remove] = useDeleteNotificationMutation();
 
-  const notifications = Array.isArray(data) ? data : [];
+  // Filter notifications based on current user's role
+  const notifications = Array.isArray(data)
+    ? data.filter((n: any) => n.notificationId?.targetRole === user?.role)
+    : [];
+
   const hasUnread = notifications.some((n) => !n.isRead);
 
   const handleViewDetails = (item: any) => {
@@ -54,7 +60,7 @@ export const Notification = () => {
         <div className="flex items-center gap-2">
           {hasUnread && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => markAllRead()}
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -73,7 +79,7 @@ export const Notification = () => {
         {notifications.length === 0 ? (
           <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
             <BellOff className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">
+            <h3 className="mt-2 text-sm font-semibold">
               No notifications
             </h3>
             <p className="mt-1 text-sm text-gray-500">You're all caught up!</p>
@@ -135,7 +141,7 @@ export const Notification = () => {
       {/* Detail Modal */}
       {selectedNoti && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in duration-150">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in duration-150 overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
@@ -148,12 +154,12 @@ export const Notification = () => {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <h2 className="text-xl font-black text-gray-900 mb-2">
+              <h2 className="text-xl font-black mb-2">
                 {selectedNoti.notificationId?.title}
               </h2>
               {/* HTML content for the Modal Detail */}
               <div
-                className="text-gray-600 text-sm leading-relaxed mb-6 prose prose-sm max-w-none dark:prose-invert"
+                className="text-gray-600 text-sm leading-relaxed mb-6 prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{
                   __html: selectedNoti.notificationId?.message || "",
                 }}
@@ -162,7 +168,7 @@ export const Notification = () => {
                 Received on: {new Date(selectedNoti.createdAt).toLocaleString()}
               </div>
             </div>
-            <div className="bg-gray-50 p-4 flex justify-end rounded-b-2xl">
+            <div className="bg-gray-50 p-4 flex justify-end">
               <Button size="sm" onClick={() => setSelectedNoti(null)}>
                 Close
               </Button>

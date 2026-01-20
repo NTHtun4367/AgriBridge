@@ -3,7 +3,7 @@ import { model, Schema, Document } from "mongoose";
 export interface INotification extends Document {
   title: string;
   message: string;
-  targetRole: "all" | "farmer" | "merchant";
+  targetRole: "all" | "farmer" | "merchant" | "admin";
 }
 
 const notificationSchema = new Schema<INotification>(
@@ -12,7 +12,7 @@ const notificationSchema = new Schema<INotification>(
     message: { type: String, required: true },
     targetRole: {
       type: String,
-      enum: ["all", "farmer", "merchant"],
+      enum: ["all", "farmer", "merchant", "admin"],
       required: true,
     },
   },

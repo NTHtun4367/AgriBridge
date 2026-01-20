@@ -239,6 +239,57 @@ export class AuthService {
   async getAllUsersByRole(role: any) {
     return await User.find({ role }, "_id");
   }
+
+  async getUserDashboardStats() {
+    // Get counts for different roles
+    const activeFarmers = await User.countDocuments({
+      role: "farmer",
+      status: "active",
+    });
+    const totalMerchants = await User.countDocuments({
+      role: "merchant",
+      status: "active",
+    });
+
+    // Aggregate user growth for Chart (Last 6 months)
+    const growthData = await User.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      { $limit: 6 },
+    ]);
+
+    // Format data for Recharts: { name: "Jan", users: 400 }
+    const formattedGrowth = growthData.map((item) => {
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      return {
+        name: monthNames[item._id.month - 1],
+        users: item.count,
+      };
+    });
+
+    return { activeFarmers, totalMerchants, formattedGrowth };
+  }
 }
 
 export const authService = new AuthService();

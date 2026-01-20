@@ -14,8 +14,11 @@ export const NotificationBell = () => {
   const { data: user } = useCurrentUserQuery();
   const { data, isLoading } = useGetNotificationsQuery();
 
-  // Your backend returns a raw array as seen in your terminal log
-  const notifications = Array.isArray(data) ? data : [];
+  // Filter notifications to match the current user's role
+  const notifications = Array.isArray(data)
+    ? data.filter((n: any) => n.notificationId?.targetRole === user?.role)
+    : [];
+
   const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 
   return (
