@@ -3,14 +3,14 @@ import { useGetAdminDashboardQuery } from "@/store/slices/adminApi";
 import { useGetDisputesQuery } from "@/store/slices/disputeApi";
 import {
   AlertTriangle,
-  Sprout,
   Users,
   BarChart3,
   Clock,
   Target,
-  Scale,
   ExternalLink,
-  // Zap,
+  ChevronRight,
+  ShieldAlert,
+  Store,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,14 +32,14 @@ const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/80 backdrop-blur-md border border-slate-200 p-3 rounded-xl shadow-xl animate-in zoom-in-95 duration-200">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl animate-in zoom-in-95 duration-200">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
           {payload[0].payload.name}
         </p>
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#6EAE19]" />
           <p className="text-sm font-bold">
-            {payload[0].value.toLocaleString()}{" "}
+            {payload[0].value.toLocaleString()}
             <span className="text-slate-400 font-medium">Users</span>
           </p>
         </div>
@@ -83,35 +83,11 @@ const Dashboard = () => {
       {/* --- HEADER --- */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          {/* <div className="inline-flex items-center gap-2 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-              <Zap className="h-3 w-3 text-emerald-500 fill-emerald-500" />
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">
-                Infrastructure Live
-              </span>
-            </div> */}
-          <h1 className="text-4xl font-bold tracking-tight">
-            {/* Admin <span className="text-[#6EAE19]">Intelligence</span> */}
-            Dashboard
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-slate-400 text-sm font-medium tracking-wide">
             Global ecosystem metrics and user acquisition.
           </p>
         </div>
-
-        {/* <div className="hidden md:flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-slate-400 uppercase">
-                Network Latency
-              </p>
-              <p className="text-sm font-black text-emerald-500">
-                24ms{" "}
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
-              </p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-200">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-          </div> */}
       </header>
 
       {/* --- STATS SECTION --- */}
@@ -119,14 +95,14 @@ const Dashboard = () => {
         <StatCard
           label="Active Farmers"
           value={stats?.activeFarmers || 0}
-          subtext="Verified agricultural producers"
-          icon={Sprout}
+          subtext="Verified agricultural farmers"
+          icon={Users}
         />
         <StatCard
           label="Verified Merchants"
           value={stats?.totalMerchants || 0}
           subtext="Authorized buying entities"
-          icon={Users}
+          icon={Store}
         />
         <StatCard
           label="Dispute Queue"
@@ -143,7 +119,7 @@ const Dashboard = () => {
           <Card className="border-none p-2">
             <CardHeader className="flex flex-row items-center justify-between pt-4 px-8">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-50 rounded-lg text-emerald-500">
+                <div className="p-2 bg-slate-50 rounded-lg text-primary">
                   <BarChart3 className="h-5 w-5" />
                 </div>
                 <div>
@@ -157,7 +133,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-black">+1</p>
-                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">
+                <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">
                   Growth this month
                 </p>
               </div>
@@ -225,72 +201,98 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* --- DISPUTES FEED --- */}
+        {/* --- REDESIGNED DISPUTES FEED --- */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-[#6EAE19]" />
-              <h3 className="font-bold">Recent Disputes</h3>
+              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                Recent Disputes
+              </h3>
             </div>
             <Link
               to="/admin/disputes"
-              className="text-[11px] font-bold text-slate-400 hover:text-[#6EAE19] transition-colors"
+              className="group flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-[#6EAE19] transition-all"
             >
-              VIEW FEED
+              See All
+              <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {recentDisputes.length > 0 ? (
               recentDisputes.map((dispute: any) => (
-                <Card
+                <div
                   key={dispute._id}
-                  className="group relative border-none shadow-sm p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white"
+                  className="group relative bg-white dark:bg-secondary rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 overflow-hidden"
                 >
-                  <div className="flex justify-between items-center">
+                  {/* Status Indicator Bar */}
+                  <div
+                    className={cn(
+                      "absolute left-0 top-0 bottom-0 w-1",
+                      dispute.status === "pending"
+                        ? "bg-amber-400"
+                        : "bg-blue-400",
+                    )}
+                  />
+
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter mb-0.5">
+                        Dispute ID
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="font-mono text-[10px] bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 px-1.5 py-0"
+                        >
+                          #{dispute._id.slice(-8).toUpperCase()}
+                        </Badge>
+                      </div>
+                    </div>
                     <Badge
                       className={cn(
-                        "text-[9px] font-black px-2 rounded-md border-none uppercase tracking-tighter",
+                        "text-[9px] font-black px-2 py-0.5 rounded-full border-none uppercase tracking-widest",
                         dispute.status === "pending"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-blue-100 text-blue-700",
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-500"
+                          : "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-500",
                       )}
                     >
                       {dispute.status}
                     </Badge>
-                    <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> Just Now
-                    </span>
                   </div>
 
-                  <h4 className="text-sm font-bold text-slate-800 line-clamp-2 leading-relaxed">
-                    {dispute.reason}
-                  </h4>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="mt-1 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-red-50 dark:group-hover:bg-red-500/10 transition-colors">
+                      <ShieldAlert className="h-4 w-4 text-slate-400 group-hover:text-red-500 transition-colors" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug">
+                      {dispute.reason}
+                    </h4>
+                  </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                        <Users className="h-3 w-3 text-slate-400" />
-                      </div>
-                      <span className="text-[10px] font-black text-slate-400">
-                        #TRX-{dispute._id.slice(-4).toUpperCase()}
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      <span className="text-[10px] font-bold">
+                        New Activity
                       </span>
                     </div>
 
                     <Link
                       to="/admin/disputes"
-                      className="inline-flex items-center gap-1 text-[11px] font-black text-[#6EAE19] group-hover:gap-2 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white dark:text-slate-100 text-[10px] font-black hover:bg-[#6EAE19] dark:hover:bg-[#6EAE19] transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-slate-200 dark:shadow-none"
                     >
-                      RESOLVE <ExternalLink className="h-3 w-3" />
+                      RESOLVE CASE <ExternalLink className="h-2.5 w-2.5" />
                     </Link>
                   </div>
-                </Card>
+                </div>
               ))
             ) : (
-              <div className="bg-white/50 backdrop-blur-sm border-2 border-dashed border-slate-200 rounded-4xl p-12 flex flex-col items-center justify-center text-center">
-                <Target className="h-10 w-10 text-slate-200 mb-4" />
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                  Everything is clear
+              <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-4xl p-12 flex flex-col items-center justify-center text-center">
+                <Target className="h-10 w-10 text-slate-200 dark:text-slate-800 mb-4" />
+                <p className="text-xs font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">
+                  Clean Record: No Open Disputes
                 </p>
               </div>
             )}
@@ -319,7 +321,7 @@ function StatCard({
   variant = "default",
 }: StatCardProps) {
   return (
-    <Card className="border-none group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default">
+    <Card className="border-none group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default  ">
       <CardContent>
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -334,14 +336,14 @@ function StatCard({
             className={cn(
               "p-2 rounded-xl transition-all duration-300 group-hover:scale-110",
               variant === "danger"
-                ? "text-red-500 bg-red-50 group-hover:bg-red-500 group-hover:text-white"
-                : "text-[#6EAE19] bg-emerald-50 group-hover:bg-[#6EAE19] group-hover:text-white",
+                ? "text-red-500 bg-red-50 dark:bg-red-500/10 group-hover:bg-red-500 group-hover:text-white"
+                : "text-[#6EAE19] bg-emerald-50 dark:bg-emerald-500/10 group-hover:bg-[#6EAE19] group-hover:text-white",
             )}
           >
             <Icon size={20} />
           </div>
         </div>
-        <p className="text-[10px] font-black uppercase tracking-wider">
+        <p className="text-[10px] font-black uppercase tracking-wider dark:text-slate-500">
           {label}
         </p>
       </CardContent>

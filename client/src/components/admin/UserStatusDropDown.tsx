@@ -6,14 +6,12 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useChangeUserStatusMutation } from "@/store/slices/adminApi";
-import { toast } from "sonner"; // Assuming you use sonner or similar for notifications
+import { toast } from "sonner";
 import { Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
-
-// type UserStatus = "active" | "ban";
 
 interface UserStatusDropDownProps {
   userId: string;
-  userStatus: string; // Changed to string to be more flexible with API response types
+  userStatus: string;
 }
 
 const statusOptions = [

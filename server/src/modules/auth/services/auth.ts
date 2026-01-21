@@ -11,6 +11,10 @@ export class AuthService {
     return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
   }
 
+  async getAllMerchants() {
+    return await User.find({ role: "merchant" }).sort({ createdAt: -1 });
+  }
+
   async getVerifiedMerchants() {
     const verifiedUsers = await User.find({
       role: "merchant",

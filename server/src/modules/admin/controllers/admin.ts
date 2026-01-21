@@ -10,6 +10,13 @@ export const getAllFarmersInfo = asyncHandler(
   },
 );
 
+export const getAllMerchants = asyncHandler(
+  async (req: Request, res: Response) => {
+    const merchants = await authService.getAllMerchants();
+    res.status(200).json(merchants);
+  },
+);
+
 export const getVerifiedMerchants = asyncHandler(
   async (req: Request, res: Response) => {
     const merchants = await authService.getVerifiedMerchants();

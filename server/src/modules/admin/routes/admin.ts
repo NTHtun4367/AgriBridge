@@ -5,6 +5,7 @@ import {
   changeUserStatus,
   getAdminOverview,
   getAllFarmersInfo,
+  getAllMerchants,
   getAllVerificationPendingUsers,
   getMerchantInfoWithMerchantId,
   getVerifiedMerchants,
@@ -22,6 +23,7 @@ router.get(
   allowRoles("admin"),
   getVerifiedMerchants,
 );
+router.get("/merchants", protect, allowRoles("admin"), getAllMerchants);
 router.patch(
   "/users/:userId",
   protect,

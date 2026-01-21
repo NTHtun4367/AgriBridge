@@ -19,6 +19,11 @@ export const adminApi = apiSlice.injectEndpoints({
       providesTags: ["Merchant"],
     }),
 
+    getMerchantsAdmin: builder.query({
+      query: () => "/merchants",
+      providesTags: ["Merchant"],
+    }),
+
     changeUserStatus: builder.mutation({
       query: ({ userId, status }) => ({
         url: `/users/${userId}`,
@@ -53,6 +58,7 @@ export const {
   useGetAdminDashboardQuery,
   useGetAllFarmersQuery,
   useGetAllMerchantsQuery,
+  useGetMerchantsAdminQuery,
   useChangeUserStatusMutation,
   useGetAllVerificationPendingUsersQuery,
   useUpdateUserVerificationStatusMutation,

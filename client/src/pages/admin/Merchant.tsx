@@ -40,23 +40,25 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Settings2, Search, ArrowUpDown } from "lucide-react";
 
-import { useGetAllMerchantsQuery } from "@/store/slices/adminApi";
+import { useGetMerchantsAdminQuery } from "@/store/slices/adminApi";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
+import MerchantVerificationDropDown from "@/components/admin/MerchantVerificationDropDown";
 
-// 1. Define the Data Shape
+// 1. Updated Data Shape
 interface Farmer {
   _id: string;
   name: string;
   email: string;
   status: string;
+  verificationStatus: "pending" | "verified" | "rejected"; // New Field
 }
 
 const columnHelper = createColumnHelper<Farmer>();
 
 function MerchantManagement() {
-  const { data: farmers = [], isLoading } = useGetAllMerchantsQuery(undefined);
+  const { data: farmers = [], isLoading } =
+    useGetMerchantsAdminQuery(undefined);
 
-  // 2. Table States
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -92,15 +94,16 @@ function MerchantManagement() {
         header: "Email",
       }),
       columnHelper.accessor("status", {
-        header: "Status",
+        header: "Account",
         cell: (info) => {
           const status = info.getValue();
           return (
             <Badge
+              variant="outline"
               className={
                 status === "active"
-                  ? "bg-primary hover:bg-primary/90"
-                  : "bg-destructive hover:bg-destructive/90"
+                  ? "border-primary text-primary"
+                  : "border-destructive text-destructive"
               }
             >
               {status}
@@ -108,11 +111,39 @@ function MerchantManagement() {
           );
         },
       }),
+      // --- NEW VERIFICATION STATUS COLUMN ---
+      columnHelper.accessor("verificationStatus", {
+        header: "Verification",
+        cell: (info) => {
+          const vStatus = info.getValue();
+          const styles = {
+            verified:
+              "bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/20",
+            pending:
+              "bg-yellow-500/10 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20",
+            rejected:
+              "bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20",
+          };
+          return (
+            <Badge
+              className={`${styles[vStatus] || ""} capitalize border shadow-none`}
+            >
+              {vStatus}
+            </Badge>
+          );
+        },
+      }),
       columnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Action</div>,
+        header: () => <div className="text-right">Actions</div>,
         cell: (info) => (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {/* New Verification Action */}
+            <MerchantVerificationDropDown
+              merchantId={info.row.original._id}
+              currentStatus={info.row.original.verificationStatus}
+            />
+            {/* Existing Status Action */}
             <UserStatusDropDown
               userId={info.row.original._id}
               userStatus={info.row.original.status}
@@ -121,10 +152,9 @@ function MerchantManagement() {
         ),
       }),
     ],
-    []
+    [],
   );
 
-  // 4. Initialize Table
   const table = useReactTable({
     data: farmers,
     columns,
@@ -155,7 +185,6 @@ function MerchantManagement() {
         </p>
       </div>
 
-      {/* Top Bar: Search & Column Toggle */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -194,7 +223,6 @@ function MerchantManagement() {
         </DropdownMenu>
       </div>
 
-      {/* The Table */}
       <div className="rounded-md border-2 bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
@@ -209,7 +237,7 @@ function MerchantManagement() {
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -237,7 +265,7 @@ function MerchantManagement() {
                     <TableCell key={cell.id} className="py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -249,7 +277,7 @@ function MerchantManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No farmers found.
+                  No merchants found.
                 </TableCell>
               </TableRow>
             )}
@@ -257,13 +285,11 @@ function MerchantManagement() {
         </Table>
       </div>
 
-      {/* Pagination Footer */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          Total {farmers.length} farmers found
+          Total {farmers.length} merchants found
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
-          {/* Rows per page */}
           <div className="flex items-center space-x-2">
             <p className="text-xs font-medium">Rows per page</p>
             <Select
@@ -285,7 +311,6 @@ function MerchantManagement() {
             </Select>
           </div>
 
-          {/* Page info & Navigation */}
           <div className="flex items-center gap-4">
             <span className="text-xs font-medium">
               Page {table.getState().pagination.pageIndex + 1} of{" "}
