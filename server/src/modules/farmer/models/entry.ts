@@ -1,10 +1,11 @@
-import { model, Schema, Types } from "mongoose";
+import { model, Schema, Types, Document } from "mongoose";
 
 export interface IEntry extends Document {
   userId: Types.ObjectId;
   type: "expense" | "income";
   date: Date;
   category: string;
+  season: string; // <--- New Field
   quantity?: number;
   unit?: string;
   value: number;
@@ -32,6 +33,12 @@ const entrySchema = new Schema<IEntry>(
       type: String,
       required: true,
     },
+    season: {
+      // <--- New Field
+      type: String,
+      required: true,
+      index: true,
+    },
     quantity: {
       type: Number,
     },
@@ -47,10 +54,10 @@ const entrySchema = new Schema<IEntry>(
     },
     billImageUrl: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Create a compound index for faster reports
-entrySchema.index({ userId: 1, type: 1, date: -1 });
+// Updated index to include season for fast filtering
+entrySchema.index({ userId: 1, season: 1, type: 1, date: -1 });
 
 export const Entry = model<IEntry>("Entry", entrySchema);

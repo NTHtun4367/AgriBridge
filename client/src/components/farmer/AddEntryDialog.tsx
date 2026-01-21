@@ -64,6 +64,17 @@ const CROP_OPTIONS: Record<string, string[]> = {
   other: ["none"],
 };
 
+// Generate multi-year seasons
+const generateSeasons = () => {
+  const currentYear = new Date().getFullYear();
+  const names = ["Monsoon", "Winter", "Summer"];
+  const years = [currentYear - 1, currentYear, currentYear + 1];
+  const options: string[] = [];
+  years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
+  return options;
+};
+const SEASON_OPTIONS = generateSeasons();
+
 const AddEntryDialog = () => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"expense" | "income">("expense");
@@ -78,6 +89,7 @@ const AddEntryDialog = () => {
       date: new Date(),
       type: "expense",
       category: "",
+      season: "",
       quantity: "",
       unit: "",
       value: "",
@@ -85,7 +97,6 @@ const AddEntryDialog = () => {
       billImage: null,
     },
   });
-
   const selectedCategory = form.watch("category");
 
   const availableUnits = useMemo(() => {
@@ -100,7 +111,7 @@ const AddEntryDialog = () => {
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    fieldOnChange: (file: File | null) => void
+    fieldOnChange: (file: File | null) => void,
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -132,8 +143,9 @@ const AddEntryDialog = () => {
     try {
       const formData = new FormData();
       formData.append("date", data.date.toISOString());
-      formData.append("type", type); // Taking type from local state toggle
+      formData.append("type", type);
       formData.append("category", data.category);
+      formData.append("season", data.season); // Dynamic season
       formData.append("quantity", data.quantity || "");
       formData.append("unit", data.unit || "");
       formData.append("value", data.value);
@@ -142,13 +154,12 @@ const AddEntryDialog = () => {
 
       await addEntry(formData).unwrap();
       toast.success("Entry added successfully!");
-      handleClose();
+      setOpen(false);
+      form.reset();
     } catch (err) {
-      console.error("Failed to save:", err);
       toast.error("Error saving record.");
     }
   };
-
   useEffect(() => {
     form.setValue("category", "");
     form.setValue("unit", "");
@@ -182,7 +193,7 @@ const AddEntryDialog = () => {
                 "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "expense"
                   ? "bg-white text-red-500 shadow-sm"
-                  : "text-slate-500 hover:bg-slate-50"
+                  : "text-slate-500 hover:bg-slate-50",
               )}
             >
               Expense
@@ -193,7 +204,7 @@ const AddEntryDialog = () => {
                 "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "income"
                   ? "bg-white text-primary shadow-sm"
-                  : "text-slate-500 hover:bg-slate-50"
+                  : "text-slate-500 hover:bg-slate-50",
               )}
             >
               Income
@@ -206,6 +217,37 @@ const AddEntryDialog = () => {
               className="space-y-6 py-4"
             >
               <div className="grid grid-cols-2 gap-4">
+                {/* SEASON SELECTOR - Crucial for multi-year */}
+                <FormField
+                  control={form.control}
+                  name="season"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-600 font-semibold">
+                        Agricultural Season
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full h-12 border-2 border-slate-200">
+                            <SelectValue placeholder="Select Season & Year" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {SEASON_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="date"
@@ -221,7 +263,7 @@ const AddEntryDialog = () => {
                               variant="outline"
                               className={cn(
                                 "pl-3 text-left font-normal border-slate-200",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value
@@ -271,7 +313,7 @@ const AddEntryDialog = () => {
                         </FormControl>
                         <SelectContent>
                           {Object.keys(
-                            type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS
+                            type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS,
                           ).map((cat) => (
                             <SelectItem
                               key={cat}
@@ -300,11 +342,7 @@ const AddEntryDialog = () => {
                           Quantity
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0.00"
-                            {...field}
-                          />
+                          <Input type="number" placeholder="0.00" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -352,11 +390,7 @@ const AddEntryDialog = () => {
                       Total Value (MMK)
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        {...field}
-                      />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -9,10 +9,15 @@ export interface IFinanceStats {
 
 export const farmerApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getFinanceStats: builder.query<IFinanceStats, void>({
-      query: () => "/farmers/finance/stats",
+    // Updated to accept an optional season string
+    getFinanceStats: builder.query<IFinanceStats, string | void>({
+      query: (season) => ({
+        url: "/farmers/finance/stats",
+        params: season && season !== "all" ? { season } : {},
+      }),
       providesTags: ["FinanceStats"],
     }),
+
     addEntry: builder.mutation<void, FormData>({
       query: (formData) => ({
         url: "/farmers/add-entry",
@@ -21,20 +26,24 @@ export const farmerApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["FinanceStats", "Entries"],
     }),
+
     getAllEntries: builder.query<Entry[], void>({
       query: () => "/farmers/entries",
       providesTags: ["Entries"],
     }),
+
     getEntryById: builder.query<Entry, string>({
       query: (id) => `/farmers/entries/${id}`,
       providesTags: ["Entries"],
     }),
+
     getMerchants: builder.query<any[], any>({
       query: (params) => ({
         url: "/farmers/merchants",
-        params: params, // contains division, district, etc.
+        params: params,
       }),
     }),
+
     getMerchantInfo: builder.query<any, string>({
       query: (userId) => `/farmers/merchants/${userId}`,
       providesTags: ["Merchant"],

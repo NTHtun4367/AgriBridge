@@ -2,9 +2,17 @@ import { Types } from "mongoose";
 import { Entry } from "../models/entry";
 
 export class FinanceService {
-  async calculateFinance(userId: string) {
+  async calculateFinance(userId: string, season?: string) {
+    // Build the match query dynamically
+    const matchQuery: any = { userId: new Types.ObjectId(userId) };
+
+    // If a specific season is requested, add it to the filter
+    if (season && season !== "all") {
+      matchQuery.season = season;
+    }
+
     const stats = await Entry.aggregate([
-      { $match: { userId: new Types.ObjectId(userId) } },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,

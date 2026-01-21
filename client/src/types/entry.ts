@@ -3,6 +3,7 @@ export interface Entry {
   date: string | Date;
   type: "expense" | "income";
   category: string;
+  season: string;
   quantity?: string;
   unit?: string;
   value: string | number;
