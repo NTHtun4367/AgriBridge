@@ -42,9 +42,10 @@ import MerchantInvoices from "./pages/merchant/MerchantInvoices.tsx";
 import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
 import CropManagement from "./pages/admin/CropManagement.tsx";
 import MarketPlaceManagement from "./pages/admin/MarketLocationManagement.tsx";
-import Settings from "./pages/admin/Settings.tsx";
+import Settings from "./pages/Settings.tsx";
 import Dispute from "./pages/admin/Dispute.tsx";
 import FarmerDisputes from "./pages/farmer/Disputes.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const router = createBrowserRouter([
   {
@@ -127,6 +128,14 @@ const router = createBrowserRouter([
             path: "/farmer/disputes",
             element: <FarmerDisputes />,
           },
+          {
+            path: "/farmer/settings",
+            element: <Settings />,
+          },
+          {
+            path: "/farmer/profile",
+            element: <Profile />,
+          },
         ],
       },
       {
@@ -164,6 +173,14 @@ const router = createBrowserRouter([
           {
             path: "/merchant/notifications",
             element: <Notification />,
+          },
+          {
+            path: "/merchant/settings",
+            element: <Settings />,
+          },
+          {
+            path: "/merchant/profile",
+            element: <Profile />,
           },
         ],
       },
@@ -222,6 +239,10 @@ const router = createBrowserRouter([
           {
             path: "/admin/notifications",
             element: <Notification />,
+          },
+          {
+            path: "/admin/profile",
+            element: <Profile />,
           },
         ],
       },

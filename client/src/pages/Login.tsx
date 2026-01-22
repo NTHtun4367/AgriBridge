@@ -32,19 +32,24 @@ function Login() {
   const form = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      identifier: "", // Corrected field name
       password: "",
     },
   });
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
-      const response = await loginMutation(data).unwrap();
+      const payload = {
+        identifier: data.identifier,
+        password: data.password,
+      };
+
+      const response = await loginMutation(payload).unwrap();
       dispatch(setCredentials(response));
       form.reset();
       toast.success("Login successful.");
 
-      // Redirect by role
+      // Role-based redirection
       if (response.user.role === "admin") {
         navigate("/admin/dashboard");
       } else if (response.user.role === "merchant") {
@@ -53,7 +58,7 @@ function Login() {
         navigate("/farmer/dashboard");
       }
     } catch (error: any) {
-      toast.error(error?.data?.message);
+      toast.error(error?.data?.message || "Login failed. Please try again.");
     }
   };
 
@@ -71,12 +76,15 @@ function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="email"
+                name="identifier" // Changed from "email" to match schema
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email or Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="allison@gmail.com" {...field} />
+                      <Input
+                        placeholder="example@gmail.com or 09..."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,13 +108,13 @@ function Login() {
                 className="w-full cursor-pointer"
                 disabled={isLoading}
               >
-                Login
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>
           <p className="text-xs text-center font-medium mt-4">
             Don't have an account?
-            <Link to={"/register"} className="underline ps-1">
+            <Link to={"/register"} className="underline ps-1 text-primary">
               Register
             </Link>
           </p>

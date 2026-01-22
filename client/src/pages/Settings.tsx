@@ -1,4 +1,16 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setTheme, type ThemeMode } from "@/store/slices/theme";
+import { type RootState } from "@/store";
+import {
+  useCurrentUserQuery,
+  useUpdateProfileMutation,
+  useUpdateAvatarMutation,
+  // Ensure your userApi has this mutation
+  // useUpdateMerchantDocsMutation,
+} from "@/store/slices/userApi";
+import { toast } from "sonner";
+
 import {
   User,
   Bell,
@@ -6,11 +18,12 @@ import {
   Lock,
   Trash2,
   CheckCircle2,
-  Laptop,
-  Smartphone,
   Key,
-  // CreditCard,
   ChevronRight,
+  Camera,
+  Loader2,
+  ShieldCheck,
+  FileUp,
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +41,74 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Settings: React.FC = () => {
+  const dispatch = useDispatch();
+  const currentTheme = useSelector((state: RootState) => state.theme.mode);
+
+  // RTK Query Logic
+  const { data: user, isLoading: isUserLoading } = useCurrentUserQuery();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [updateAvatar, { isLoading: isUploadingAvatar }] =
+    useUpdateAvatarMutation();
+
+  const [formData, setFormData] = useState({ name: "", bio: "", email: "" });
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        bio: user.bio || "",
+        email: user.email || user.phone || "",
+      });
+    }
+  }, [user]);
+
+  // Apply theme to the document head
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+
+    if (currentTheme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(currentTheme);
+    }
+  }, [currentTheme]);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({ name: formData.name, bio: formData.bio }).unwrap();
+      toast.success("Profile updated!");
+    } catch (err) {
+      toast.error("Failed to update profile");
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const body = new FormData();
+    body.append("avatar", file);
+    try {
+      await updateAvatar(body).unwrap();
+      toast.success("Photo updated");
+    } catch (err) {
+      toast.error("Upload failed");
+    }
+  };
+
+  if (isUserLoading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-primary" />
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/50 pb-20">
       <div className="container mx-auto py-10 max-w-6xl px-4 lg:px-8">
@@ -45,7 +126,12 @@ const Settings: React.FC = () => {
             <Button variant="outline" className="shadow-sm">
               Discard
             </Button>
-            <Button className="shadow-md shadow-primary/20">
+            <Button
+              onClick={handleSave}
+              disabled={isUpdating}
+              className="shadow-md shadow-primary/20"
+            >
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
           </div>
@@ -55,7 +141,7 @@ const Settings: React.FC = () => {
           defaultValue="account"
           className="flex flex-col lg:flex-row gap-12"
         >
-          {/* Sidebar Navigation - Glassmorphism Style */}
+          {/* Sidebar Navigation */}
           <aside className="lg:w-64">
             <TabsList className="flex lg:flex-col h-auto bg-transparent gap-2 p-0 justify-start overflow-x-auto lg:overflow-visible no-scrollbar">
               <NavTrigger
@@ -63,16 +149,19 @@ const Settings: React.FC = () => {
                 icon={<User size={18} />}
                 label="Account"
               />
+              {/* --- NEW MERCHANT TAB TRIGGER --- */}
+              {user?.role === "merchant" && (
+                <NavTrigger
+                  value="verification"
+                  icon={<ShieldCheck size={18} />}
+                  label="Verification"
+                />
+              )}
               <NavTrigger
                 value="security"
                 icon={<Lock size={18} />}
                 label="Security"
               />
-              {/* <NavTrigger
-                value="billing"
-                icon={<CreditCard size={18} />}
-                label="Billing"
-              /> */}
               <NavTrigger
                 value="notifications"
                 icon={<Bell size={18} />}
@@ -95,26 +184,42 @@ const Settings: React.FC = () => {
             >
               <section className="space-y-6">
                 <div className="flex items-center gap-6 p-6 rounded-2xl bg-white dark:bg-slate-900 border shadow-sm">
-                  <Avatar className="h-24 w-24 border-4 border-primary/10">
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
+                  <div className="relative group">
+                    <Avatar className="h-24 w-24 border-4 border-primary/10">
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Camera className="text-white" size={20} />
+                    </button>
+                    <input
+                      type="file"
+                      ref={avatarInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <h3 className="font-semibold text-xl">Your Photo</h3>
                     <p className="text-sm text-muted-foreground">
                       This will be displayed on your profile.
                     </p>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="h-8">
-                        Change
-                      </Button>
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="h-8 text-destructive hover:text-destructive"
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => avatarInputRef.current?.click()}
                       >
-                        Remove
+                        Change
                       </Button>
+                      {isUploadingAvatar && (
+                        <Loader2 className="h-4 w-4 animate-spin mt-2" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -124,32 +229,98 @@ const Settings: React.FC = () => {
                     <CardTitle>Personal Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <Field
-                        label="First Name"
-                        id="f-name"
-                        defaultValue="John"
+                        label="Full Name"
+                        id="name"
+                        value={formData.name}
+                        onChange={(val: string) =>
+                          setFormData({ ...formData, name: val })
+                        }
                       />
-                      <Field label="Last Name" id="l-name" defaultValue="Doe" />
                     </div>
                     <Field
-                      label="Email Address"
+                      label="Identifier (Email/Phone)"
                       id="email"
-                      type="email"
-                      defaultValue="john@example.com"
+                      type="text"
+                      value={formData.email}
+                      disabled
                     />
                     <div className="space-y-2">
                       <Label htmlFor="bio">Bio</Label>
                       <Textarea
                         id="bio"
-                        placeholder="Brief description for your profile..."
+                        placeholder="Brief description..."
                         className="resize-none h-32"
+                        value={formData.bio}
+                        onChange={(e) =>
+                          setFormData({ ...formData, bio: e.target.value })
+                        }
                       />
                     </div>
                   </CardContent>
                 </Card>
               </section>
             </TabsContent>
+
+            {/* --- NEW MERCHANT VERIFICATION TAB CONTENT --- */}
+            {user?.role === "merchant" && (
+              <TabsContent
+                value="verification"
+                className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
+              >
+                <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ShieldCheck className="text-primary" /> Merchant
+                      Verification
+                    </CardTitle>
+                    <CardDescription>
+                      Upload your identity documents to verify your merchant
+                      account.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label>NRC Front Side</Label>
+                        <div className="group relative border-2 border-dashed rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer">
+                          <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                          <p className="text-xs text-muted-foreground">
+                            PNG, JPG up to 5MB
+                          </p>
+                          <input
+                            type="file"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            accept="image/*"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label>NRC Back Side</Label>
+                        <div className="group relative border-2 border-dashed rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer">
+                          <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                          <p className="text-xs text-muted-foreground">
+                            PNG, JPG up to 5MB
+                          </p>
+                          <input
+                            type="file"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            accept="image/*"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        <strong>Note:</strong> Verification usually takes 24-48
+                        hours. Your documents are stored securely and encrypted.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
 
             {/* Security Tab */}
             <TabsContent
@@ -186,29 +357,6 @@ const Settings: React.FC = () => {
                   </Button>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Active Sessions</CardTitle>
-                  <CardDescription>
-                    Devices currently logged into your account.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <SessionItem
-                    icon={<Laptop />}
-                    device="MacBook Pro"
-                    location="London, UK"
-                    status="Current Session"
-                  />
-                  <SessionItem
-                    icon={<Smartphone />}
-                    device="iPhone 15 Pro"
-                    location="London, UK"
-                    status="2 hours ago"
-                  />
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Appearance Tab */}
@@ -225,9 +373,21 @@ const Settings: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-6">
-                    <ThemeOption theme="light" active={false} />
-                    <ThemeOption theme="dark" active={true} />
-                    <ThemeOption theme="system" active={false} />
+                    <ThemeOption
+                      theme="light"
+                      active={currentTheme === "light"}
+                      onClick={() => dispatch(setTheme("light"))}
+                    />
+                    <ThemeOption
+                      theme="dark"
+                      active={currentTheme === "dark"}
+                      onClick={() => dispatch(setTheme("dark"))}
+                    />
+                    <ThemeOption
+                      theme="system"
+                      active={currentTheme === "system"}
+                      onClick={() => dispatch(setTheme("system"))}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -259,7 +419,7 @@ const Settings: React.FC = () => {
   );
 };
 
-// --- Helper Components for the "Beautiful" Design ---
+// --- Helper Components ---
 
 const NavTrigger = ({
   value,
@@ -279,7 +439,14 @@ const NavTrigger = ({
   </TabsTrigger>
 );
 
-const Field = ({ label, id, type = "text", defaultValue = "" }: any) => (
+const Field = ({
+  label,
+  id,
+  type = "text",
+  value,
+  onChange,
+  disabled,
+}: any) => (
   <div className="space-y-2">
     <Label
       htmlFor={id}
@@ -290,41 +457,24 @@ const Field = ({ label, id, type = "text", defaultValue = "" }: any) => (
     <Input
       id={id}
       type={type}
-      defaultValue={defaultValue}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
       className="bg-slate-50/50 dark:bg-slate-950/50"
     />
-  </div>
-);
-
-const SessionItem = ({ icon, device, location, status }: any) => (
-  <div className="flex items-center justify-between p-2">
-    <div className="flex items-center gap-4">
-      <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm font-semibold">{device}</p>
-        <p className="text-xs text-muted-foreground">
-          {location} • {status}
-        </p>
-      </div>
-    </div>
-    {status !== "Current Session" && (
-      <Button variant="ghost" size="sm" className="text-xs h-8">
-        Sign out
-      </Button>
-    )}
   </div>
 );
 
 const ThemeOption = ({
   theme,
   active,
+  onClick,
 }: {
-  theme: "light" | "dark" | "system";
+  theme: ThemeMode;
   active: boolean;
+  onClick: () => void;
 }) => (
-  <div className="space-y-3 cursor-pointer group">
+  <div className="space-y-3 cursor-pointer group" onClick={onClick}>
     <div
       className={`
       relative h-28 w-full rounded-xl border-2 p-2 transition-all
@@ -347,7 +497,11 @@ const ThemeOption = ({
         <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary fill-white dark:fill-slate-950" />
       )}
     </div>
-    <p className="text-center text-xs font-bold capitalize">{theme}</p>
+    <p
+      className={`text-center text-xs capitalize ${active ? "font-bold" : "font-medium"}`}
+    >
+      {theme}
+    </p>
   </div>
 );
 

@@ -76,7 +76,7 @@ export const getAdminOverview = asyncHandler(
           totalMerchants: userStats.totalMerchants,
           pendingDisputes: disputeStats.pendingDisputes,
         },
-        chartData: userStats.formattedGrowth,
+        chartData: userStats.formattedGrowth, // Now contains farmers and merchants
         recentActivity: disputeStats.recentActivity,
       },
     });

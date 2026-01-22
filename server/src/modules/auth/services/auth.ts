@@ -1,12 +1,13 @@
 import { IUser, User } from "../models/user";
 import { Merchant } from "../models/merchant";
-import { uploadSingleImage } from "../../../shared/utils/cloudinary";
+import {
+  deleteImage,
+  uploadSingleImage,
+} from "../../../shared/utils/cloudinary";
 import generateToken from "../../../shared/utils/generateToken";
-import { AnyKeys } from "mongoose";
-import { HydratedDocument } from "mongoose";
+import { generateOtp, sendOtp } from "../../../shared/utils/otp";
 
 export class AuthService {
-  // Logic for Admin to use
   async getFarmers() {
     return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
   }
@@ -16,27 +17,23 @@ export class AuthService {
   }
 
   async getVerifiedMerchants() {
-    const verifiedUsers = await User.find({
+    return await User.find({
       role: "merchant",
       verificationStatus: "verified",
-      status: "active", // Optional: only get active (non-banned) verified merchants
+      status: "active",
     })
-      .populate("merchantId") // This fetches the IMerchant document
+      .populate("merchantId")
       .select("-password")
       .sort({ createdAt: -1 });
-
-    return verifiedUsers;
   }
 
   async getMerchants(filter: any) {
     return await User.find(filter)
       .populate({
         path: "merchantId",
-        // Hide the NRC fields inside the populated merchant object
         select:
           "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
       })
-      // This select only hides fields directly on the User (like password)
       .select("-password")
       .sort({ createdAt: -1 });
   }
@@ -50,190 +47,219 @@ export class AuthService {
   }
 
   async getPendingUsers() {
-    const user = await User.find({ verificationStatus: "pending" }).sort({
+    return await User.find({ verificationStatus: "pending" }).sort({
       createdAt: -1,
     });
-    if (!user) throw new Error("Verification pending user not found!");
-    return user;
   }
 
-  // for admin
   async getMerchantInfo(merchantId: string) {
     const merchant = await Merchant.findById(merchantId);
     if (!merchant) throw new Error("Merchant info not found.");
     return merchant;
   }
 
-  // for farmer
   async getMerchantById(userId: string) {
     return await User.findById(userId)
       .populate({
         path: "merchantId",
-        // Hide the NRC fields inside the populated merchant object
         select:
           "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
       })
-      // This select only hides fields directly on the User (like password)
-      .select("-password")
-      .sort({ createdAt: -1 });
+      .select("-password");
   }
 
-  // Logic for Auth Controllers to use
-  async login(email: string, pass: string) {
-    const user = await User.findOne({ email });
-    if (!user || !(await user.matchPassword(pass))) {
-      throw new Error("Invalid email or password");
+  // services/auth.ts
+
+  async login(identifier: string, password: string) {
+    const cleanId = identifier.trim().toLowerCase();
+
+    // ADD .select("+password") to ensure the hash is available for comparison
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    }).select("+password");
+
+    if (!user) throw new Error("Invalid credentials");
+
+    // If password field is missing in DB for some reason, catch it here
+    if (!user.password) {
+      throw new Error(
+        "Account configuration error. Please reset your password.",
+      );
     }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) throw new Error("Invalid credentials");
 
     return {
       token: generateToken(user),
       user: {
         id: user._id,
         role: user.role,
-        merchantId: user.merchantId || null,
         verificationStatus: user.verificationStatus,
       },
     };
   }
 
-  // Farmer Registration
-  async registerFarmer(body: any) {
-    const { name, email, password, homeAddress, division, district, township } =
-      body;
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      throw new Error("Email already registered.");
-    }
-
-    const newUser = await User.create({
-      role: "farmer",
-      name,
-      email,
-      password,
-      homeAddress,
-      division,
-      district,
-      township,
-
-      verificationStatus: "verified",
+  async verifyOtp(identifier: string, otp: string) {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
     });
 
-    const token = generateToken(newUser);
+    if (!user || !user.otp || !user.otpExpires)
+      throw new Error("No active OTP session.");
+    if (new Date() > user.otpExpires) throw new Error("OTP has expired.");
 
-    if (newUser) {
-      return {
-        token,
-        user: {
-          id: newUser._id,
-          role: newUser.role,
-          verificationStatus: newUser.verificationStatus,
-        },
-      };
-    }
-  }
+    const isMatch = await user.matchOtp(otp);
+    if (!isMatch) throw new Error("Invalid OTP code.");
 
-  // Get Profile
-  async getUserProfile(userId: string) {
-    const user = await User.findById(userId).select("-password");
-    if (!user) throw new Error("User not found");
-    return user;
-  }
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    if (user.role === "farmer") user.verificationStatus = "verified";
 
-  async registerMerchant(body: any, reqFiles: any) {
-    const {
-      name,
-      email,
-      password,
-      homeAddress,
-      division,
-      district,
-      township,
-      businessName,
-      phone,
-      nrc,
-    } = body;
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      throw new Error("Email already registered.");
-    }
-
-    if (!nrc?.region || !nrc?.township || !nrc?.type || !nrc?.number) {
-      throw new Error("NRC information is required");
-    }
-
-    const files = reqFiles as {
-      nrcFront?: Express.Multer.File[];
-      nrcBack?: Express.Multer.File[];
-    };
-
-    const frontImage = files.nrcFront?.[0];
-    const backImage = files.nrcBack?.[0];
-
-    if (!frontImage || !backImage) {
-      throw new Error("NRC front and back images are required");
-    }
-
-    const uploadedFront = await uploadSingleImage(
-      `data:${frontImage.mimetype};base64,${frontImage.buffer.toString(
-        "base64",
-      )}`,
-      "/agribridge/nrc",
-    );
-
-    const uploadedBack = await uploadSingleImage(
-      `data:${backImage.mimetype};base64,${backImage.buffer.toString(
-        "base64",
-      )}`,
-      "/agribridge/nrc",
-    );
-
-    const merchant = await Merchant.create({
-      businessName,
-      phone,
-      nrcRegion: nrc.region,
-      nrcTownship: nrc.township,
-      nrcType: nrc.type,
-      nrcNumber: nrc.number,
-      nrcFrontImage: {
-        url: uploadedFront.image_url,
-        public_alt: uploadedFront.public_alt,
-      },
-      nrcBackImage: {
-        url: uploadedBack.image_url,
-        public_alt: uploadedBack.public_alt,
-      },
-    });
-
-    const userData: AnyKeys<IUser> = {
-      role: "merchant",
-      name,
-      email,
-      password,
-      homeAddress,
-      division,
-      district,
-      township,
-      merchantId: merchant._id,
-      verificationStatus: "pending",
-    };
-
-    const user: HydratedDocument<IUser> = await User.create(userData);
-
-    const token = generateToken(user);
-
+    await user.save();
     return {
-      token,
+      token: generateToken(user),
       user: {
         id: user._id,
         role: user.role,
         verificationStatus: user.verificationStatus,
-        merchantId: merchant._id,
       },
     };
+  }
+
+  async registerFarmer(body: any) {
+    const { identifier, ...rest } = body;
+    const cleanId = identifier.trim().toLowerCase();
+    const isEmail = cleanId.includes("@");
+
+    const exists = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+    if (exists)
+      throw new Error("User with this phone or email is already registered.");
+
+    const otpCode = generateOtp();
+
+    // BUILD USER OBJECT DYNAMICALLY
+    const userData: any = {
+      role: "farmer",
+      ...rest,
+      verificationStatus: "unverified",
+      otp: otpCode,
+      otpExpires: new Date(Date.now() + 5 * 60 * 1000),
+    };
+
+    // Only set the field that exists to avoid 'null' duplication
+    if (isEmail) {
+      userData.email = cleanId;
+    } else {
+      userData.phone = cleanId;
+    }
+
+    try {
+      const user = await User.create(userData);
+      await sendOtp(cleanId, otpCode);
+      return { message: "OTP sent to your " + (isEmail ? "email" : "phone") };
+    } catch (err: any) {
+      console.error("Error in registerFarmer:", err.message);
+      throw err;
+    }
+  }
+
+  async registerMerchant(body: any, reqFiles: any) {
+    try {
+      const { identifier, password, ...rest } = body;
+      const cleanId = identifier.trim().toLowerCase();
+      const isEmail = cleanId.includes("@");
+
+      const existingUser = await User.findOne({
+        $or: [{ email: cleanId }, { phone: cleanId }],
+      });
+      if (existingUser)
+        throw new Error("User with this phone or email already exists.");
+
+      const files = reqFiles as {
+        nrcFront?: Express.Multer.File[];
+        nrcBack?: Express.Multer.File[];
+      };
+
+      if (!files?.nrcFront?.[0] || !files?.nrcBack?.[0])
+        throw new Error("NRC images required.");
+
+      const uploadedFront = await uploadSingleImage(
+        `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`,
+        "/agribridge/nrc",
+      );
+      const uploadedBack = await uploadSingleImage(
+        `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`,
+        "/agribridge/nrc",
+      );
+
+      const merchant: any = await Merchant.create({
+        ...rest,
+        nrcFrontImage: {
+          url: uploadedFront.image_url,
+          public_alt: uploadedFront.public_alt,
+        },
+        nrcBackImage: {
+          url: uploadedBack.image_url,
+          public_alt: uploadedBack.public_alt,
+        },
+      });
+
+      const otpCode = generateOtp();
+
+      // BUILD USER OBJECT DYNAMICALLY
+      const userData: any = {
+        ...rest,
+        role: "merchant",
+        password,
+        merchantId: merchant._id,
+        verificationStatus: "unverified",
+        otp: otpCode,
+        otpExpires: new Date(Date.now() + 5 * 60 * 1000),
+      };
+
+      if (isEmail) {
+        userData.email = cleanId;
+      } else {
+        userData.phone = cleanId;
+      }
+
+      const user = new User(userData);
+      await user.save();
+      await sendOtp(cleanId, otpCode);
+
+      return { message: "Merchant registration initiated. OTP sent." };
+    } catch (err: any) {
+      console.error("Error in registerMerchant:", err.message);
+      throw err;
+    }
+  }
+
+  async resendOtp(identifier: string) {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+    if (!user) throw new Error("User not found");
+
+    const otpCode = generateOtp();
+    user.otp = otpCode;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+
+    await sendOtp(cleanId, otpCode);
+    return { message: "New OTP sent." };
+  }
+
+  async getUserProfile(userId: string) {
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("merchantId");
+    if (!user) throw new Error("User not found");
+    return user;
   }
 
   async getAllUsers() {
@@ -244,8 +270,86 @@ export class AuthService {
     return await User.find({ role }, "_id");
   }
 
+  /**
+   * Update Basic Profile Text Fields
+   */
+  async updateProfile(userId: string, updateData: Partial<IUser>) {
+    // Prevent sensitive fields from being updated via this method
+    const { password, role, merchantId, otp, ...safeData } = updateData as any;
+
+    const user = await User.findByIdAndUpdate(userId, safeData, {
+      new: true,
+    }).select("-password");
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+
+  /**
+   * Update Profile Avatar (Handles Cloudinary Cleanup)
+   */
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    // 1. Remove old avatar if it exists
+    if (user.avatarPublicId) {
+      await deleteImage(user.avatarPublicId);
+    }
+
+    // 2. Upload to Cloudinary
+    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    const uploaded = await uploadSingleImage(dataUri, "/agribridge/avatars");
+
+    // 3. Update User
+    user.avatar = uploaded.image_url;
+    user.avatarPublicId = uploaded.public_alt;
+    await user.save();
+
+    return { avatar: user.avatar };
+  }
+
+  /**
+   * Update Merchant NRC Documents
+   */
+  async updateMerchantDocs(userId: string, reqFiles: any) {
+    const user = await User.findById(userId);
+    if (!user || user.role !== "merchant")
+      throw new Error("Merchant not found");
+
+    const files = reqFiles as {
+      nrcFront?: Express.Multer.File[];
+      nrcBack?: Express.Multer.File[];
+    };
+
+    const updateData: any = {};
+
+    // Upload Front NRC if provided
+    if (files?.nrcFront?.[0]) {
+      const frontUri = `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`;
+      const uploaded = await uploadSingleImage(frontUri, "/agribridge/nrc");
+      updateData["nrcFrontImage.url"] = uploaded.image_url;
+      updateData["nrcFrontImage.public_alt"] = uploaded.public_alt;
+    }
+
+    // Upload Back NRC if provided
+    if (files?.nrcBack?.[0]) {
+      const backUri = `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`;
+      const uploaded = await uploadSingleImage(backUri, "/agribridge/nrc");
+      updateData["nrcBackImage.url"] = uploaded.image_url;
+      updateData["nrcBackImage.public_alt"] = uploaded.public_alt;
+    }
+
+    // Update the Merchant document
+    await Merchant.findByIdAndUpdate(user.merchantId, { $set: updateData });
+
+    // Set User status to pending for re-verification
+    user.verificationStatus = "pending";
+    await user.save();
+
+    return { message: "Documents updated. Verification is now pending." };
+  }
+
   async getUserDashboardStats() {
-    // Get counts for different roles
     const activeFarmers = await User.countDocuments({
       role: "farmer",
       status: "active",
@@ -255,42 +359,54 @@ export class AuthService {
       status: "active",
     });
 
-    // Aggregate user growth for Chart (Last 6 months)
     const growthData = await User.aggregate([
+      { $match: { createdAt: { $exists: true, $ne: null } } },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
             month: { $month: "$createdAt" },
+            role: "$role",
           },
           count: { $sum: 1 },
         },
       },
-      { $sort: { "_id.year": 1, "_id.month": 1 } },
-      { $limit: 6 },
     ]);
 
-    // Format data for Recharts: { name: "Jan", users: 400 }
-    const formattedGrowth = growthData.map((item) => {
-      const monthNames = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
-      return {
-        name: monthNames[item._id.month - 1],
-        users: item.count,
-      };
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const chartMap = new Map();
+
+    growthData.forEach((item) => {
+      const monthKey = `${item._id.year}-${item._id.month}`;
+      if (!chartMap.has(monthKey)) {
+        chartMap.set(monthKey, {
+          name: monthNames[item._id.month - 1],
+          farmers: 0,
+          merchants: 0,
+          sortKey: item._id.year * 100 + item._id.month,
+        });
+      }
+      const current = chartMap.get(monthKey);
+      if (item._id.role === "farmer") current.farmers = item.count;
+      if (item._id.role === "merchant") current.merchants = item.count;
     });
+
+    const formattedGrowth = Array.from(chartMap.values())
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .map(({ sortKey, ...rest }) => rest);
 
     return { activeFarmers, totalMerchants, formattedGrowth };
   }

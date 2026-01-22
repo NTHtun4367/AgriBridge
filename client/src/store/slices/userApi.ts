@@ -2,7 +2,7 @@ import type { User } from "@/types/user";
 import { apiSlice } from "./api";
 
 interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -63,6 +63,33 @@ export const authApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+
+    updateProfile: builder.mutation<User, Partial<User>>({
+      query: (data) => ({
+        url: "/auth/profile",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    updateAvatar: builder.mutation<{ avatar: string }, FormData>({
+      query: (formData) => ({
+        url: "/auth/profile/avatar",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    updateMerchantDocs: builder.mutation<{ message: string }, FormData>({
+      query: (formData) => ({
+        url: "/auth/profile/documents",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
@@ -71,4 +98,7 @@ export const {
   useRegisterFarmerMutation,
   useRegisterMerchantMutation,
   useCurrentUserQuery,
+  useUpdateProfileMutation,
+  useUpdateAvatarMutation,
+  useUpdateMerchantDocsMutation,
 } = authApi;

@@ -1,78 +1,76 @@
 import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcrypt";
 
-// Define the base interface for the User Document
 export interface IUser extends Document {
   role: "farmer" | "merchant" | "admin";
   status: "active" | "ban";
-
   verificationStatus: "unverified" | "pending" | "verified";
-
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
-
   homeAddress: string;
   division: string;
   district: string;
   township: string;
-
-  // The merchantId is a reference to the Merchant document
+  bio: string;
+  avatar: string;
+  avatarPublicId: string;
+  nrcFront?: string;
+  nrcBack?: string;
   merchantId?: Schema.Types.ObjectId;
+  otp?: string;
+  otpExpires?: Date;
 
-  matchPassword(enteredPassword: string): Promise<boolean>;
+  // ✅ ADD THESE METHODS
+  matchPassword(password: string): Promise<boolean>;
+  matchOtp(otp: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
-    role: {
-      type: String,
-      enum: ["farmer", "merchant", "admin"],
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["active", "ban"],
-      default: "active",
-    },
-
-    verificationStatus: {
-      type: String,
-      enum: ["unverified", "pending", "verified"],
-      default: "unverified",
-    },
-
-    name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-
-    homeAddress: { type: String, required: true },
-    division: { type: String, required: true },
-    district: { type: String, required: true },
-    township: { type: String, required: true },
-
-    merchantId: {
-      type: Schema.Types.ObjectId,
-      ref: "Merchant",
-      required: false,
-    },
+    role: { type: String, required: true },
+    status: { type: String, default: "active" },
+    verificationStatus: { type: String, default: "unverified" },
+    name: String,
+    email: { type: String, unique: true, sparse: true },
+    phone: { type: String, unique: true, sparse: true },
+    password: { type: String, select: false },
+    homeAddress: String,
+    division: String,
+    district: String,
+    township: String,
+    bio: { type: String, default: "" },
+    avatar: { type: String, default: "" },
+    avatarPublicId: { type: String, default: "" },
+    nrcFront: String,
+    nrcBack: String,
+    merchantId: { type: Schema.Types.ObjectId, ref: "Merchant" },
+    otp: String,
+    otpExpires: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password") && this.password) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  if (this.isModified("otp") && this.otp) {
+    this.otp = await bcrypt.hash(this.otp, 10);
+  }
 });
 
-userSchema.methods.matchPassword = function (enteredPassword: string) {
-  return bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.matchPassword = async function (enteredPassword: string) {
+  if (!enteredPassword || !this.password) {
+    return false;
+  }
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// This optimizes queries that filter by role, status, and verification at once
-userSchema.index({ role: 1, verificationStatus: 1, status: 1 });
-userSchema.index({ division: 1, district: 1, township: 1 });
+userSchema.methods.matchOtp = function (otp: string) {
+  return bcrypt.compare(otp, this.otp);
+};
 
 export const User = model<IUser>("User", userSchema);

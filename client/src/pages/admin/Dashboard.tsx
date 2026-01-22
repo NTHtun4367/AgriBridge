@@ -1,10 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useGetAdminDashboardQuery } from "@/store/slices/adminApi";
 import { useGetDisputesQuery } from "@/store/slices/disputeApi";
 import {
   AlertTriangle,
   Users,
-  BarChart3,
+  // BarChart3,
   Clock,
   Target,
   ExternalLink,
@@ -21,27 +21,37 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  Cell,
+  // Cell,
   Tooltip,
+  Legend,
 } from "recharts";
 import { Link } from "react-router";
 
 const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 
 // --- BEAUTIFUL CUSTOM TOOLTIP ---
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl animate-in zoom-in-95 duration-200">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-          {payload[0].payload.name}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg">
+        <p className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-wider">
+          {label}
         </p>
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-[#6EAE19]" />
-          <p className="text-sm font-bold">
-            {payload[0].value.toLocaleString()}
-            <span className="text-slate-400 font-medium">Users</span>
-          </p>
+        <div className="space-y-1.5">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-3">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: entry.fill }}
+              />
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                {entry.value}{" "}
+                <span className="text-slate-400 font-medium ml-1">
+                  {entry.name}
+                </span>
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -50,20 +60,27 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 const Dashboard = () => {
-  const { data: response, isLoading: dashboardLoading } =
-    useGetAdminDashboardQuery();
   const { data: disputeResponse, isLoading: disputesLoading } =
     useGetDisputesQuery(undefined);
+  // Add refetchOnMountOrArgChange to ensure fresh data on every visit
+  const {
+    data: response,
+    isLoading: dashboardLoading,
+    refetch,
+  } = useGetAdminDashboardQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
-  const formattedChartData = useMemo(() => {
-    if (!response?.data?.chartData) return [];
-    return [...response.data.chartData].map((item: any) => ({
-      ...item,
-      users: Number(item.users),
-      displayMonth: item.name?.substring(0, 3).toUpperCase(),
-    }));
+  // Optional: Auto-refresh every 30 seconds if you stay on the page
+  useEffect(() => {
+    const interval = setInterval(() => refetch(), 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  const chartData = useMemo(() => {
+    // Only include months that have a valid name to prevent the "3rd bar" ghost issue
+    return (response?.data?.chartData || []).filter((item: any) => item.name);
   }, [response]);
-
   if (dashboardLoading || disputesLoading) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-50">
@@ -115,35 +132,23 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* --- ANALYTICS SECTION --- */}
-        <div className="xl:col-span-2 space-y-8">
-          <Card className="border-none p-2">
-            <CardHeader className="flex flex-row items-center justify-between pt-4 px-8">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-50 rounded-lg text-primary">
-                  <BarChart3 className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold">
-                    User Acquisition Trends
-                  </CardTitle>
-                  <p className="text-xs text-slate-400 font-medium">
-                    Monthly onboarding volume across the network
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-black">+1</p>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">
-                  Growth this month
-                </p>
-              </div>
+        <div className="p-4 lg:p-8">
+          <Card className="border-none shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-black">
+                Network Growth
+              </CardTitle>
+              <p className="text-xs text-slate-400 font-bold uppercase">
+                Real-time Onboarding
+              </p>
             </CardHeader>
             <CardContent>
               <div className="w-full h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={formattedChartData}
-                    margin={{ top: 20, right: 30, left: 40, bottom: 40 }}
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    barGap={8}
                   >
                     <CartesianGrid
                       vertical={false}
@@ -151,49 +156,34 @@ const Dashboard = () => {
                       stroke="#f1f5f9"
                     />
                     <XAxis
-                      dataKey="displayMonth"
+                      dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      angle={-90}
-                      textAnchor="end"
-                      dy={10}
-                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 800 }}
+                      interval={0} // Ensure DEC and JAN both show
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-                      label={{
-                        value: "TOTAL USERS",
-                        angle: -90,
-                        position: "insideLeft",
-                        offset: -20,
-                        style: {
-                          textAnchor: "middle",
-                          fontSize: "10px",
-                          fontWeight: "900",
-                          fill: "#94a3b8",
-                          letterSpacing: "0.1em",
-                        },
-                      }}
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
                     />
-                    <Tooltip
-                      content={<CustomTooltip />}
-                      cursor={{ fill: "#F8FAFC", radius: 8 }}
+                    <Tooltip cursor={{ fill: "#F8FAFC" }} />
+                    <Legend verticalAlign="top" align="right" />
+
+                    <Bar
+                      name="Farmers"
+                      dataKey="farmers"
+                      fill="#6EAE19"
+                      radius={[4, 4, 0, 0]}
+                      barSize={24}
                     />
-                    <Bar dataKey="users" radius={[8, 8, 8, 8]} barSize={28}>
-                      {formattedChartData.map((_entry: any, index: number) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            index === formattedChartData.length - 1
-                              ? "#6EAE19"
-                              : "#E2E8F0"
-                          }
-                          className="transition-all duration-300 hover:opacity-80"
-                        />
-                      ))}
-                    </Bar>
+                    <Bar
+                      name="Merchants"
+                      dataKey="merchants"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                      barSize={24}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
