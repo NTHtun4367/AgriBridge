@@ -8,7 +8,7 @@ export interface IUser extends Document {
   name: string;
   email?: string;
   phone?: string;
-  password: string;
+  password?: string;
   homeAddress: string;
   division: string;
   district: string;
@@ -16,13 +16,12 @@ export interface IUser extends Document {
   bio: string;
   avatar: string;
   avatarPublicId: string;
-  nrcFront?: string;
-  nrcBack?: string;
   merchantId?: Schema.Types.ObjectId;
   otp?: string;
   otpExpires?: Date;
+  // New field for pending identity changes
+  tempIdentifier?: string;
 
-  // ✅ ADD THESE METHODS
   matchPassword(password: string): Promise<boolean>;
   matchOtp(otp: string): Promise<boolean>;
 }
@@ -43,11 +42,10 @@ const userSchema = new Schema<IUser>(
     bio: { type: String, default: "" },
     avatar: { type: String, default: "" },
     avatarPublicId: { type: String, default: "" },
-    nrcFront: String,
-    nrcBack: String,
     merchantId: { type: Schema.Types.ObjectId, ref: "Merchant" },
     otp: String,
     otpExpires: Date,
+    tempIdentifier: String,
   },
   { timestamps: true },
 );
@@ -56,21 +54,19 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("password") && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
-
+  // Note: Hashing OTP is secure but requires 'await' during comparison
   if (this.isModified("otp") && this.otp) {
     this.otp = await bcrypt.hash(this.otp, 10);
   }
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword: string) {
-  if (!enteredPassword || !this.password) {
-    return false;
-  }
-  return await bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password || "");
 };
 
-userSchema.methods.matchOtp = function (otp: string) {
-  return bcrypt.compare(otp, this.otp);
+userSchema.methods.matchOtp = async function (otp: string) {
+  if (!this.otp) return false;
+  return await bcrypt.compare(otp, this.otp);
 };
 
 export const User = model<IUser>("User", userSchema);

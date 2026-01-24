@@ -46,6 +46,7 @@ import Settings from "./pages/Settings.tsx";
 import Dispute from "./pages/admin/Dispute.tsx";
 import FarmerDisputes from "./pages/farmer/Disputes.tsx";
 import Profile from "./pages/Profile.tsx";
+import VerifyOtp from "./pages/VerifyOtp.tsx";
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/verify-otp",
+        element: <VerifyOtp />,
       },
       {
         path: "/verification-submitted",

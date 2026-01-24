@@ -90,11 +90,56 @@ export const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    verifyOtp: builder.mutation({
+      query: (data: { identifier: string; otp: string }) => ({
+        url: "/auth/verify-otp",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    requestIdentifierChange: builder.mutation<
+      { message: string },
+      { newIdentifier: string }
+    >({
+      query: (data) => ({
+        url: "/auth/request-identifier-change",
+        method: "POST",
+        body: data, // Sending { newIdentifier }
+      }),
+    }),
+
+    confirmIdentifierChange: builder.mutation<
+      { message: string },
+      { otp: string }
+    >({
+      query: (data) => ({
+        url: "/auth/confirm-identifier-change",
+        method: "POST",
+        body: data, // Sending { otp }
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    // Resend OTP
+    resendOtp: builder.mutation<{ message: string }, { identifier: string }>({
+      query: (data) => ({
+        url: "/auth/resend-otp",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useLoginMutation,
+  useVerifyOtpMutation,
+  useResendOtpMutation,
+  useRequestIdentifierChangeMutation,
+  useConfirmIdentifierChangeMutation,
   useRegisterFarmerMutation,
   useRegisterMerchantMutation,
   useCurrentUserQuery,

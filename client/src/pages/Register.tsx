@@ -59,7 +59,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import ProfileUploadDialog from "@/components/ProfileUploadDialog";
 
 const myanmarData = myanmarDataRaw as Record<string, Record<string, string[]>>;
 const nrcData = nrcDataRaw as Record<string, string[]>;
@@ -71,7 +70,6 @@ function Register() {
     useRegisterMerchantMutation();
   const [status, setStatus] = useState<"farmer" | "merchant">("farmer");
   const [dialogOpen, setDialogOpen] = useState(true);
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -134,7 +132,7 @@ function Register() {
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
       if (data.status === "farmer") {
-        // Added .unwrap() to catch backend errors properly
+        // 1. Farmer Registration Logic (Plain JSON)
         await registerFarmerMutation({
           identifier: data.identifier,
           name: data.name,
@@ -145,6 +143,7 @@ function Register() {
           township: data.township,
         }).unwrap();
       } else {
+        // 2. Merchant Registration Logic (Multi-part FormData for Images)
         const formData = new FormData();
         formData.append("identifier", data.identifier);
         formData.append("name", data.name);
@@ -155,30 +154,48 @@ function Register() {
         formData.append("township", data.township);
         formData.append("businessName", data.businessName);
         formData.append("businessPhone", data.phone);
+
+        // Nested NRC Object handling
         formData.append("nrc[region]", data.nrcRegion);
         formData.append("nrc[township]", data.nrcTownship);
         formData.append("nrc[type]", data.nrcType);
         formData.append("nrc[number]", data.nrcNumber);
 
-        if (data.nrcFrontImage?.file)
+        // Image files from your ImageUpload component
+        if (data.nrcFrontImage?.file) {
           formData.append("nrcFront", data.nrcFrontImage.file);
-        if (data.nrcBackImage?.file)
+        }
+        if (data.nrcBackImage?.file) {
           formData.append("nrcBack", data.nrcBackImage.file);
+        }
 
-        // Added .unwrap() to catch backend errors properly
         await registerMerchantMutation(formData).unwrap();
       }
 
-      toast.success("Registration successful!");
-      setProfileDialogOpen(true);
-    } catch (error: any) {
-      // The toast now correctly shows the error from the backend (e.g., "Already registered")
-      console.error("Registration error:", error);
-      toast.error(
-        error?.data?.message ||
-          error?.message ||
-          "Registration failed. Please try again.",
+      // 3. Success Feedback
+      toast.success(
+        "Registration initiated! Please check your email or phone for the OTP.",
       );
+
+      // 4. Navigation to OTP Screen
+      // We pass the 'identifier' (email/phone) in the navigation state
+      // so the VerifyOtp page knows where to send the verification request.
+      navigate("/verify-otp", {
+        state: {
+          identifier: data.identifier,
+          role: data.status,
+        },
+      });
+    } catch (error: any) {
+      // 5. Error Handling
+      console.error("Registration error:", error);
+
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Registration failed. Please try again.";
+
+      toast.error(errorMessage);
     }
   };
 
@@ -338,8 +355,6 @@ function Register() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {profileDialogOpen && <ProfileUploadDialog status={status} />}
 
       <Card>
         <CardHeader className="text-center">

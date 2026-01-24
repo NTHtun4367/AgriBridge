@@ -3,6 +3,40 @@ import asyncHandler from "../../../shared/utils/asyncHandler";
 import { AuthRequest } from "../../../shared/middleware/authMiddleware";
 import { authService } from "../services/auth";
 
+export const requestChangeId = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { newIdentifier } = req.body; // Changed from newId to newIdentifier
+
+    if (!newIdentifier) {
+      res.status(400);
+      throw new Error("New email or phone is required");
+    }
+
+    const result = await authService.requestIdentifierChange(
+      req.user?._id as string,
+      newIdentifier,
+    );
+    res.status(200).json(result);
+  },
+);
+
+export const confirmChangeId = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { otp } = req.body;
+
+    if (!otp) {
+      res.status(400);
+      throw new Error("OTP is required");
+    }
+
+    const result = await authService.confirmIdentifierChange(
+      req.user?._id as string,
+      otp,
+    );
+    res.status(200).json(result);
+  },
+);
+
 // --- Registration Controllers ---
 
 export const registerFarmer = asyncHandler(

@@ -16,6 +16,8 @@ import {
   updateProfile,
   updateAvatar,
   updateMerchantDocs,
+  requestChangeId,
+  confirmChangeId,
 } from "../controllers/auth";
 import { upload } from "../../../shared/utils/upload";
 import { protect } from "../../../shared/middleware/authMiddleware";
@@ -68,5 +70,12 @@ router.post(
   ]),
   updateMerchantDocs,
 );
+// ... existing imports
+router.post("/verify-otp", verifyOtpValidator, validateRequest, verifyOtp);
+router.post("/resend-otp", resendOtpValidator, validateRequest, resendOtp);
+
+// NEW: Change Email/Phone Routes
+router.post("/request-identifier-change", protect, requestChangeId);
+router.post("/confirm-identifier-change", protect, confirmChangeId);
 
 export default router;

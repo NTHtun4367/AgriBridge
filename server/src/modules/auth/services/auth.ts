@@ -5,9 +5,227 @@ import {
   uploadSingleImage,
 } from "../../../shared/utils/cloudinary";
 import generateToken from "../../../shared/utils/generateToken";
-import { generateOtp, sendOtp } from "../../../shared/utils/otp";
+import { sendOtp, sendWelcome } from "../../../shared/utils/message";
+
+// Helper to generate a 6-digit OTP
+const generateOtp = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 export class AuthService {
+  // --- OTP VERIFICATION & WELCOME ---
+  async verifyOtp(identifier: string, otp: string) {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+
+    if (!user || !user.otp || !user.otpExpires)
+      throw new Error("No active session found for this user.");
+
+    if (new Date() > user.otpExpires)
+      throw new Error("OTP has expired. Please request a new one.");
+
+    const isMatch = await user.matchOtp(otp);
+    if (!isMatch) throw new Error("Invalid OTP code.");
+
+    // Clear OTP fields
+    user.otp = undefined;
+    user.otpExpires = undefined;
+
+    // LOGIC FIX:
+    // Farmers are auto-verified upon OTP success.
+    // Merchants remain 'unverified' or 'pending' until Admin approves NRC.
+    if (user.role === "farmer") {
+      user.verificationStatus = "verified";
+    } else if (user.role === "merchant") {
+      user.verificationStatus = "pending";
+    }
+
+    await user.save();
+
+    // sendWelcome(user.email ? user.email : user.phone,user.name)
+    return {
+      token: generateToken(user),
+      user: {
+        id: user._id,
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+      },
+    };
+  }
+
+  // --- REGISTRATION (FARMER) ---
+  async registerFarmer(body: any) {
+    const { identifier, ...rest } = body;
+    const cleanId = identifier.trim().toLowerCase();
+
+    const exists = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+    if (exists) throw new Error("This email or phone is already registered.");
+
+    const otpCode = generateOtp();
+    const userData: any = {
+      ...rest,
+      role: "farmer",
+      [cleanId.includes("@") ? "email" : "phone"]: cleanId,
+      otp: otpCode,
+      otpExpires: new Date(Date.now() + 1 * 60 * 1000),
+    };
+
+    await User.create(userData);
+    await sendOtp(cleanId, otpCode);
+
+    return {
+      message: `OTP sent to your ${cleanId.includes("@") ? "email" : "phone"}`,
+    };
+  }
+
+  // --- REGISTRATION (MERCHANT) ---
+  async registerMerchant(body: any, reqFiles: any) {
+    const { identifier, password, ...rest } = body;
+    const cleanId = identifier.trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+    if (existingUser)
+      throw new Error("User with this phone or email already exists.");
+
+    const files = reqFiles as {
+      nrcFront?: Express.Multer.File[];
+      nrcBack?: Express.Multer.File[];
+    };
+    if (!files?.nrcFront?.[0] || !files?.nrcBack?.[0])
+      throw new Error("NRC images required.");
+
+    const uploadedFront = await uploadSingleImage(
+      `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`,
+      "/agribridge/nrc",
+    );
+    const uploadedBack = await uploadSingleImage(
+      `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`,
+      "/agribridge/nrc",
+    );
+
+    const merchant: any = await Merchant.create({
+      ...rest,
+      nrcFrontImage: {
+        url: uploadedFront.image_url,
+        public_alt: uploadedFront.public_alt,
+      },
+      nrcBackImage: {
+        url: uploadedBack.image_url,
+        public_alt: uploadedBack.public_alt,
+      },
+    });
+
+    const otpCode = generateOtp();
+    const userData: any = {
+      ...rest,
+      role: "merchant",
+      password,
+      merchantId: merchant._id,
+      verificationStatus: "unverified",
+      otp: otpCode,
+      otpExpires: new Date(Date.now() + 1 * 60 * 1000),
+      [cleanId.includes("@") ? "email" : "phone"]: cleanId,
+    };
+
+    const user = await User.create(userData);
+    await sendOtp(cleanId, otpCode);
+
+    return { message: "Merchant registration initiated. OTP sent." };
+  }
+
+  // --- CHANGE EMAIL OR PHONE ---
+  async requestIdentifierChange(userId: string, newIdentifier: string) {
+    const cleanId = newIdentifier.trim().toLowerCase();
+
+    const taken = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+    if (taken) throw new Error("This email or phone is already in use.");
+
+    const otpCode = generateOtp();
+
+    // Store NEW identifier in temp field until verified
+    await User.findByIdAndUpdate(userId, {
+      tempIdentifier: cleanId,
+      otp: otpCode,
+      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendOtp(cleanId, otpCode);
+    return { message: `Verification code sent to ${cleanId}.` };
+  }
+
+  async confirmIdentifierChange(userId: string, otp: string) {
+    const user = await User.findById(userId);
+    if (!user || !user.tempIdentifier)
+      throw new Error("No pending change request.");
+
+    const isMatch = await user.matchOtp(otp);
+    if (!isMatch || new Date() > (user.otpExpires as Date))
+      throw new Error("Invalid or expired OTP.");
+
+    const isEmail = user.tempIdentifier.includes("@");
+
+    // Move tempIdentifier to the actual field
+    if (isEmail) {
+      user.email = user.tempIdentifier;
+    } else {
+      user.phone = user.tempIdentifier;
+    }
+
+    user.tempIdentifier = undefined;
+    user.otp = undefined;
+    await user.save();
+
+    return { message: "Contact information updated successfully." };
+  }
+
+  // --- LOGIN ---
+  async login(identifier: string, password: string) {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    }).select("+password");
+
+    if (!user) throw new Error("Invalid credentials");
+    if (!user.password)
+      throw new Error("Account error. Please reset your password.");
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) throw new Error("Invalid credentials");
+
+    return {
+      token: generateToken(user),
+      user: {
+        id: user._id,
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+      },
+    };
+  }
+
+  // --- PROFILE UPDATES ---
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    if (user.avatarPublicId) await deleteImage(user.avatarPublicId);
+
+    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    const uploaded = await uploadSingleImage(dataUri, "/agribridge/avatars");
+
+    user.avatar = uploaded.image_url;
+    user.avatarPublicId = uploaded.public_alt;
+    await user.save();
+
+    return { avatar: user.avatar };
+  }
+
   async getFarmers() {
     return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
   }
@@ -68,176 +286,6 @@ export class AuthService {
       .select("-password");
   }
 
-  // services/auth.ts
-
-  async login(identifier: string, password: string) {
-    const cleanId = identifier.trim().toLowerCase();
-
-    // ADD .select("+password") to ensure the hash is available for comparison
-    const user = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    }).select("+password");
-
-    if (!user) throw new Error("Invalid credentials");
-
-    // If password field is missing in DB for some reason, catch it here
-    if (!user.password) {
-      throw new Error(
-        "Account configuration error. Please reset your password.",
-      );
-    }
-
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) throw new Error("Invalid credentials");
-
-    return {
-      token: generateToken(user),
-      user: {
-        id: user._id,
-        role: user.role,
-        verificationStatus: user.verificationStatus,
-      },
-    };
-  }
-
-  async verifyOtp(identifier: string, otp: string) {
-    const cleanId = identifier.trim().toLowerCase();
-    const user = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    });
-
-    if (!user || !user.otp || !user.otpExpires)
-      throw new Error("No active OTP session.");
-    if (new Date() > user.otpExpires) throw new Error("OTP has expired.");
-
-    const isMatch = await user.matchOtp(otp);
-    if (!isMatch) throw new Error("Invalid OTP code.");
-
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    if (user.role === "farmer") user.verificationStatus = "verified";
-
-    await user.save();
-    return {
-      token: generateToken(user),
-      user: {
-        id: user._id,
-        role: user.role,
-        verificationStatus: user.verificationStatus,
-      },
-    };
-  }
-
-  async registerFarmer(body: any) {
-    const { identifier, ...rest } = body;
-    const cleanId = identifier.trim().toLowerCase();
-    const isEmail = cleanId.includes("@");
-
-    const exists = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    });
-    if (exists)
-      throw new Error("User with this phone or email is already registered.");
-
-    const otpCode = generateOtp();
-
-    // BUILD USER OBJECT DYNAMICALLY
-    const userData: any = {
-      role: "farmer",
-      ...rest,
-      verificationStatus: "unverified",
-      otp: otpCode,
-      otpExpires: new Date(Date.now() + 5 * 60 * 1000),
-    };
-
-    // Only set the field that exists to avoid 'null' duplication
-    if (isEmail) {
-      userData.email = cleanId;
-    } else {
-      userData.phone = cleanId;
-    }
-
-    try {
-      const user = await User.create(userData);
-      await sendOtp(cleanId, otpCode);
-      return { message: "OTP sent to your " + (isEmail ? "email" : "phone") };
-    } catch (err: any) {
-      console.error("Error in registerFarmer:", err.message);
-      throw err;
-    }
-  }
-
-  async registerMerchant(body: any, reqFiles: any) {
-    try {
-      const { identifier, password, ...rest } = body;
-      const cleanId = identifier.trim().toLowerCase();
-      const isEmail = cleanId.includes("@");
-
-      const existingUser = await User.findOne({
-        $or: [{ email: cleanId }, { phone: cleanId }],
-      });
-      if (existingUser)
-        throw new Error("User with this phone or email already exists.");
-
-      const files = reqFiles as {
-        nrcFront?: Express.Multer.File[];
-        nrcBack?: Express.Multer.File[];
-      };
-
-      if (!files?.nrcFront?.[0] || !files?.nrcBack?.[0])
-        throw new Error("NRC images required.");
-
-      const uploadedFront = await uploadSingleImage(
-        `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`,
-        "/agribridge/nrc",
-      );
-      const uploadedBack = await uploadSingleImage(
-        `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`,
-        "/agribridge/nrc",
-      );
-
-      const merchant: any = await Merchant.create({
-        ...rest,
-        nrcFrontImage: {
-          url: uploadedFront.image_url,
-          public_alt: uploadedFront.public_alt,
-        },
-        nrcBackImage: {
-          url: uploadedBack.image_url,
-          public_alt: uploadedBack.public_alt,
-        },
-      });
-
-      const otpCode = generateOtp();
-
-      // BUILD USER OBJECT DYNAMICALLY
-      const userData: any = {
-        ...rest,
-        role: "merchant",
-        password,
-        merchantId: merchant._id,
-        verificationStatus: "unverified",
-        otp: otpCode,
-        otpExpires: new Date(Date.now() + 5 * 60 * 1000),
-      };
-
-      if (isEmail) {
-        userData.email = cleanId;
-      } else {
-        userData.phone = cleanId;
-      }
-
-      const user = new User(userData);
-      await user.save();
-      await sendOtp(cleanId, otpCode);
-
-      return { message: "Merchant registration initiated. OTP sent." };
-    } catch (err: any) {
-      console.error("Error in registerMerchant:", err.message);
-      throw err;
-    }
-  }
-
   async resendOtp(identifier: string) {
     const cleanId = identifier.trim().toLowerCase();
     const user = await User.findOne({
@@ -247,7 +295,7 @@ export class AuthService {
 
     const otpCode = generateOtp();
     user.otp = otpCode;
-    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    user.otpExpires = new Date(Date.now() + 1 * 60 * 1000);
     await user.save();
 
     await sendOtp(cleanId, otpCode);
@@ -282,30 +330,6 @@ export class AuthService {
     }).select("-password");
     if (!user) throw new Error("User not found");
     return user;
-  }
-
-  /**
-   * Update Profile Avatar (Handles Cloudinary Cleanup)
-   */
-  async updateAvatar(userId: string, file: Express.Multer.File) {
-    const user = await User.findById(userId);
-    if (!user) throw new Error("User not found");
-
-    // 1. Remove old avatar if it exists
-    if (user.avatarPublicId) {
-      await deleteImage(user.avatarPublicId);
-    }
-
-    // 2. Upload to Cloudinary
-    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-    const uploaded = await uploadSingleImage(dataUri, "/agribridge/avatars");
-
-    // 3. Update User
-    user.avatar = uploaded.image_url;
-    user.avatarPublicId = uploaded.public_alt;
-    await user.save();
-
-    return { avatar: user.avatar };
   }
 
   /**
