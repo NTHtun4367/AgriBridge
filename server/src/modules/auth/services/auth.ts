@@ -350,6 +350,7 @@ export class AuthService {
   }
 
   async getUserDashboardStats() {
+    // 1. Get Totals
     const activeFarmers = await User.countDocuments({
       role: "farmer",
       status: "active",
@@ -359,6 +360,7 @@ export class AuthService {
       status: "active",
     });
 
+    // 2. Aggregate Growth Data for both roles
     const growthData = await User.aggregate([
       { $match: { createdAt: { $exists: true, $ne: null } } },
       {
@@ -394,7 +396,7 @@ export class AuthService {
       if (!chartMap.has(monthKey)) {
         chartMap.set(monthKey, {
           name: monthNames[item._id.month - 1],
-          farmers: 0,
+          farmers: 0, // Initialize both
           merchants: 0,
           sortKey: item._id.year * 100 + item._id.month,
         });

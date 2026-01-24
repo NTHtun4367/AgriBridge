@@ -50,6 +50,7 @@ import myanmarDataRaw from "../utils/myanmarLocationData.json";
 import nrcDataRaw from "../utils/nrcData.json";
 import {
   Briefcase,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   MapPin,
@@ -279,26 +280,61 @@ function Register() {
   return (
     <div className="max-w-[500px] lg:mx-auto mx-6 mt-12 animate-in fade-in zoom-in duration-700">
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] max-w-[90%] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Welcome</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl">
+          <DialogHeader className="items-center text-center">
+            <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+              <CheckCircle2 className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-bold">
+              Welcome to AgriBridge
+            </DialogTitle>
+            <DialogDescription className="text-base">
               Choose what type of account you want to open.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center gap-4 mt-6">
-            <Button
-              variant={status === "farmer" ? "default" : "secondary"}
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <button
               onClick={() => handleChoice("farmer")}
+              className={cn(
+                "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all hover:border-primary/50",
+                status === "farmer"
+                  ? "border-primary bg-primary/5"
+                  : "border-muted bg-transparent",
+              )}
             >
-              Farmer
-            </Button>
-            <Button
-              variant={status === "merchant" ? "default" : "secondary"}
+              <div
+                className={cn(
+                  "p-3 rounded-full",
+                  status === "farmer"
+                    ? "bg-primary text-white"
+                    : "bg-secondary text-muted-foreground",
+                )}
+              >
+                <User size={24} />
+              </div>
+              <span className="font-semibold">Farmer</span>
+            </button>
+            <button
               onClick={() => handleChoice("merchant")}
+              className={cn(
+                "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all hover:border-primary/50",
+                status === "merchant"
+                  ? "border-primary bg-primary/5"
+                  : "border-muted bg-transparent",
+              )}
             >
-              Merchant
-            </Button>
+              <div
+                className={cn(
+                  "p-3 rounded-full",
+                  status === "merchant"
+                    ? "bg-primary text-white"
+                    : "bg-secondary text-muted-foreground",
+                )}
+              >
+                <Briefcase size={24} />
+              </div>
+              <span className="font-semibold">Merchant</span>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
@@ -401,18 +437,6 @@ function Register() {
               {step === 2 && (
                 <>
                   <FormField
-                    name="homeAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Home Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your home address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
                     name="division"
                     render={({ field }) => (
                       <FormItem>
@@ -422,7 +446,7 @@ function Register() {
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select division" />
                             </SelectTrigger>
                           </FormControl>
@@ -448,7 +472,7 @@ function Register() {
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select district" />
                             </SelectTrigger>
                           </FormControl>
@@ -474,7 +498,7 @@ function Register() {
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select township" />
                             </SelectTrigger>
                           </FormControl>
@@ -486,6 +510,18 @@ function Register() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    name="homeAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Home Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your home address" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -601,6 +637,7 @@ function Register() {
                       </FormItem>
                     )}
                   />
+                  <FormLabel>NRC Documents (Images)</FormLabel>
                   <div className="flex gap-4">
                     <FormField
                       name="nrcFrontImage"

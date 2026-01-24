@@ -66,6 +66,7 @@ export const getMerchantInfoWithMerchantId = asyncHandler(
 export const getAdminOverview = asyncHandler(
   async (req: Request, res: Response) => {
     const userStats = await authService.getUserDashboardStats();
+    // Assuming disputeService exists as per your provided snippet
     const disputeStats = await disputeService.getDisputeDashboardStats();
 
     res.status(200).json({
@@ -76,7 +77,7 @@ export const getAdminOverview = asyncHandler(
           totalMerchants: userStats.totalMerchants,
           pendingDisputes: disputeStats.pendingDisputes,
         },
-        chartData: userStats.formattedGrowth, // Now contains farmers and merchants
+        chartData: userStats.formattedGrowth, // Array of { name, farmers, merchants }
         recentActivity: disputeStats.recentActivity,
       },
     });

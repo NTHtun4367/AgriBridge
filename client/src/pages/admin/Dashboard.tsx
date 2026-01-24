@@ -4,7 +4,6 @@ import { useGetDisputesQuery } from "@/store/slices/disputeApi";
 import {
   AlertTriangle,
   Users,
-  // BarChart3,
   Clock,
   Target,
   ExternalLink,
@@ -21,7 +20,6 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  // Cell,
   Tooltip,
   Legend,
 } from "recharts";
@@ -33,22 +31,27 @@ const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg border-t-4 border-t-[#6EAE19]">
         <p className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-wider">
           {label}
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-3">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: entry.fill }}
-              />
-              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                {entry.value}{" "}
-                <span className="text-slate-400 font-medium ml-1">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-6"
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: entry.fill }}
+                />
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {entry.name}
-                </span>
+                </p>
+              </div>
+              <p className="text-xs font-black text-slate-800 dark:text-slate-100">
+                {entry.value}
               </p>
             </div>
           ))}
@@ -62,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const Dashboard = () => {
   const { data: disputeResponse, isLoading: disputesLoading } =
     useGetDisputesQuery(undefined);
-  // Add refetchOnMountOrArgChange to ensure fresh data on every visit
+
   const {
     data: response,
     isLoading: dashboardLoading,
@@ -71,16 +74,15 @@ const Dashboard = () => {
     refetchOnMountOrArgChange: true,
   });
 
-  // Optional: Auto-refresh every 30 seconds if you stay on the page
   useEffect(() => {
     const interval = setInterval(() => refetch(), 30000);
     return () => clearInterval(interval);
   }, [refetch]);
 
   const chartData = useMemo(() => {
-    // Only include months that have a valid name to prevent the "3rd bar" ghost issue
     return (response?.data?.chartData || []).filter((item: any) => item.name);
   }, [response]);
+
   if (dashboardLoading || disputesLoading) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-50">
@@ -131,67 +133,116 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* --- ANALYTICS SECTION --- */}
-        <div className="p-4 lg:p-8">
-          <Card className="border-none shadow-sm">
-            <CardHeader>
+        {/* --- BEAUTIFIED ANALYTICS SECTION --- */}
+        <Card className="xl:col-span-2 border-none shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-6">
+            <div>
               <CardTitle className="text-xl font-black">
                 Network Growth
               </CardTitle>
-              <p className="text-xs text-slate-400 font-bold uppercase">
-                Real-time Onboarding
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
+                Real-time Acquisition
               </p>
-            </CardHeader>
-            <CardContent>
-              <div className="w-full h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    barGap={8}
-                  >
-                    <CartesianGrid
-                      vertical={false}
-                      strokeDasharray="3 3"
-                      stroke="#f1f5f9"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 800 }}
-                      interval={0} // Ensure DEC and JAN both show
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 10 }}
-                    />
-                    <Tooltip cursor={{ fill: "#F8FAFC" }} />
-                    <Legend verticalAlign="top" align="right" />
-
-                    <Bar
-                      name="Farmers"
-                      dataKey="farmers"
-                      fill="#6EAE19"
-                      radius={[4, 4, 0, 0]}
-                      barSize={24}
-                    />
-                    <Bar
-                      name="Merchants"
-                      dataKey="merchants"
-                      fill="#3b82f6"
-                      radius={[4, 4, 0, 0]}
-                      barSize={24}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+            </div>
+            <div className="flex gap-4">
+              {/* Custom Legend for Chart */}
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-sm bg-[#6EAE19]" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase">
+                  Farmers
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-sm bg-[#3b82f6]" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase">
+                  Merchants
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-8">
+            <div className="h-[380px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 0, right: 10, left: -20, bottom: 0 }}
+                  barGap={8}
+                >
+                  <defs>
+                    <linearGradient
+                      id="farmerGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#6EAE19" stopOpacity={1} />
+                      <stop
+                        offset="100%"
+                        stopColor="#6EAE19"
+                        stopOpacity={0.6}
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id="merchantGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                      <stop
+                        offset="100%"
+                        stopColor="#3b82f6"
+                        stopOpacity={0.6}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#94a3b8", fontSize: 10 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    content={<CustomTooltip />}
+                  />
 
-        {/* --- REDESIGNED DISPUTES FEED --- */}
+                  {/* Farmer Bar */}
+                  <Bar
+                    name="Farmers"
+                    dataKey="farmers"
+                    fill="url(#farmerGradient)"
+                    radius={[6, 6, 0, 0]}
+                    barSize={18}
+                  />
+
+                  {/* Merchant Bar */}
+                  <Bar
+                    name="Merchants"
+                    dataKey="merchants"
+                    fill="url(#merchantGradient)"
+                    radius={[6, 6, 0, 0]}
+                    barSize={18}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* --- DISPUTES FEED (Kept original logic) --- */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
@@ -216,7 +267,6 @@ const Dashboard = () => {
                   key={dispute._id}
                   className="group relative bg-white dark:bg-secondary rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 overflow-hidden"
                 >
-                  {/* Status Indicator Bar */}
                   <div
                     className={cn(
                       "absolute left-0 top-0 bottom-0 w-1",
@@ -311,7 +361,7 @@ function StatCard({
   variant = "default",
 }: StatCardProps) {
   return (
-    <Card className="border-none group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default  ">
+    <Card className="border-none group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-default bg-white dark:bg-slate-900">
       <CardContent>
         <div className="flex justify-between items-start mb-6">
           <div>

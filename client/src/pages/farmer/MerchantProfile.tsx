@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PreorderDialog } from "@/components/merchant/PreorderDialog";
-import { ReportDisputeDialog } from "@/components/merchant/ReportDisputeDialog"; // Import new dialog
+import { ReportDisputeDialog } from "@/components/merchant/ReportDisputeDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +51,7 @@ function MerchantProfile() {
 
   // Dialog states
   const [isPreorderOpen, setIsPreorderOpen] = useState(false);
-  const [isDisputeOpen, setIsDisputeOpen] = useState(false); // State for dispute dialog
+  const [isDisputeOpen, setIsDisputeOpen] = useState(false);
 
   const { data: response } = useGetMarketPricesQuery({ userId });
   const {
@@ -210,7 +210,6 @@ function MerchantProfile() {
             </div>
           </div>
 
-          {/* Report/Dropdown Section */}
           <div className="absolute top-6 right-6">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -234,7 +233,6 @@ function MerchantProfile() {
             </DropdownMenu>
           </div>
 
-          {/* Dispute Dialog Component */}
           <ReportDisputeDialog
             merchant={merchant}
             isOpen={isDisputeOpen}
@@ -242,6 +240,19 @@ function MerchantProfile() {
           />
         </CardContent>
       </Card>
+
+      {merchant.bio && (
+        <Card className="shadow-sm rounded-2xl">
+          <CardContent className="p-8">
+            <div className="flex items-center gap-2 mb-4 text-primary font-bold uppercase text-xs tracking-widest">
+              <UserIcon size={16} /> Merchant Biography
+            </div>
+            <p className="text-lg text-slate-600 leading-relaxed italic">
+              "{merchant.bio}"
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sidebar Info */}
