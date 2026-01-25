@@ -44,7 +44,16 @@ import { toast } from "sonner";
 type PriceUpdates = Record<string, string>;
 type UnitUpdates = Record<string, string>;
 
-const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
+export const UNITS = [
+  "Viss (1.63kg)",
+  "Bag",
+  "Tin",
+  "Basket",
+  // "Basket (Rice - 20.9kg)",
+  // "Basket (Pulses - 32.7kg)",
+  "Metric Ton",
+  "Pound (lb)",
+];
 
 interface MarketPriceUpdateProps {
   role: "admin" | "merchant";
@@ -68,7 +77,7 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
     undefined,
     {
       skip: role === "merchant",
-    }
+    },
   );
 
   const [updateMarketPrices, { isLoading: isUpdating }] =
@@ -79,13 +88,13 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
     return (CROP_DATA || []).filter(
       (crop) =>
         crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        crop.category.toLowerCase().includes(searchTerm.toLowerCase())
+        crop.category.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [searchTerm, CROP_DATA]);
 
   const toggleCrop = (_id: string): void => {
     setSelectedIds((prev) =>
-      prev.includes(_id) ? prev.filter((i) => i !== _id) : [...prev, _id]
+      prev.includes(_id) ? prev.filter((i) => i !== _id) : [...prev, _id],
     );
   };
 
@@ -98,7 +107,7 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
   };
 
   const selectedCropsData = (CROP_DATA || []).filter((crop) =>
-    selectedIds.includes(crop._id)
+    selectedIds.includes(crop._id),
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {

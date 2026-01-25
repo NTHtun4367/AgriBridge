@@ -83,7 +83,10 @@ export function MarketPriceTable({
                 <Badge variant="outline">{market.unit}</Badge>
               </TableCell>
               <TableCell className="text-center font-bold italic text-slate-500">
-                {market.previousPrice.toLocaleString()} MMK
+                {market.previousPrice
+                  ? market.previousPrice.toLocaleString()
+                  : "0.00"}
+                MMK
               </TableCell>
               <TableCell className="text-center font-bold">
                 {market.currentPrice.toLocaleString()} MMK

@@ -3,41 +3,12 @@ import asyncHandler from "../../../shared/utils/asyncHandler";
 import { AuthRequest } from "../../../shared/middleware/authMiddleware";
 import { authService } from "../services/auth";
 
-export const requestChangeId = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const { newIdentifier } = req.body; // Changed from newId to newIdentifier
+/**
+ * AuthController manages the interaction between HTTP requests
+ * and the AuthService business logic.
+ */
 
-    if (!newIdentifier) {
-      res.status(400);
-      throw new Error("New email or phone is required");
-    }
-
-    const result = await authService.requestIdentifierChange(
-      req.user?._id as string,
-      newIdentifier,
-    );
-    res.status(200).json(result);
-  },
-);
-
-export const confirmChangeId = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const { otp } = req.body;
-
-    if (!otp) {
-      res.status(400);
-      throw new Error("OTP is required");
-    }
-
-    const result = await authService.confirmIdentifierChange(
-      req.user?._id as string,
-      otp,
-    );
-    res.status(200).json(result);
-  },
-);
-
-// --- Registration Controllers ---
+// --- REGISTRATION ---
 
 export const registerFarmer = asyncHandler(
   async (req: Request, res: Response) => {
@@ -48,37 +19,52 @@ export const registerFarmer = asyncHandler(
 
 export const registerMerchant = asyncHandler(
   async (req: Request, res: Response) => {
-    // Pass req.body and req.files (NRC images) to service
     const result = await authService.registerMerchant(req.body, req.files);
     res.status(201).json(result);
   },
 );
 
-// --- OTP Controllers ---
+// --- LOGIN & VERIFICATION ---
+
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const { identifier, password } = req.body;
+  if (!identifier || !password) {
+    res.status(400);
+    throw new Error("Identifier and password are required");
+  }
+  const result = await authService.login(identifier, password);
+  res.status(200).json(result);
+});
 
 export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   const { identifier, otp } = req.body;
+  if (!identifier || !otp) {
+    res.status(400);
+    throw new Error("Identifier and OTP are required");
+  }
   const result = await authService.verifyOtp(identifier, otp);
   res.status(200).json(result);
 });
 
 export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
   const { identifier } = req.body;
+  if (!identifier) {
+    res.status(400);
+    throw new Error("Identifier is required to resend OTP");
+  }
   const result = await authService.resendOtp(identifier);
   res.status(200).json(result);
 });
 
-// --- Login & Profile Controllers ---
+// --- PROFILE MANAGEMENT ---
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { identifier, password } = req.body;
-  const result = await authService.login(identifier, password);
-  res.json(result);
-});
+export const getUserInfo = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const result = await authService.getUserProfile(req.user?._id as string);
+    res.status(200).json(result);
+  },
+);
 
-/**
- * Update Text Profile Info
- */
 export const updateProfile = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const result = await authService.updateProfile(
@@ -89,12 +75,10 @@ export const updateProfile = asyncHandler(
   },
 );
 
-/**
- * Update Profile Avatar
- */
 export const updateAvatar = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     if (!req.file) {
+      res.status(400);
       throw new Error("Avatar image is required");
     }
     const result = await authService.updateAvatar(
@@ -105,12 +89,46 @@ export const updateAvatar = asyncHandler(
   },
 );
 
-/**
- * Update Merchant NRC Docs
- */
+// --- ACCOUNT SECURITY ---
+
+export const requestEmailChange = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { newEmail } = req.body;
+    if (!newEmail) {
+      res.status(400);
+      throw new Error("New email address is required");
+    }
+    const result = await authService.requestEmailChange(
+      req.user?._id as string,
+      newEmail,
+    );
+    res.status(200).json(result);
+  },
+);
+
+export const confirmEmailChange = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { otp } = req.body;
+    if (!otp) {
+      res.status(400);
+      throw new Error("OTP is required");
+    }
+    const result = await authService.confirmEmailChange(
+      req.user?._id as string,
+      otp,
+    );
+    res.status(200).json(result);
+  },
+);
+
+// --- MERCHANT SPECIFIC ---
+
 export const updateMerchantDocs = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    // req.files contains nrcFront and nrcBack from Multer
+    if (!req.files || Object.keys(req.files).length === 0) {
+      res.status(400);
+      throw new Error("Document files are required");
+    }
     const result = await authService.updateMerchantDocs(
       req.user?._id as string,
       req.files,
@@ -119,10 +137,25 @@ export const updateMerchantDocs = asyncHandler(
   },
 );
 
-// --- Existing getUserInfo ---
-export const getUserInfo = asyncHandler(
+// --- ADMINISTRATIVE & STATS ---
+
+export const getDashboardStats = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const result = await authService.getUserProfile(req.user?._id as string);
+    const result = await authService.getUserDashboardStats();
+    res.status(200).json(result);
+  },
+);
+
+export const getPendingVerifications = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const result = await authService.getPendingUsers();
+    res.status(200).json(result);
+  },
+);
+
+export const getVerifiedMerchants = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await authService.getVerifiedMerchants();
     res.status(200).json(result);
   },
 );

@@ -147,7 +147,7 @@ function FarmerDashboard() {
                 Loading entries...
               </div>
             ) : filteredEntries.length === 0 ? (
-              <div className="col-span-full py-12 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+              <div className="col-span-full py-12 flex flex-col items-center justify-center bg-secondary rounded-2xl border-2 border-dashed border-slate-200">
                 <AlertCircle className="w-8 h-8 text-slate-300 mb-2" />
                 <p className="text-slate-400 font-medium">
                   No records found for this season.

@@ -63,7 +63,7 @@ const formSchema = z.object({
         price: z.string(),
         quantity: z.string().min(1, "Required"),
         unit: z.string(),
-      })
+      }),
     )
     .min(1, "Add at least one crop"),
   nrcRegion: z.string().min(1, "Required"),
@@ -169,7 +169,10 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   const handleCropChange = (index: number, cropName: string) => {
     const selectedCrop = rawData.find((item) => item.cropName === cropName);
     if (selectedCrop) {
-      form.setValue(`items.${index}.price`, selectedCrop.currentPrice.toString());
+      form.setValue(
+        `items.${index}.price`,
+        selectedCrop.currentPrice.toString(),
+      );
       form.setValue(`items.${index}.unit`, selectedCrop.unit);
       form.setValue(`items.${index}.cropName`, cropName);
     }
@@ -240,8 +243,8 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                 <FormLabel className="flex items-center gap-2">
                   <ShieldCheck className="w-3.5 h-3.5" /> Identity (NRC)
                 </FormLabel>
-                <div className="grid grid-cols-12 gap-2">
-                  <div className="col-span-3">
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="col-span-1">
                     <FormField
                       control={form.control}
                       name="nrcRegion"
@@ -252,7 +255,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             value={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="No." />
                               </SelectTrigger>
                             </FormControl>
@@ -269,7 +272,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       )}
                     />
                   </div>
-                  <div className="col-span-5">
+                  <div className="col-span-2">
                     <FormField
                       control={form.control}
                       name="nrcTownship"
@@ -281,7 +284,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             disabled={!selectedNrcRegion}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Township" />
                               </SelectTrigger>
                             </FormControl>
@@ -298,7 +301,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       )}
                     />
                   </div>
-                  <div className="col-span-4">
+                  <div className="col-span-1">
                     <FormField
                       control={form.control}
                       name="nrcType"
@@ -309,7 +312,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             value={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -319,7 +322,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                   <SelectItem key={type} value={type}>
                                     {type}
                                   </SelectItem>
-                                )
+                                ),
                               )}
                             </SelectContent>
                           </Select>
@@ -328,24 +331,24 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       )}
                     />
                   </div>
-                  <div className="col-span-12">
-                    <FormField
-                      control={form.control}
-                      name="nrcNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              placeholder="6-digit serial number"
-                              {...field}
-                              maxLength={6}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                </div>
+                <div className="col-span-12">
+                  <FormField
+                    control={form.control}
+                    name="nrcNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            placeholder="6-digit serial number"
+                            {...field}
+                            maxLength={6}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </div>

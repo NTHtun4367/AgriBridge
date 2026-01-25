@@ -107,7 +107,7 @@ function Records() {
               Loading your history...
             </div>
           ) : filteredEntries.length === 0 ? (
-            <div className="col-span-full py-24 flex flex-col items-center justify-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="col-span-full py-24 flex flex-col items-center justify-center bg-secondary rounded-3xl border-2 border-dashed border-slate-200">
               <div className="p-4 bg-slate-50 rounded-full mb-4">
                 <Inbox className="w-10 h-10 text-slate-300" />
               </div>

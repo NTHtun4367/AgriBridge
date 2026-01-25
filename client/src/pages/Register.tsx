@@ -68,7 +68,7 @@ function Register() {
     useRegisterFarmerMutation();
   const [registerMerchantMutation, { isLoading: merchantLoading }] =
     useRegisterMerchantMutation();
-  const [status, setStatus] = useState<"farmer" | "merchant">("farmer");
+  const [role, setRole] = useState<"farmer" | "merchant">("farmer");
   const [dialogOpen, setDialogOpen] = useState(true);
   const navigate = useNavigate();
 
@@ -80,7 +80,7 @@ function Register() {
     reValidateMode: "onBlur",
     shouldUnregister: false,
     defaultValues: {
-      status: "farmer",
+      role: "farmer",
       name: "",
       identifier: "",
       password: "",
@@ -89,7 +89,7 @@ function Register() {
       district: "",
       township: "",
       businessName: "",
-      phone: "",
+      businessPhone: "",
       nrcRegion: "",
       nrcTownship: "",
       nrcType: "",
@@ -99,15 +99,16 @@ function Register() {
     },
   });
 
-  const totalSteps = status === "farmer" ? 2 : 4;
+  const totalSteps = role === "farmer" ? 2 : 4;
 
   const nextStep = async () => {
     let fields: string[] = [];
     if (step === 1) fields = ["name", "identifier", "password"];
     if (step === 2)
       fields = ["homeAddress", "division", "district", "township"];
-    if (status === "merchant" && step === 3) fields = ["businessName", "phone"];
-    if (status === "merchant" && step === 4)
+    if (role === "merchant" && step === 3)
+      fields = ["businessName", "businessPhone"];
+    if (role === "merchant" && step === 4)
       fields = [
         "nrcRegion",
         "nrcTownship",
@@ -131,77 +132,60 @@ function Register() {
 
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
-      if (data.status === "farmer") {
-        // 1. Farmer Registration Logic (Plain JSON)
-        await registerFarmerMutation({
-          identifier: data.identifier,
-          name: data.name,
-          password: data.password,
-          homeAddress: data.homeAddress,
-          division: data.division,
-          district: data.district,
-          township: data.township,
-        }).unwrap();
+      const identifier = data.identifier.trim().toLowerCase();
+      let result;
+
+      if (data.role === "farmer") {
+        result = await registerFarmerMutation({ ...data, identifier }).unwrap();
       } else {
-        // 2. Merchant Registration Logic (Multi-part FormData for Images)
         const formData = new FormData();
-        formData.append("identifier", data.identifier);
+        // 1. General Fields
+        formData.append("identifier", identifier);
         formData.append("name", data.name);
         formData.append("password", data.password);
         formData.append("homeAddress", data.homeAddress);
         formData.append("division", data.division);
         formData.append("district", data.district);
         formData.append("township", data.township);
-        formData.append("businessName", data.businessName);
-        formData.append("businessPhone", data.phone);
+        formData.append("businessName", data.businessName || "");
 
-        // Nested NRC Object handling
-        formData.append("nrc[region]", data.nrcRegion);
-        formData.append("nrc[township]", data.nrcTownship);
-        formData.append("nrc[type]", data.nrcType);
-        formData.append("nrc[number]", data.nrcNumber);
+        formData.append("businessPhone", data.businessPhone || "");
 
-        // Image files from your ImageUpload component
-        if (data.nrcFrontImage?.file) {
+        formData.append("nrcRegion", data.nrcRegion);
+        formData.append("nrcTownship", data.nrcTownship);
+        formData.append("nrcType", data.nrcType);
+        formData.append("nrcNumber", data.nrcNumber);
+
+        // 2. Image Files
+        if (data.nrcFrontImage?.file)
           formData.append("nrcFront", data.nrcFrontImage.file);
-        }
-        if (data.nrcBackImage?.file) {
+        if (data.nrcBackImage?.file)
           formData.append("nrcBack", data.nrcBackImage.file);
-        }
 
-        await registerMerchantMutation(formData).unwrap();
+        result = await registerMerchantMutation(formData).unwrap();
       }
 
-      // 3. Success Feedback
-      toast.success(
-        "Registration initiated! Please check your email or phone for the OTP.",
-      );
-
-      // 4. Navigation to OTP Screen
-      // We pass the 'identifier' (email/phone) in the navigation state
-      // so the VerifyOtp page knows where to send the verification request.
-      navigate("/verify-otp", {
-        state: {
-          identifier: data.identifier,
-          role: data.status,
-        },
-      });
+      if (result.requiresOtp) {
+        toast.success("OTP sent! Please check your email.");
+        navigate("/verify-otp", {
+          state: { identifier: identifier, role: data.role },
+        });
+      } else {
+        toast.success("Registration successful!");
+        if (role === "merchant") {
+          navigate("/pending-approval");
+        } else {
+          navigate("/login");
+        }
+      }
     } catch (error: any) {
-      // 5. Error Handling
-      console.error("Registration error:", error);
-
-      const errorMessage =
-        error?.data?.message ||
-        error?.message ||
-        "Registration failed. Please try again.";
-
-      toast.error(errorMessage);
+      toast.error(error?.data?.message || "Registration failed.");
     }
   };
 
   const handleChoice = (choice: "farmer" | "merchant") => {
-    setStatus(choice);
-    form.setValue("status", choice);
+    setRole(choice);
+    form.setValue("role", choice);
     setDialogOpen(false);
     setStep(1);
   };
@@ -209,8 +193,9 @@ function Register() {
   const getCurrentStepFields = (): string[] => {
     if (step === 1) return ["name", "identifier", "password"];
     if (step === 2) return ["homeAddress", "division", "district", "township"];
-    if (status === "merchant" && step === 3) return ["businessName", "phone"];
-    if (status === "merchant" && step === 4)
+    if (role === "merchant" && step === 3)
+      return ["businessName", "businessPhone"];
+    if (role === "merchant" && step === 4)
       return [
         "nrcRegion",
         "nrcTownship",
@@ -233,7 +218,7 @@ function Register() {
       "district",
       "township",
       "businessName",
-      "phone",
+      "businessPhone",
       "nrcRegion",
       "nrcTownship",
       "nrcType",
@@ -243,7 +228,7 @@ function Register() {
     ];
     const toClear = allPossibleFields.filter((f) => !current.includes(f));
     form.clearErrors(toClear as any);
-  }, [step, status]);
+  }, [step, role]);
 
   const selectedDivision = useWatch({
     control: form.control,
@@ -296,6 +281,7 @@ function Register() {
 
   return (
     <div className="max-w-[500px] lg:mx-auto mx-6 mt-12 animate-in fade-in zoom-in duration-700">
+      <div id="recaptcha-container"></div>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl">
           <DialogHeader className="items-center text-center">
@@ -314,7 +300,7 @@ function Register() {
               onClick={() => handleChoice("farmer")}
               className={cn(
                 "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all hover:border-primary/50",
-                status === "farmer"
+                role === "farmer"
                   ? "border-primary bg-primary/5"
                   : "border-muted bg-transparent",
               )}
@@ -322,7 +308,7 @@ function Register() {
               <div
                 className={cn(
                   "p-3 rounded-full",
-                  status === "farmer"
+                  role === "farmer"
                     ? "bg-primary text-white"
                     : "bg-secondary text-muted-foreground",
                 )}
@@ -335,7 +321,7 @@ function Register() {
               onClick={() => handleChoice("merchant")}
               className={cn(
                 "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all hover:border-primary/50",
-                status === "merchant"
+                role === "merchant"
                   ? "border-primary bg-primary/5"
                   : "border-muted bg-transparent",
               )}
@@ -343,7 +329,7 @@ function Register() {
               <div
                 className={cn(
                   "p-3 rounded-full",
-                  status === "merchant"
+                  role === "merchant"
                     ? "bg-primary text-white"
                     : "bg-secondary text-muted-foreground",
                 )}
@@ -544,7 +530,7 @@ function Register() {
                 </>
               )}
 
-              {status === "merchant" && step === 3 && (
+              {role === "merchant" && step === 3 && (
                 <>
                   <FormField
                     name="businessName"
@@ -559,7 +545,7 @@ function Register() {
                     )}
                   />
                   <FormField
-                    name="phone"
+                    name="businessPhone"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Business Phone</FormLabel>
@@ -573,7 +559,7 @@ function Register() {
                 </>
               )}
 
-              {status === "merchant" && step === 4 && (
+              {role === "merchant" && step === 4 && (
                 <div className="space-y-4">
                   <FormLabel>NRC Information</FormLabel>
                   <div className="flex gap-2">
@@ -708,7 +694,7 @@ function Register() {
                     disabled={farmerLoading || merchantLoading}
                     className="flex-1"
                   >
-                    {status === "farmer"
+                    {role === "farmer"
                       ? "Create Account"
                       : "Submit Verification"}
                   </Button>

@@ -29,7 +29,7 @@ export const registerFarmerValidator = [
 export const registerMerchantValidator = [
   ...registerFarmerValidator,
   body("businessName").notEmpty().withMessage("Business name is required."),
-  body("phone").notEmpty().withMessage("Business phone is required."),
+  body("businessPhone").notEmpty().withMessage("Business phone is required."),
   body("nrcRegion").notEmpty().withMessage("NRC Region is required."),
   body("nrcTownship").notEmpty().withMessage("NRC Township is required."),
   body("nrcType").notEmpty().withMessage("NRC Type is required."),

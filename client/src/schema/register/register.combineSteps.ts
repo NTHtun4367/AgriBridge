@@ -4,24 +4,24 @@ import { step2Schema } from "./register.step2";
 import { step3Schema } from "./register.step3";
 import { step4Schema } from "./register.step4";
 
-export const registerSchema = z.discriminatedUnion("status", [
+export const registerSchema = z.discriminatedUnion("role", [
   z
     .object({
-      status: z.literal("farmer"),
+      role: z.literal("farmer"),
     })
     .merge(step1Schema)
     .merge(step2Schema),
 
   z
     .object({
-      status: z.literal("merchant"),
+      role: z.literal("merchant"),
     })
     .merge(step1Schema)
     .merge(step2Schema)
     .merge(step3Schema)
     .merge(step4Schema),
 ]).superRefine((data, ctx) => {
-  if (data.status === "merchant") {
+  if (data.role === "merchant") {
     if (!data.nrcFrontImage)
       ctx.addIssue({
         path: ["nrcFrontImage"],

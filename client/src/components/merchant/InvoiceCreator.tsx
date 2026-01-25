@@ -330,8 +330,8 @@ export function InvoiceCreator({
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
                     <ShieldCheck size={14} /> Identity (NRC)
                   </Label>
-                  <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-3">
+                  <div className="grid grid-cols-7 gap-2">
+                    <div className="col-span-1">
                       <Controller
                         control={control}
                         name="nrcRegion"
@@ -340,7 +340,7 @@ export function InvoiceCreator({
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger className="h-11">
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="No." />
                             </SelectTrigger>
                             <SelectContent>
@@ -354,7 +354,7 @@ export function InvoiceCreator({
                         )}
                       />
                     </div>
-                    <div className="col-span-4">
+                    <div className="col-span-2">
                       <Controller
                         control={control}
                         name="nrcTownship"
@@ -364,7 +364,7 @@ export function InvoiceCreator({
                             value={field.value}
                             disabled={!selectedNrcRegion}
                           >
-                            <SelectTrigger className="h-11">
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Township" />
                             </SelectTrigger>
                             <SelectContent>
@@ -378,7 +378,7 @@ export function InvoiceCreator({
                         )}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Controller
                         control={control}
                         name="nrcType"
@@ -387,7 +387,7 @@ export function InvoiceCreator({
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger className="h-11 px-2">
+                            <SelectTrigger className="w-full px-2">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -403,7 +403,7 @@ export function InvoiceCreator({
                       <Input
                         {...register("nrcNumber")}
                         placeholder="123456"
-                        className="h-11"
+                        className="w-full"
                         maxLength={6}
                       />
                     </div>

@@ -8,6 +8,7 @@ import { LogOut, X, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, NavLink, useNavigate, useLocation } from "react-router";
+import heroBg from "@/assets/logo.png";
 
 interface SideBarProps {
   pages: Page[];
@@ -21,6 +22,7 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
+  // Auto-expand submenus if a child route is active
   useEffect(() => {
     pages.forEach((page) => {
       if (page.subItems?.some((sub: any) => location.pathname === sub.path)) {
@@ -33,7 +35,7 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
 
   const toggleMenu = (name: string) => {
     setOpenMenus((prev) =>
-      prev.includes(name) ? prev.filter((i) => i !== name) : [...prev, name]
+      prev.includes(name) ? prev.filter((i) => i !== name) : [...prev, name],
     );
   };
 
@@ -46,22 +48,39 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden border-r border-border">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-6 h-16 shrink-0 relative">
-        <h1
-          className={`text-2xl text-primary font-extrabold italic transition-all duration-300 ${
-            isCollapsed ? "opacity-0 scale-90" : "opacity-100 scale-100"
-          }`}
-        >
-          <Link to="/">AgriBridge</Link>
-        </h1>
-        {isCollapsed && (
-          <span className="absolute left-1/2 -translate-x-1/2 hidden md:block text-primary font-black text-xl">
-            AB
-          </span>
+      {/* Header - Logo and Text aligned horizontally */}
+      <div
+        className={`flex items-center justify-between px-4 shrink-0 relative transition-all duration-300 h-16`}
+      >
+        {!isCollapsed ? (
+          <div className="flex items-center w-full overflow-hidden">
+            <Link to="/" className="flex items-center">
+              <img
+                src={heroBg}
+                alt="Logo"
+                className="h-10 w-auto object-contain shrink-0"
+              />
+              <span className="text-2xl text-primary font-extrabold italic tracking-tight whitespace-nowrap">
+                AgriBridge
+              </span>
+            </Link>
+          </div>
+        ) : (
+          /* AB Placeholder or small logo for collapsed state */
+          <div className="w-full flex justify-center items-center h-full">
+            <img
+              src={heroBg}
+              alt="Logo"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
         )}
-        <button onClick={closeMobile} className="md:hidden p-2 hover:bg-accent rounded-full">
-          <X className="w-6 h-6" />
+
+        <button
+          onClick={closeMobile}
+          className="md:hidden p-2 hover:bg-accent rounded-full"
+        >
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -74,16 +93,21 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
         <nav className="flex flex-col gap-1.5">
           {pages.map((page, index) => {
             const isMenuOpen = openMenus.includes(page.name);
-            const isParentActive = page.subItems?.some((sub: any) => location.pathname === sub.path);
+            const isParentActive = page.subItems?.some(
+              (sub: any) => location.pathname === sub.path,
+            );
 
             return (
               <div key={index} className="w-full">
                 {page.subItems ? (
+                  /* Submenu Dropdown logic */
                   <div className="flex flex-col">
                     <button
                       onClick={() => toggleMenu(page.name)}
                       className={`w-full flex items-center justify-between gap-3 font-semibold text-sm px-3 py-2.5 rounded-lg transition-all ${
-                        isParentActive ? "text-primary bg-primary/5" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        isParentActive
+                          ? "text-primary bg-primary/5"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       } ${isCollapsed ? "md:justify-center" : ""}`}
                     >
                       <div className="flex items-center gap-3">
@@ -91,18 +115,28 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
                         {!isCollapsed && <span>{page.name}</span>}
                       </div>
                       {!isCollapsed && (
-                        <ChevronDown size={14} className={`transition-transform duration-300 ${isMenuOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-300 ${
+                            isMenuOpen ? "rotate-180" : ""
+                          }`}
+                        />
                       )}
                     </button>
+
+                    {/* Sub-items */}
                     {isMenuOpen && !isCollapsed && (
                       <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-border pl-4 animate-in slide-in-from-top-1">
                         {page.subItems.map((sub: any) => (
                           <NavLink
                             key={sub.path}
                             to={sub.path}
+                            onClick={closeMobile}
                             className={({ isActive }) =>
                               `text-sm py-2 px-3 rounded-md transition-colors ${
-                                isActive ? "text-primary font-bold bg-primary/5" : "text-muted-foreground hover:text-foreground"
+                                isActive
+                                  ? "text-primary font-bold bg-primary/5"
+                                  : "text-muted-foreground hover:text-foreground"
                               }`
                             }
                           >
@@ -113,18 +147,22 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
                     )}
                   </div>
                 ) : (
+                  /* Standard Link logic */
                   <NavLink
                     to={page.path}
+                    onClick={closeMobile}
                     className={({ isActive }) =>
                       `flex items-center gap-3 font-semibold text-sm px-3 py-2.5 rounded-lg transition-all ${
-                        isActive 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       } ${isCollapsed ? "md:justify-center" : ""}`
                     }
                   >
                     <span className="shrink-0">{page.icon}</span>
-                    <span className={isCollapsed ? "md:hidden" : "opacity-100"}>{page.name}</span>
+                    <span className={isCollapsed ? "md:hidden" : "opacity-100"}>
+                      {page.name}
+                    </span>
                   </NavLink>
                 )}
               </div>

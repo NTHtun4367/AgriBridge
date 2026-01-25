@@ -194,12 +194,12 @@ function MerchantProfile() {
             </div>
 
             <div className="pt-4 flex flex-wrap justify-center md:justify-start gap-3">
-              <Button
+              {/* <Button
                 variant="outline"
                 className="rounded-full border-slate-200"
               >
                 Contact Merchant
-              </Button>
+              </Button> */}
 
               <PreorderDialog
                 merchant={merchant}
@@ -273,7 +273,7 @@ function MerchantProfile() {
                     Mobile
                   </p>
                   <p className="font-bold text-slate-700">
-                    {merchant.merchantId.phone}
+                    {merchant.merchantId.businessPhone}
                   </p>
                 </div>
               </div>

@@ -31,7 +31,7 @@ export default function FarmerDisputes() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 lg:p-12 font-sans text-slate-900">
+    <div className="min-h-screen p-4 md:p-8 lg:p-12 font-sans">
       <div className="max-w-6xl mx-auto space-y-10">
         {/* --- Header & Stats --- */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -40,7 +40,7 @@ export default function FarmerDisputes() {
               <ShieldCheck className="h-4 w-4" />
               <span>Trust & Safety</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-bold tracking-tight">
               Dispute Center
             </h1>
             <p className="text-slate-500 text-sm">
@@ -113,7 +113,7 @@ export default function FarmerDisputes() {
                     </Badge>
                     <StatusBadge status={selectedDispute.status} />
                   </div>
-                  <h2 className="text-2xl font-bold capitalize text-slate-900">
+                  <h2 className="text-2xl font-bold capitalize">
                     {selectedDispute.reason.replace("_", " ")}
                   </h2>
                 </div>
@@ -261,7 +261,7 @@ function DisputeRow({ dispute, onClick }: any) {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1.5">
               Merchant Partner
             </p>
-            <p className="font-bold text-slate-800 text-lg tracking-tight truncate group-hover:text-primary transition-colors">
+            <p className="font-bold text-lg tracking-tight truncate group-hover:text-primary transition-colors">
               {dispute.merchantId?.merchantId?.businessName ||
                 dispute.merchantId?.name}
             </p>
@@ -352,7 +352,7 @@ function EmptyState() {
       <div className="bg-slate-50 p-8 rounded-full mb-6">
         <ShieldCheck className="h-12 w-12 text-slate-300" />
       </div>
-      <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+      <h3 className="text-xl font-bold tracking-tight">
         Everything looks good!
       </h3>
       <p className="text-slate-500 text-sm max-w-xs text-center mt-2 leading-relaxed">

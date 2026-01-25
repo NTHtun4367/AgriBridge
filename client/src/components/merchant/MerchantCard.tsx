@@ -37,7 +37,7 @@ export function MerchantCard({ user }: { user: any }) {
 
           <div className="flex items-center text-xs text-slate-500">
             <Phone className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-            <span className="font-mono">{user.merchantId?.phone}</span>
+            <span className="font-mono">{user.merchantId?.businessPhone}</span>
           </div>
 
           <div className="flex items-center text-xs text-slate-500">

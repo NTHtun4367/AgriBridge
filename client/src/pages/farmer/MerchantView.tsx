@@ -55,7 +55,7 @@ function MerchantView() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-slate-50">
+        <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-secondary">
           <Info className="w-12 h-12 text-slate-300 mb-4" />
           <h3 className="text-lg font-semibold">No Merchants Found</h3>
           <p className="text-muted-foreground max-w-xs text-center">

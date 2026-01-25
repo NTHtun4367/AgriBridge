@@ -77,7 +77,8 @@ function VerifyOtp() {
       toast.success("Verification successful!");
 
       // Route based on backend verification status
-      // Merchants usually go to "pending" while admin reviews NRC
+      // Merchants go to "pending" (verificationStatus: 'pending')
+      // Farmers go to "login" (verificationStatus: 'verified')
       if (response.user.verificationStatus === "pending") {
         navigate("/pending-approval");
       } else {

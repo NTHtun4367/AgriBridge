@@ -16,8 +16,8 @@ import {
   updateProfile,
   updateAvatar,
   updateMerchantDocs,
-  requestChangeId,
-  confirmChangeId,
+  requestEmailChange,
+  confirmEmailChange,
 } from "../controllers/auth";
 import { upload } from "../../../shared/utils/upload";
 import { protect } from "../../../shared/middleware/authMiddleware";
@@ -25,13 +25,13 @@ import { allowRoles } from "../../../shared/middleware/role";
 
 const router = Router();
 
-// Registration
 router.post(
   "/register/farmer",
   registerFarmerValidator,
   validateRequest,
   registerFarmer,
 );
+
 router.post(
   "/register/merchant",
   upload.fields([
@@ -41,14 +41,12 @@ router.post(
   registerMerchant,
 );
 
-// OTP Verification
+// Verification (Uses unified identifier: email/phone)
 router.post("/verify-otp", verifyOtpValidator, validateRequest, verifyOtp);
 router.post("/resend-otp", resendOtpValidator, validateRequest, resendOtp);
 
-// Standard Auth
 router.post("/login", loginValidator, validateRequest, login);
 
-// Profile
 router.get(
   "/me",
   protect,
@@ -56,11 +54,8 @@ router.get(
   getUserInfo,
 );
 
-// Profile Updates
 router.patch("/profile", protect, updateProfile);
-
 router.post("/profile/avatar", protect, upload.single("avatar"), updateAvatar);
-
 router.post(
   "/profile/documents",
   protect,
@@ -70,12 +65,8 @@ router.post(
   ]),
   updateMerchantDocs,
 );
-// ... existing imports
-router.post("/verify-otp", verifyOtpValidator, validateRequest, verifyOtp);
-router.post("/resend-otp", resendOtpValidator, validateRequest, resendOtp);
 
-// NEW: Change Email/Phone Routes
-router.post("/request-identifier-change", protect, requestChangeId);
-router.post("/confirm-identifier-change", protect, confirmChangeId);
+router.post("/request-email-change", protect, requestEmailChange);
+router.post("/confirm-email-change", protect, confirmEmailChange);
 
 export default router;

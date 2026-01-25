@@ -20,10 +20,18 @@ export const Notification = () => {
   const [markAllRead] = useMarkAllAsReadMutation();
   const [remove] = useDeleteNotificationMutation();
 
+  console.log(data);
+
   // Filter notifications based on current user's role
   const notifications = Array.isArray(data)
-    ? data.filter((n: any) => n.notificationId?.targetRole === user?.role)
+    ? data.filter(
+        (n: any) =>
+          n.notificationId?.targetRole === user?.role ||
+          n.notificationId?.targetRole === "all",
+      )
     : [];
+
+  console.log(notifications);
 
   const hasUnread = notifications.some((n) => !n.isRead);
 
@@ -77,11 +85,9 @@ export const Notification = () => {
       {/* List */}
       <div className="space-y-3">
         {notifications.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="text-center py-20 rounded-2xl border-2 border-dashed border-gray-200">
             <BellOff className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-2 text-sm font-semibold">
-              No notifications
-            </h3>
+            <h3 className="mt-2 text-sm font-semibold">No notifications</h3>
             <p className="mt-1 text-sm text-gray-500">You're all caught up!</p>
           </div>
         ) : (

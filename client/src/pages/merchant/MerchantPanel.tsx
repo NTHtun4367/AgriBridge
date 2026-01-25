@@ -1,8 +1,9 @@
 import NavBar from "@/common/NavBar";
 import SideBar from "@/common/SideBar";
 import type { Page } from "@/types/sidebar";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Outlet } from "react-router";
+import { useCurrentUserQuery } from "@/store/slices/userApi"; // Ensure path is correct
 import {
   LayoutDashboard,
   TrendingUp,
@@ -12,42 +13,59 @@ import {
   Receipt,
 } from "lucide-react";
 
-const pages: Page[] = [
-  {
-    name: "Dashboard",
-    path: "/merchant/dashboard",
-    icon: <LayoutDashboard className="w-5 h-5" />,
-  },
-  {
-    name: "Market Prices",
-    path: "/merchant/markets",
-    icon: <TrendingUp className="w-5 h-5" />,
-  },
-  {
-    name: "Market Management",
-    path: "/merchant/manage-market",
-    icon: <BarChart3 className="w-5 h-5" />,
-  },
-  {
-    name: "Preorders",
-    path: "/merchant/preorders",
-    icon: <ShoppingBag className="w-5 h-5" />,
-  },
-  {
-    name: "Invoices",
-    path: "/merchant/invoices",
-    icon: <Receipt className="w-5 h-5" />,
-  },
-  {
-    name: "Settings",
-    path: "/merchant/settings",
-    icon: <Settings className="w-5 h-5" />,
-  },
-];
-
 function MerchantPanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Fetch current user info
+  const { data: user } = useCurrentUserQuery();
+
+  // Dynamically filter pages based on verification status
+  const filteredPages = useMemo(() => {
+    const allPages: Page[] = [
+      {
+        name: "Dashboard",
+        path: "/merchant/dashboard",
+        icon: <LayoutDashboard className="w-5 h-5" />,
+      },
+      {
+        name: "Market Prices",
+        path: "/merchant/markets",
+        icon: <TrendingUp className="w-5 h-5" />,
+      },
+      {
+        name: "Market Management",
+        path: "/merchant/manage-market",
+        icon: <BarChart3 className="w-5 h-5" />,
+        protected: true, // Custom flag to identify restricted routes
+      },
+      {
+        name: "Preorders",
+        path: "/merchant/preorders",
+        icon: <ShoppingBag className="w-5 h-5" />,
+        protected: true,
+      },
+      {
+        name: "Invoices",
+        path: "/merchant/invoices",
+        icon: <Receipt className="w-5 h-5" />,
+        protected: true,
+      },
+      {
+        name: "Settings",
+        path: "/merchant/settings",
+        icon: <Settings className="w-5 h-5" />,
+      },
+    ];
+
+    // If user is verified, show everything.
+    // Otherwise, filter out the protected items.
+    if (user?.verificationStatus === "verified") {
+      return allPages;
+    }
+
+    return allPages.filter((page: any) => !page.protected);
+  }, [user]);
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -70,7 +88,7 @@ function MerchantPanel() {
         `}
       >
         <SideBar
-          pages={pages}
+          pages={filteredPages} // Passing the filtered list here
           isCollapsed={isCollapsed}
           closeMobile={() => setIsMobileOpen(false)}
         />
@@ -83,6 +101,16 @@ function MerchantPanel() {
           openMobile={() => setIsMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary">
+          {/* Optional: Add a verification alert if not verified */}
+          {user && user.verificationStatus !== "verified" && (
+            <div className="mb-4 p-4 bg-orange-100 border-l-4 border-orange-500 text-orange-700 text-sm">
+              <p className="font-bold">Account Verification Pending</p>
+              <p>
+                Please complete your verification to access Market Management,
+                Preorders, and Invoices.
+              </p>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

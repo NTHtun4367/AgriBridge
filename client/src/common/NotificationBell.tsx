@@ -12,11 +12,15 @@ import { useCurrentUserQuery } from "@/store/slices/userApi";
 export const NotificationBell = () => {
   // const navigate = useNavigate();
   const { data: user } = useCurrentUserQuery();
-  const { data, isLoading } = useGetNotificationsQuery();
-
+  const { data, isLoading } = useGetNotificationsQuery()
+  
   // Filter notifications to match the current user's role
   const notifications = Array.isArray(data)
-    ? data.filter((n: any) => n.notificationId?.targetRole === user?.role)
+    ? data.filter(
+        (n: any) =>
+          n.notificationId?.targetRole === user?.role ||
+          n.notificationId?.targetRole === "all",
+      )
     : [];
 
   const unreadCount = notifications.filter((n: any) => !n.isRead).length;

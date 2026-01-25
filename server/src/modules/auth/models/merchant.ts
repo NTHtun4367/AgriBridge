@@ -2,7 +2,7 @@ import { Schema, model, Document } from "mongoose";
 
 export interface IMerchant extends Document {
   businessName: string;
-  phone: string;
+  businessPhone: string;
 
   nrcRegion: string;
   nrcTownship: string;
@@ -23,7 +23,7 @@ export interface IMerchant extends Document {
 const merchantSchema = new Schema<IMerchant>(
   {
     businessName: { type: String, required: true },
-    phone: { type: String, required: true },
+    businessPhone: { type: String, required: true },
 
     nrcRegion: { type: String, required: true },
     nrcTownship: { type: String, required: true },
@@ -39,7 +39,7 @@ const merchantSchema = new Schema<IMerchant>(
       public_alt: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Merchant = model<IMerchant>("Merchant", merchantSchema);

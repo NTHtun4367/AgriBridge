@@ -5,59 +5,29 @@ import {
   uploadSingleImage,
 } from "../../../shared/utils/cloudinary";
 import generateToken from "../../../shared/utils/generateToken";
-import { sendOtp, sendWelcome } from "../../../shared/utils/message";
+import { sendOtp } from "../../../shared/utils/message";
 
-// Helper to generate a 6-digit OTP
+// --- HELPERS ---
+
+/**
+ * Generates a 6-digit numeric OTP string
+ */
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
+/**
+ * Simple regex helper for email validation
+ */
+const isEmailFormat = (identifier: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
 export class AuthService {
-  // --- OTP VERIFICATION & WELCOME ---
-  async verifyOtp(identifier: string, otp: string) {
-    const cleanId = identifier.trim().toLowerCase();
-    const user = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    });
-
-    if (!user || !user.otp || !user.otpExpires)
-      throw new Error("No active session found for this user.");
-
-    if (new Date() > user.otpExpires)
-      throw new Error("OTP has expired. Please request a new one.");
-
-    const isMatch = await user.matchOtp(otp);
-    if (!isMatch) throw new Error("Invalid OTP code.");
-
-    // Clear OTP fields
-    user.otp = undefined;
-    user.otpExpires = undefined;
-
-    // LOGIC FIX:
-    // Farmers are auto-verified upon OTP success.
-    // Merchants remain 'unverified' or 'pending' until Admin approves NRC.
-    if (user.role === "farmer") {
-      user.verificationStatus = "verified";
-    } else if (user.role === "merchant") {
-      user.verificationStatus = "pending";
-    }
-
-    await user.save();
-
-    // sendWelcome(user.email ? user.email : user.phone,user.name)
-    return {
-      token: generateToken(user),
-      user: {
-        id: user._id,
-        role: user.role,
-        verificationStatus: user.verificationStatus,
-      },
-    };
-  }
-
   // --- REGISTRATION (FARMER) ---
+
   async registerFarmer(body: any) {
     const { identifier, ...rest } = body;
     const cleanId = identifier.trim().toLowerCase();
+    const isEmail = cleanId.includes("@");
 
     const exists = await User.findOne({
       $or: [{ email: cleanId }, { phone: cleanId }],
@@ -68,23 +38,43 @@ export class AuthService {
     const userData: any = {
       ...rest,
       role: "farmer",
-      [cleanId.includes("@") ? "email" : "phone"]: cleanId,
-      otp: otpCode,
-      otpExpires: new Date(Date.now() + 1 * 60 * 1000),
+      [isEmail ? "email" : "phone"]: cleanId,
+      // If Email: unverified + needs OTP. If Phone: verified immediately.
+      // verificationStatus: isEmail ? "unverified" : "verified",
+      verificationStatus: "verified",
+      otp: isEmail ? otpCode : undefined,
+      otpExpires: isEmail ? new Date(Date.now() + 5 * 60 * 1000) : undefined,
     };
 
-    await User.create(userData);
-    await sendOtp(cleanId, otpCode);
+    const user: any = await User.create(userData);
+
+    // if (isEmail) {
+    //   await sendOtp(cleanId, otpCode);
+    //   return {
+    //     message: "OTP sent to your email.",
+    //     requiresOtp: true,
+    //     identifier: cleanId,
+    //   };
+    // }
 
     return {
-      message: `OTP sent to your ${cleanId.includes("@") ? "email" : "phone"}`,
+      message: "Registration successful!",
+      requiresOtp: false,
+      token: generateToken(user),
+      user: {
+        id: user._id,
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+      },
     };
   }
 
   // --- REGISTRATION (MERCHANT) ---
+
   async registerMerchant(body: any, reqFiles: any) {
     const { identifier, password, ...rest } = body;
     const cleanId = identifier.trim().toLowerCase();
+    const isEmail = cleanId.includes("@");
 
     const existingUser = await User.findOne({
       $or: [{ email: cleanId }, { phone: cleanId }],
@@ -99,6 +89,7 @@ export class AuthService {
     if (!files?.nrcFront?.[0] || !files?.nrcBack?.[0])
       throw new Error("NRC images required.");
 
+    // Upload NRC images to Cloudinary
     const uploadedFront = await uploadSingleImage(
       `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`,
       "/agribridge/nrc",
@@ -108,6 +99,7 @@ export class AuthService {
       "/agribridge/nrc",
     );
 
+    // Create Merchant document first to link to User
     const merchant: any = await Merchant.create({
       ...rest,
       nrcFrontImage: {
@@ -123,81 +115,50 @@ export class AuthService {
     const otpCode = generateOtp();
     const userData: any = {
       ...rest,
-      role: "merchant",
       password,
+      role: "merchant",
       merchantId: merchant._id,
-      verificationStatus: "unverified",
-      otp: otpCode,
-      otpExpires: new Date(Date.now() + 1 * 60 * 1000),
-      [cleanId.includes("@") ? "email" : "phone"]: cleanId,
+      [isEmail ? "email" : "phone"]: cleanId,
+      // Email must verify OTP. Phone goes straight to 'pending' for Admin review.
+      // verificationStatus: isEmail ? "unverified" : "pending",
+      verificationStatus: "pending",
+      otp: isEmail ? otpCode : undefined,
+      otpExpires: isEmail ? new Date(Date.now() + 5 * 60 * 1000) : undefined,
     };
 
     const user = await User.create(userData);
-    await sendOtp(cleanId, otpCode);
 
-    return { message: "Merchant registration initiated. OTP sent." };
+    // if (isEmail) {
+    //   await sendOtp(cleanId, otpCode);
+    //   return {
+    //     message: "OTP sent to email.",
+    //     requiresOtp: true,
+    //     identifier: cleanId,
+    //   };
+    // }
+
+    return {
+      message: "Merchant registered. Pending admin approval.",
+      requiresOtp: false,
+    };
   }
 
-  // --- CHANGE EMAIL OR PHONE ---
-  async requestIdentifierChange(userId: string, newIdentifier: string) {
-    const cleanId = newIdentifier.trim().toLowerCase();
+  // --- AUTH FLOWS ---
 
-    const taken = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    });
-    if (taken) throw new Error("This email or phone is already in use.");
-
-    const otpCode = generateOtp();
-
-    // Store NEW identifier in temp field until verified
-    await User.findByIdAndUpdate(userId, {
-      tempIdentifier: cleanId,
-      otp: otpCode,
-      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
-    });
-
-    await sendOtp(cleanId, otpCode);
-    return { message: `Verification code sent to ${cleanId}.` };
-  }
-
-  async confirmIdentifierChange(userId: string, otp: string) {
-    const user = await User.findById(userId);
-    if (!user || !user.tempIdentifier)
-      throw new Error("No pending change request.");
-
-    const isMatch = await user.matchOtp(otp);
-    if (!isMatch || new Date() > (user.otpExpires as Date))
-      throw new Error("Invalid or expired OTP.");
-
-    const isEmail = user.tempIdentifier.includes("@");
-
-    // Move tempIdentifier to the actual field
-    if (isEmail) {
-      user.email = user.tempIdentifier;
-    } else {
-      user.phone = user.tempIdentifier;
-    }
-
-    user.tempIdentifier = undefined;
-    user.otp = undefined;
-    await user.save();
-
-    return { message: "Contact information updated successfully." };
-  }
-
-  // --- LOGIN ---
   async login(identifier: string, password: string) {
     const cleanId = identifier.trim().toLowerCase();
     const user = await User.findOne({
       $or: [{ email: cleanId }, { phone: cleanId }],
     }).select("+password");
 
-    if (!user) throw new Error("Invalid credentials");
-    if (!user.password)
-      throw new Error("Account error. Please reset your password.");
+    if (!user || !user.password) throw new Error("Invalid credentials");
+    if (!(await user.matchPassword(password)))
+      throw new Error("Invalid credentials");
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) throw new Error("Invalid credentials");
+    // Block unverified email users
+    if (user.verificationStatus === "unverified" && user.email) {
+      throw new Error("Please verify your email via OTP before logging in.");
+    }
 
     return {
       token: generateToken(user),
@@ -209,11 +170,105 @@ export class AuthService {
     };
   }
 
-  // --- PROFILE UPDATES ---
+  async verifyOtp(identifier: string, otp: string) {
+    const cleanId = identifier.trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [{ email: cleanId }, { phone: cleanId }],
+    });
+
+    if (!user || !user.otp || !user.otpExpires)
+      throw new Error("No active verification session.");
+    if (new Date() > user.otpExpires) throw new Error("OTP expired.");
+    if (!(await user.matchOtp(otp))) throw new Error("Invalid OTP.");
+
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    // Farmer becomes verified, Merchant stays pending for NRC review
+    user.verificationStatus = user.role === "farmer" ? "verified" : "pending";
+    await user.save();
+
+    return {
+      token: generateToken(user),
+      user: {
+        id: user._id,
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+      },
+    };
+  }
+
+  async resendOtp(email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) throw new Error("User with this email not found.");
+
+    const otpCode = generateOtp();
+    user.otp = otpCode;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+
+    await sendOtp(cleanEmail, otpCode);
+    return { message: "New OTP sent to your email." };
+  }
+
+  // --- EMAIL MANAGEMENT ---
+
+  async requestEmailChange(userId: string, newEmail: string) {
+    const cleanEmail = newEmail.trim().toLowerCase();
+    const taken = await User.findOne({ email: cleanEmail });
+    if (taken) throw new Error("This email is already in use.");
+
+    const otpCode = generateOtp();
+    await User.findByIdAndUpdate(userId, {
+      tempIdentifier: cleanEmail,
+      otp: otpCode,
+      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendOtp(cleanEmail, otpCode);
+    return { message: `Verification code sent to ${cleanEmail}.` };
+  }
+
+  async confirmEmailChange(userId: string, otp: string) {
+    const user = await User.findById(userId);
+    if (!user || !user.tempIdentifier)
+      throw new Error("No pending email change request.");
+
+    const isMatch = await user.matchOtp(otp);
+    if (!isMatch || new Date() > (user.otpExpires as Date))
+      throw new Error("Invalid or expired OTP.");
+
+    user.email = user.tempIdentifier;
+    user.tempIdentifier = undefined;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    return { message: "Email updated successfully." };
+  }
+
+  // --- PROFILE & USER QUERIES ---
+
+  async getUserProfile(userId: string) {
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("merchantId");
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+
+  async updateProfile(userId: string, updateData: Partial<IUser>) {
+    const { password, role, merchantId, otp, ...safeData } = updateData as any;
+    const user = await User.findByIdAndUpdate(userId, safeData, {
+      new: true,
+    }).select("-password");
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+
   async updateAvatar(userId: string, file: Express.Multer.File) {
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
-
     if (user.avatarPublicId) await deleteImage(user.avatarPublicId);
 
     const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
@@ -222,38 +277,7 @@ export class AuthService {
     user.avatar = uploaded.image_url;
     user.avatarPublicId = uploaded.public_alt;
     await user.save();
-
     return { avatar: user.avatar };
-  }
-
-  async getFarmers() {
-    return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
-  }
-
-  async getAllMerchants() {
-    return await User.find({ role: "merchant" }).sort({ createdAt: -1 });
-  }
-
-  async getVerifiedMerchants() {
-    return await User.find({
-      role: "merchant",
-      verificationStatus: "verified",
-      status: "active",
-    })
-      .populate("merchantId")
-      .select("-password")
-      .sort({ createdAt: -1 });
-  }
-
-  async getMerchants(filter: any) {
-    return await User.find(filter)
-      .populate({
-        path: "merchantId",
-        select:
-          "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
-      })
-      .select("-password")
-      .sort({ createdAt: -1 });
   }
 
   async findUserAndUpdate(userId: string, updateData: object) {
@@ -264,10 +288,38 @@ export class AuthService {
     return user;
   }
 
-  async getPendingUsers() {
-    return await User.find({ verificationStatus: "pending" }).sort({
-      createdAt: -1,
-    });
+  // --- MERCHANT MANAGEMENT ---
+
+  async updateMerchantDocs(userId: string, reqFiles: any) {
+    const user = await User.findById(userId);
+    if (!user || user.role !== "merchant")
+      throw new Error("Merchant not found");
+
+    const files = reqFiles as {
+      nrcFront?: Express.Multer.File[];
+      nrcBack?: Express.Multer.File[];
+    };
+    const updateData: any = {};
+
+    if (files?.nrcFront?.[0]) {
+      const uri = `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`;
+      const uploaded = await uploadSingleImage(uri, "/agribridge/nrc");
+      updateData["nrcFrontImage.url"] = uploaded.image_url;
+      updateData["nrcFrontImage.public_alt"] = uploaded.public_alt;
+    }
+
+    if (files?.nrcBack?.[0]) {
+      const uri = `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`;
+      const uploaded = await uploadSingleImage(uri, "/agribridge/nrc");
+      updateData["nrcBackImage.url"] = uploaded.image_url;
+      updateData["nrcBackImage.public_alt"] = uploaded.public_alt;
+    }
+
+    await Merchant.findByIdAndUpdate(user.merchantId, { $set: updateData });
+    user.verificationStatus = "pending";
+    await user.save();
+
+    return { message: "Documents updated. Verification is now pending." };
   }
 
   async getMerchantInfo(merchantId: string) {
@@ -286,28 +338,42 @@ export class AuthService {
       .select("-password");
   }
 
-  async resendOtp(identifier: string) {
-    const cleanId = identifier.trim().toLowerCase();
-    const user = await User.findOne({
-      $or: [{ email: cleanId }, { phone: cleanId }],
-    });
-    if (!user) throw new Error("User not found");
-
-    const otpCode = generateOtp();
-    user.otp = otpCode;
-    user.otpExpires = new Date(Date.now() + 1 * 60 * 1000);
-    await user.save();
-
-    await sendOtp(cleanId, otpCode);
-    return { message: "New OTP sent." };
+  async getVerifiedMerchants() {
+    return await User.find({
+      role: "merchant",
+      verificationStatus: "verified",
+      status: "active",
+    })
+      .populate("merchantId")
+      .select("-password")
+      .sort({ createdAt: -1 });
   }
 
-  async getUserProfile(userId: string) {
-    const user = await User.findById(userId)
+  async getAllMerchants() {
+    return await User.find({ role: "merchant" }).sort({ createdAt: -1 });
+  }
+
+  async getMerchants(filter: any) {
+    return await User.find(filter)
+      .populate({
+        path: "merchantId",
+        select:
+          "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
+      })
       .select("-password")
-      .populate("merchantId");
-    if (!user) throw new Error("User not found");
-    return user;
+      .sort({ createdAt: -1 });
+  }
+
+  // --- GENERAL USER QUERIES ---
+
+  async getFarmers() {
+    return await User.find({ role: "farmer" }).sort({ createdAt: -1 });
+  }
+
+  async getPendingUsers() {
+    return await User.find({ verificationStatus: "pending" }).sort({
+      createdAt: -1,
+    });
   }
 
   async getAllUsers() {
@@ -318,63 +384,9 @@ export class AuthService {
     return await User.find({ role }, "_id");
   }
 
-  /**
-   * Update Basic Profile Text Fields
-   */
-  async updateProfile(userId: string, updateData: Partial<IUser>) {
-    // Prevent sensitive fields from being updated via this method
-    const { password, role, merchantId, otp, ...safeData } = updateData as any;
-
-    const user = await User.findByIdAndUpdate(userId, safeData, {
-      new: true,
-    }).select("-password");
-    if (!user) throw new Error("User not found");
-    return user;
-  }
-
-  /**
-   * Update Merchant NRC Documents
-   */
-  async updateMerchantDocs(userId: string, reqFiles: any) {
-    const user = await User.findById(userId);
-    if (!user || user.role !== "merchant")
-      throw new Error("Merchant not found");
-
-    const files = reqFiles as {
-      nrcFront?: Express.Multer.File[];
-      nrcBack?: Express.Multer.File[];
-    };
-
-    const updateData: any = {};
-
-    // Upload Front NRC if provided
-    if (files?.nrcFront?.[0]) {
-      const frontUri = `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`;
-      const uploaded = await uploadSingleImage(frontUri, "/agribridge/nrc");
-      updateData["nrcFrontImage.url"] = uploaded.image_url;
-      updateData["nrcFrontImage.public_alt"] = uploaded.public_alt;
-    }
-
-    // Upload Back NRC if provided
-    if (files?.nrcBack?.[0]) {
-      const backUri = `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`;
-      const uploaded = await uploadSingleImage(backUri, "/agribridge/nrc");
-      updateData["nrcBackImage.url"] = uploaded.image_url;
-      updateData["nrcBackImage.public_alt"] = uploaded.public_alt;
-    }
-
-    // Update the Merchant document
-    await Merchant.findByIdAndUpdate(user.merchantId, { $set: updateData });
-
-    // Set User status to pending for re-verification
-    user.verificationStatus = "pending";
-    await user.save();
-
-    return { message: "Documents updated. Verification is now pending." };
-  }
+  // --- DASHBOARD ANALYTICS ---
 
   async getUserDashboardStats() {
-    // 1. Get Totals
     const activeFarmers = await User.countDocuments({
       role: "farmer",
       status: "active",
@@ -384,7 +396,6 @@ export class AuthService {
       status: "active",
     });
 
-    // 2. Aggregate Growth Data for both roles
     const growthData = await User.aggregate([
       { $match: { createdAt: { $exists: true, $ne: null } } },
       {
@@ -420,7 +431,7 @@ export class AuthService {
       if (!chartMap.has(monthKey)) {
         chartMap.set(monthKey, {
           name: monthNames[item._id.month - 1],
-          farmers: 0, // Initialize both
+          farmers: 0,
           merchants: 0,
           sortKey: item._id.year * 100 + item._id.month,
         });

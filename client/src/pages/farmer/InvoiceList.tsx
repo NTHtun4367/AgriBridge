@@ -30,6 +30,32 @@ import {
   useAddEntryMutation,
 } from "@/store/slices/farmerApi";
 
+const getCurrentSeason = () => {
+  const now = new Date();
+  const month = now.getMonth(); // 0 = Jan, 11 = Dec
+  const year = now.getFullYear();
+
+  let seasonName = "";
+
+  // Logic:
+  // Summer: Mar(2) - Jun(5)
+  // Monsoon: Jul(6) - Oct(9)
+  // Winter: Nov(10) - Feb(1)
+  if (month >= 2 && month <= 5) {
+    seasonName = "Summer";
+  } else if (month >= 6 && month <= 9) {
+    seasonName = "Monsoon";
+  } else {
+    seasonName = "Winter";
+  }
+
+  // Adjust year for "Winter" if it's January/February but belongs to the previous cycle
+  // (Optional: depending on how you want to label your seasons)
+  return `${seasonName} ${year}`;
+};
+
+const CURRENT_SEASON = getCurrentSeason();
+
 // Utility to convert base64/dataUrl to a File object for FormData
 const dataURLtoFile = (dataurl: string, filename: string) => {
   const arr = dataurl.split(",");
@@ -99,7 +125,6 @@ export default function InvoiceList() {
       toast.error("Failed to generate image.");
       return null;
     } finally {
-      // 🔵 RESTORE UI
       if (auto && actionButtonsRef.current) {
         actionButtonsRef.current.classList.remove("print-hidden");
       }
@@ -163,6 +188,7 @@ export default function InvoiceList() {
       formData.append("date", new Date().toISOString());
       formData.append("type", "income");
       formData.append("category", displayCategory);
+      formData.append("season", CURRENT_SEASON); // Dynamic season
       formData.append("quantity", totalQuantity.toString());
       formData.append("unit", displayUnit);
       formData.append("value", selectedInvoice.totalAmount.toString());
@@ -203,7 +229,7 @@ export default function InvoiceList() {
               Billing History
             </span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black tracking-tight">
             Digital Receipts
           </h1>
           <p className="text-slate-500 text-sm mt-1">
@@ -220,11 +246,9 @@ export default function InvoiceList() {
       {/* INVOICE LIST */}
       <div className="grid gap-4">
         {invoices?.length === 0 ? (
-          <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+          <div className="text-center py-20 bg-secondary rounded-3xl border-2 border-dashed border-slate-200">
             <Search className="text-slate-300 mx-auto mb-4" size={32} />
-            <h3 className="text-lg font-bold text-slate-900">
-              No receipts yet
-            </h3>
+            <h3 className="text-lg font-bold">No receipts yet</h3>
           </div>
         ) : (
           invoices?.map((inv: any) => (
@@ -248,7 +272,7 @@ export default function InvoiceList() {
                     )}
                   </div>
                   <div>
-                    <h3 className="font-black text-slate-900 text-lg leading-tight group-hover:text-primary transition-colors">
+                    <h3 className="font-black text-lg leading-tight group-hover:text-primary transition-colors">
                       {inv.merchantId?.businessName || "Agri Merchant"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
@@ -266,7 +290,7 @@ export default function InvoiceList() {
                     <p className="text-[10px] font-bold text-slate-400 uppercase">
                       Amount Due
                     </p>
-                    <span className="text-xl font-black text-slate-900">
+                    <span className="text-xl font-black">
                       {inv.totalAmount.toLocaleString()}{" "}
                       <span className="text-xs">MMK</span>
                     </span>
@@ -329,7 +353,7 @@ export default function InvoiceList() {
                           <div className="h-4 w-32 bg-slate-100 animate-pulse rounded" />
                         ) : (
                           <>
-                            <p className="font-bold text-slate-900">
+                            <p className="font-bold">
                               {merchant?.merchantId?.businessName}
                             </p>
                             <p className="text-slate-500 text-xs">
@@ -371,7 +395,7 @@ export default function InvoiceList() {
                           {selectedInvoice.items?.map(
                             (item: any, i: number) => (
                               <tr key={i} className="border-b border-slate-50">
-                                <td className="py-4 font-medium text-slate-900">
+                                <td className="py-4 font-medium">
                                   {item.cropName}
                                 </td>
                                 <td className="py-4 text-center">
