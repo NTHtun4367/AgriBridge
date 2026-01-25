@@ -15,7 +15,7 @@ export class MarketService {
 
   async updateCrop(
     id: string,
-    data: Partial<{ name: string; category: "rice" | "beans" }>
+    data: Partial<{ name: string; category: "rice" | "beans" }>,
   ) {
     const crop = await Crop.findByIdAndUpdate(id, data, { new: true });
     if (!crop) throw new Error("Crop not found");
@@ -55,7 +55,7 @@ export class MarketService {
   async updatePrices(
     marketId: string | undefined,
     updates: any[],
-    userId: string
+    userId: string,
   ) {
     let marketInfo = null;
 
@@ -91,25 +91,25 @@ export class MarketService {
   async getLatestMarketAnalytics(filters: {
     userId?: string;
     official?: boolean;
+    marketId?: string; // Add this
   }) {
     const matchStage: any = {};
 
     // 1. FILTERING
     if (filters.official) {
-      // Show only official market updates
       matchStage.marketId = { $exists: true, $ne: null };
     } else if (filters.userId) {
-      // Show only records for a specific merchant profile
       matchStage.userId = new Types.ObjectId(filters.userId);
+    }
+
+    // NEW: Add specific market filtering
+    if (filters.marketId && filters.marketId !== "all") {
+      matchStage.marketId = new Types.ObjectId(filters.marketId);
     }
 
     const pipeline: PipelineStage[] = [
       { $match: matchStage },
-
-      // Sort so the most recent is at the top
       { $sort: { marketId: 1, userId: 1, cropId: 1, createdAt: -1 } },
-
-      // Group by the "Market-User-Crop" unique trio
       {
         $group: {
           _id: {
@@ -126,18 +126,15 @@ export class MarketService {
           },
         },
       },
-
       {
         $project: {
           latest: { $arrayElemAt: ["$records", 0] },
           previous: { $arrayElemAt: ["$records", 1] },
         },
       },
-
-      // LOOKUPS
       {
         $lookup: {
-          from: "markets", // Make sure this matches your MongoDB collection name
+          from: "markets",
           localField: "_id.marketId",
           foreignField: "_id",
           as: "marketDetails",
@@ -151,12 +148,8 @@ export class MarketService {
           as: "cropDetails",
         },
       },
-
-      // CRITICAL FIX: preserveNullAndEmptyArrays
-      // If marketDetails is empty (Merchant price), this keeps the record alive
       { $unwind: { path: "$marketDetails", preserveNullAndEmptyArrays: true } },
       { $unwind: { path: "$cropDetails", preserveNullAndEmptyArrays: true } },
-
       {
         $project: {
           _id: 0,
@@ -169,8 +162,6 @@ export class MarketService {
           unit: "$latest.unit",
           updatedAt: "$latest.createdAt",
           previousPrice: { $ifNull: ["$previous.price", null] },
-
-          // Math for price changes
           priceChange: {
             $cond: [
               { $gt: ["$previous.price", null] },

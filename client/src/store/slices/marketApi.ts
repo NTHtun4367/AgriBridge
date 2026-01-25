@@ -93,13 +93,15 @@ export const marketApi = apiSlice.injectEndpoints({
     /* ---------------- PRICE & ANALYTICS ---------------- */
     getMarketPrices: builder.query<
       MarketPriceResponse,
-      { userId?: string; official?: boolean }
+      { userId?: string; official?: boolean; marketId?: string } // Added marketId
     >({
       query: (params) => {
         const queryString = new URLSearchParams();
         if (params.userId) queryString.append("userId", params.userId);
         if (params.official !== undefined)
           queryString.append("official", params.official.toString());
+        if (params.marketId && params.marketId !== "all")
+          queryString.append("marketId", params.marketId);
 
         return `/markets/prices?${queryString.toString()}`;
       },

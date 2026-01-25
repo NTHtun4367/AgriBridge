@@ -10,7 +10,7 @@ import { Provider } from "react-redux";
 import { persistor, store } from "./store/index.ts";
 import Panel from "./pages/admin/Panel.tsx";
 import IsAdmin from "./pages/protector/IsAdmin.tsx";
-import IsVerified from "./pages/protector/IsVerified.tsx"; // Import the new protector
+import IsVerified from "./pages/protector/IsVerified.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import Farmer from "./pages/admin/Farmer.tsx";
 import Merchant from "./pages/admin/Merchant.tsx";

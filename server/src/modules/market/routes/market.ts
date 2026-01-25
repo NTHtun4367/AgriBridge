@@ -22,7 +22,7 @@ router.post(
   "/update",
   protect,
   allowRoles("admin", "merchant"),
-  updateMarketPrices
+  updateMarketPrices,
 );
 router.get("/prices", getMarketPrices);
 router.get("/analytics/history", getCropPriceHistory);
@@ -34,7 +34,7 @@ router.put("/crops/:id", protect, allowRoles("admin"), updateCrop);
 router.delete("/crops/:id", protect, allowRoles("admin"), deleteCrop);
 
 // --- Market Management ---
-router.get("/", protect, getAllMarkets);
+router.get("/", getAllMarkets);
 router.post("/", protect, allowRoles("admin"), createMarket);
 router.put("/:id", protect, allowRoles("admin"), updateMarket);
 router.delete("/:id", protect, allowRoles("admin"), deleteMarket);
