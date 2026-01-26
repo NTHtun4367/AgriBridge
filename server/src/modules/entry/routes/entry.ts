@@ -3,11 +3,6 @@ import { upload } from "../../../shared/utils/upload";
 import { entryValidator } from "../../entry/validators/entry";
 import { validateRequest } from "../../../shared/middleware/validateRequest";
 import { protect } from "../../../shared/middleware/authMiddleware";
-import { getStats } from "../controllers/finance";
-import {
-  getMerchantInfoById,
-  getVerifiedMerchants,
-} from "../controllers/merchant";
 import { allowRoles } from "../../../shared/middleware/role";
 import {
   createEntry,
@@ -17,7 +12,7 @@ import {
 
 const router = Router();
 
-router.use(protect, allowRoles("farmer"));
+router.use(protect);
 
 router.post(
   "/add-entry",
@@ -26,14 +21,7 @@ router.post(
   validateRequest,
   createEntry,
 );
-router.get("/finance/stats", getStats);
-router.get("/entries", getAllEntries);
-router.get("/entries/:id", getEntryById);
-
-// MOVE THIS LINE BEFORE THE DYNAMIC ROUTE
-router.get("/merchants", getVerifiedMerchants);
-
-// KEEP THIS AS THE LAST ROUTE
-router.get("/merchants/:userId", getMerchantInfoById);
+router.get("/", getAllEntries);
+router.get("/:id", getEntryById);
 
 export default router;

@@ -9,10 +9,10 @@ export const createEntry = asyncHandler(
     const newEntry = await entryService.createEntry(
       userId?.toString()!,
       req.body,
-      req.file
+      req.file,
     );
     res.status(201).json(newEntry);
-  }
+  },
 );
 
 export const getAllEntries = asyncHandler(
@@ -20,7 +20,7 @@ export const getAllEntries = asyncHandler(
     const userId = req.user?._id;
     const entries = await entryService.getAllEntries(userId?.toString()!);
     res.status(200).json(entries);
-  }
+  },
 );
 
 export const getEntryById = asyncHandler(
@@ -29,5 +29,5 @@ export const getEntryById = asyncHandler(
     const id = req.params.id;
     const entry = await entryService.getEntryById(id, userId?.toString()!);
     res.status(200).json(entry);
-  }
+  },
 );

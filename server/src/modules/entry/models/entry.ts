@@ -5,7 +5,7 @@ export interface IEntry extends Document {
   type: "expense" | "income";
   date: Date;
   category: string;
-  season: string; // <--- New Field
+  season?: string; // <--- New Field
   quantity?: number;
   unit?: string;
   value: number;
@@ -36,7 +36,7 @@ const entrySchema = new Schema<IEntry>(
     season: {
       // <--- New Field
       type: String,
-      required: true,
+      // required: true,
       index: true,
     },
     quantity: {

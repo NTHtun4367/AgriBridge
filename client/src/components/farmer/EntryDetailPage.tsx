@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useGetEntryByIdQuery } from "@/store/slices/farmerApi";
+import { useGetEntryByIdQuery } from "@/store/slices/entryApi";
 import {
   Calendar,
   ChevronLeft,

@@ -12,25 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
 
-// Helper to match seasons
-const generateFilterSeasons = () => {
-  const currentYear = new Date().getFullYear();
-  const names = ["Summer", "Monsoon", "Winter"];
-  const years = [currentYear - 1, currentYear, currentYear + 1];
-  const options: string[] = [];
-  years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
-  return options;
-};
-
-function Records() {
+function MerchantRecords() {
   const { data: entries, isLoading } = useGetAllEntriesQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
-  const [selectedSeason, setSelectedSeason] = useState("all");
 
-  const seasonOptions = useMemo(() => generateFilterSeasons(), []);
-
-  // Advanced Filtering Logic
+  // Filter logic updated to remove season dependency
   const filteredEntries = useMemo(() => {
     if (!entries) return [];
 
@@ -38,28 +25,29 @@ function Records() {
       const matchesSearch =
         en.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         en.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = selectedType === "all" || en.type === selectedType;
-      const matchesSeason =
-        selectedSeason === "all" || en.season === selectedSeason;
 
-      return matchesSearch && matchesType && matchesSeason;
+      const matchesType = selectedType === "all" || en.type === selectedType;
+
+      return matchesSearch && matchesType;
     });
-  }, [entries, searchTerm, selectedType, selectedSeason]);
+  }, [entries, searchTerm, selectedType]);
 
   return (
     <div className="w-full min-h-screen p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-black tracking-tight">Farm Records</h2>
+          <h2 className="text-3xl font-black tracking-tight">
+            Inventory Records
+          </h2>
           <p className="text-slate-500 font-medium">
-            History of all your agricultural transactions
+            History of all your inventory transactions
           </p>
         </div>
 
         {/* Filters Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8">
-          {/* Search Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+          {/* Search Bar - Adjusted col-span for better 3-column balance */}
           <div className="md:col-span-2 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
@@ -79,21 +67,6 @@ function Records() {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="income">Income Only</SelectItem>
               <SelectItem value="expense">Expenses Only</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Season Filter */}
-          <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Season" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="all">All Seasons</SelectItem>
-              {seasonOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
             </SelectContent>
           </Select>
         </div>
@@ -121,7 +94,6 @@ function Records() {
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedType("all");
-                  setSelectedSeason("all");
                 }}
               >
                 Clear all filters
@@ -139,8 +111,8 @@ function Records() {
                   cat={en.type}
                   amount={en.value}
                   type={en.type}
-                  date={en.date} // Actual entry date
-                  season={en.season} // Multi-year season
+                  date={en.date}
+                  season={en.season} // Keeping this prop as it displays on the card
                 />
               </div>
             ))
@@ -151,4 +123,4 @@ function Records() {
   );
 }
 
-export default Records;
+export default MerchantRecords;

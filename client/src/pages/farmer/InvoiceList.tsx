@@ -25,10 +25,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  useGetMerchantInfoQuery,
-  useAddEntryMutation,
-} from "@/store/slices/farmerApi";
+import { useGetMerchantInfoQuery } from "@/store/slices/farmerApi";
+import { useAddEntryMutation } from "@/store/slices/entryApi";
 
 const getCurrentSeason = () => {
   const now = new Date();

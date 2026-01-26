@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import {
   CalendarIcon,
   PlusCircle,
-  Landmark,
+  Store,
   Save,
   X,
   UploadCloud,
@@ -45,37 +45,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { entrySchema, type EntryFormValues } from "@/schema/entry";
+// import { useAddMerchantEntryMutation } from "@/store/slices/merchantApi"; // Updated API hook name
 import { toast } from "sonner";
 import { useAddEntryMutation } from "@/store/slices/entryApi";
 
-const UNIT_OPTIONS: Record<string, string[]> = {
-  seeds: ["Bag", "Packet", "Kg", "Grams", "Viss"],
-  fertilizer: ["Bag", "Kg", "Liter", "Packet"],
-  pesticide: ["Liter", "ml", "Bottle", "Kg"],
-  labor: ["Day", "Hour", "Person", "Flat Rate"],
-  machinery: ["Hour", "Acre", "Trip", "Liter"],
+// Purchase categories
+const PURCHASE_OPTIONS: Record<string, string[]> = {
+  labor: ["Person", "Day", "Hour"],
   transport: ["Trip", "Km", "Tons"],
-  other: ["none"],
+  store: ["Month", "Day", "Sqft"],
+  other: ["None"],
 };
 
-const CROP_OPTIONS: Record<string, string[]> = {
-  crops: ["Bag", "Packet", "Kg", "Grams", "Viss"],
-  beans: ["Bag", "Packet", "Kg", "Grams", "Viss"],
-  other: ["none"],
+// Sales/Income categories
+const SALES_OPTIONS: Record<string, string[]> = {
+  paddy: ["Bag", "Basket", "Kg", "Tons"], // စပါး
+  beans: ["Bag", "Viss", "Kg", "Basket"], // ပဲ
+  other: ["Unit"],
 };
 
-// Generate multi-year seasons
-const generateSeasons = () => {
-  const currentYear = new Date().getFullYear();
-  const names = ["Monsoon", "Winter", "Summer"];
-  const years = [currentYear - 1, currentYear, currentYear + 1];
-  const options: string[] = [];
-  years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
-  return options;
-};
-const SEASON_OPTIONS = generateSeasons();
-
-const AddEntryDialog = () => {
+const MerchantEntryDialog = () => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"expense" | "income">("expense");
   const [preview, setPreview] = useState<string | null>(null);
@@ -89,7 +78,6 @@ const AddEntryDialog = () => {
       date: new Date(),
       type: "expense",
       category: "",
-      season: "",
       quantity: "",
       unit: "",
       value: "",
@@ -97,11 +85,12 @@ const AddEntryDialog = () => {
       billImage: null,
     },
   });
+
   const selectedCategory = form.watch("category");
 
   const availableUnits = useMemo(() => {
     if (!selectedCategory) return [];
-    const options = type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS;
+    const options = type === "expense" ? PURCHASE_OPTIONS : SALES_OPTIONS;
     return options[selectedCategory] || [];
   }, [selectedCategory, type]);
 
@@ -131,7 +120,6 @@ const AddEntryDialog = () => {
 
   const handleClose = () => {
     setOpen(false);
-    // Reset form and cleanup preview
     setTimeout(() => {
       form.reset();
       if (preview) URL.revokeObjectURL(preview);
@@ -145,7 +133,6 @@ const AddEntryDialog = () => {
       formData.append("date", data.date.toISOString());
       formData.append("type", type);
       formData.append("category", data.category);
-      formData.append("season", data.season!); // Dynamic season
       formData.append("quantity", data.quantity || "");
       formData.append("unit", data.unit || "");
       formData.append("value", data.value);
@@ -153,13 +140,14 @@ const AddEntryDialog = () => {
       if (data.billImage) formData.append("billImage", data.billImage);
 
       await addEntry(formData).unwrap();
-      toast.success("Entry added successfully!");
+      toast.success("Merchant record saved!");
       setOpen(false);
       form.reset();
     } catch (err) {
-      toast.error("Error saving record.");
+      toast.error("Failed to save transaction.");
     }
   };
+
   useEffect(() => {
     form.setValue("category", "");
     form.setValue("unit", "");
@@ -172,20 +160,22 @@ const AddEntryDialog = () => {
         onOpenChange={(val) => (!val ? handleClose() : setOpen(true))}
       >
         <DialogTrigger asChild>
-          <Button className="shadow-lg bg-primary hover:bg-primary/90 transition-all">
-            <PlusCircle className="h-5 w-5 mr-2" /> Add New Entry
+          <Button className="shadow-lg bg-indigo-600 hover:bg-indigo-700 transition-all">
+            <PlusCircle className="h-5 w-5 mr-2" /> New Transaction
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto rounded-3xl">
+        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[85vh] overflow-y-auto">
           <DialogHeader className="border-b pb-4">
             <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
-              <Landmark className="h-5 w-5 text-primary" />
-              {type === "expense" ? "Record Expenditure" : "Record Income"}
+              <Store className="h-5 w-5 text-indigo-600" />
+              {type === "expense"
+                ? "Record Purchase/Expense"
+                : "Record Sales/Income"}
             </DialogTitle>
           </DialogHeader>
 
-          {/* Type Toggle Segment */}
+          {/* Toggle Switch */}
           <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200 mt-4">
             <div
               onClick={() => setType("expense")}
@@ -203,7 +193,7 @@ const AddEntryDialog = () => {
               className={cn(
                 "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "income"
-                  ? "bg-white text-primary shadow-sm"
+                  ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:bg-slate-50",
               )}
             >
@@ -216,45 +206,15 @@ const AddEntryDialog = () => {
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-6 py-4"
             >
-              <div className="grid grid-cols-2 gap-4">
-                {/* SEASON SELECTOR - Crucial for multi-year */}
-                <FormField
-                  control={form.control}
-                  name="season"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Agricultural Season
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full h-12 border-2 border-slate-200">
-                            <SelectValue placeholder="Select Season & Year" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {SEASON_OPTIONS.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* DATE PICKER */}
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel className="text-slate-600 font-semibold">
-                        Date
+                        Transaction Date
                       </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -268,15 +228,12 @@ const AddEntryDialog = () => {
                             >
                               {field.value
                                 ? format(field.value, "PPP")
-                                : "Pick a date"}
+                                : "Select Date"}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent
-                          className="w-auto p-0 rounded-2xl shadow-xl"
-                          align="start"
-                        >
+                        <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
                             selected={field.value}
@@ -291,6 +248,7 @@ const AddEntryDialog = () => {
                   )}
                 />
 
+                {/* CATEGORY */}
                 <FormField
                   control={form.control}
                   name="category"
@@ -307,13 +265,15 @@ const AddEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full border-slate-200 capitalize">
+                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize">
                             <SelectValue placeholder="Select Category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {Object.keys(
-                            type === "expense" ? UNIT_OPTIONS : CROP_OPTIONS,
+                            type === "expense"
+                              ? PURCHASE_OPTIONS
+                              : SALES_OPTIONS,
                           ).map((cat) => (
                             <SelectItem
                               key={cat}
@@ -363,7 +323,7 @@ const AddEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full border-slate-200">
+                          <SelectTrigger className="w-full h-11 border-slate-200">
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
                         </FormControl>
@@ -387,10 +347,15 @@ const AddEntryDialog = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 font-semibold">
-                      Total Value (MMK)
+                      Total Amount (MMK)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input
+                        className="text-lg font-medium"
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -403,12 +368,12 @@ const AddEntryDialog = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 font-semibold">
-                      Additional Notes
+                      Description / Notes
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g. Purchased from Aung Market..."
-                        className="resize-none h-24"
+                        placeholder="Customer name, voucher number, etc..."
+                        className="resize-none h-20"
                         {...field}
                       />
                     </FormControl>
@@ -419,19 +384,17 @@ const AddEntryDialog = () => {
               <FormField
                 control={form.control}
                 name="billImage"
-                // Destructure 'ref' here to prevent it from being passed into fieldProps
                 render={({
                   field: { onChange, value: _, ref: fieldRef, ...fieldProps },
                 }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 font-semibold">
-                      Bill Photo / Receipt
+                      Upload Invoice / Receipt
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-4">
                         <input
                           type="file"
-                          // Now you can safely use your custom ref
                           ref={fileInputRef}
                           className="hidden"
                           accept="image/*"
@@ -440,7 +403,7 @@ const AddEntryDialog = () => {
                         />
 
                         {preview ? (
-                          <div className="relative group w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">
+                          <div className="relative group w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50">
                             <img
                               src={preview}
                               alt="Preview"
@@ -451,44 +414,33 @@ const AddEntryDialog = () => {
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="rounded-full gap-2"
                                 onClick={() => removeImage(onChange)}
                               >
-                                <X className="h-4 w-4" /> Remove Photo
+                                <X className="h-4 w-4 mr-2" /> Remove
                               </Button>
                             </div>
                           </div>
                         ) : (
                           <div
                             onClick={handleTriggerUpload}
-                            className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 bg-slate-50 hover:bg-slate-100 hover:border-primary/50 transition-all cursor-pointer group"
+                            className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer group"
                           >
-                            <div className="bg-white p-4 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
-                              <UploadCloud className="h-8 w-8 text-primary" />
-                            </div>
+                            <UploadCloud className="h-8 w-8 text-indigo-500 mb-2" />
                             <p className="text-sm font-bold text-slate-700">
-                              Click to upload bill
-                            </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              PNG, JPG up to 5MB
+                              Tap to upload receipt
                             </p>
                           </div>
                         )}
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <DialogFooter className="pt-4">
-                <Button
-                  type="submit"
-                  className="w-full font-bold shadow-lg shadow-primary/20"
-                  disabled={isLoading}
-                >
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
-                    "Processing..."
+                    "Saving..."
                   ) : (
                     <>
                       <Save className="h-5 w-5 mr-2" /> Save Entry
@@ -504,4 +456,4 @@ const AddEntryDialog = () => {
   );
 };
 
-export default AddEntryDialog;
+export default MerchantEntryDialog;

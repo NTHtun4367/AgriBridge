@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setTheme, type ThemeMode } from "@/store/slices/theme";
 import { type RootState } from "@/store";
@@ -6,8 +6,7 @@ import {
   useCurrentUserQuery,
   useUpdateProfileMutation,
   useUpdateAvatarMutation,
-  // Ensure your userApi has this mutation
-  // useUpdateMerchantDocsMutation,
+  // useUpdateMerchantDocsMutation, // Uncomment when available
 } from "@/store/slices/userApi";
 import { toast } from "sonner";
 
@@ -24,6 +23,9 @@ import {
   Loader2,
   ShieldCheck,
   FileUp,
+  Mail,
+  Smartphone,
+  Info,
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +41,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 
 const Settings: React.FC = () => {
   const dispatch = useDispatch();
@@ -50,7 +53,21 @@ const Settings: React.FC = () => {
   const [updateAvatar, { isLoading: isUploadingAvatar }] =
     useUpdateAvatarMutation();
 
+  // Form States
   const [formData, setFormData] = useState({ name: "", bio: "", email: "" });
+  const [passwords, setPasswords] = useState({ current: "", next: "" });
+  const [notifications, setNotifications] = useState({
+    email: true,
+    push: false,
+    marketing: false,
+  });
+  const [nrcFiles, setNrcFiles] = useState<{
+    front: File | null;
+    back: File | null;
+  }>({ front: null, back: null });
+
+  const [isSubmittingDocs, setIsSubmittingDocs] = useState(false);
+
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form with user data
@@ -63,6 +80,13 @@ const Settings: React.FC = () => {
       });
     }
   }, [user]);
+
+  // Check if form is dirty (has changes)
+  const isDirty = useMemo(() => {
+    return (
+      formData.name !== (user?.name || "") || formData.bio !== (user?.bio || "")
+    );
+  }, [formData, user]);
 
   // Apply theme to the document head
   useEffect(() => {
@@ -83,15 +107,32 @@ const Settings: React.FC = () => {
   const handleSave = async () => {
     try {
       await updateProfile({ name: formData.name, bio: formData.bio }).unwrap();
-      toast.success("Profile updated!");
+      toast.success("Profile updated successfully");
     } catch (err) {
       toast.error("Failed to update profile");
+    }
+  };
+
+  const handleDiscard = () => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        bio: user.bio || "",
+        email: user.email || user.phone || "",
+      });
+      toast.info("Changes discarded");
     }
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side validation
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("Image must be less than 2MB");
+    }
+
     const body = new FormData();
     body.append("avatar", file);
     try {
@@ -100,6 +141,38 @@ const Settings: React.FC = () => {
     } catch (err) {
       toast.error("Upload failed");
     }
+  };
+
+  const handleNrcUpload = (
+    side: "front" | "back",
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNrcFiles((prev) => ({ ...prev, [side]: file }));
+      toast.success(`${side.toUpperCase()} side attached`);
+    }
+  };
+
+  const handleSubmitDocs = async () => {
+    setIsSubmittingDocs(true);
+    // Simulate API Call
+    setTimeout(() => {
+      setIsSubmittingDocs(false);
+      toast.success("Documents submitted for review");
+      setNrcFiles({ front: null, back: null });
+    }, 2000);
+  };
+
+  const handlePasswordUpdate = () => {
+    if (!passwords.current || !passwords.next) {
+      return toast.error("Please fill in all password fields");
+    }
+    if (passwords.next.length < 8) {
+      return toast.error("New password must be at least 8 characters");
+    }
+    toast.success("Password update requested");
+    setPasswords({ current: "", next: "" });
   };
 
   if (isUserLoading)
@@ -123,12 +196,17 @@ const Settings: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="shadow-sm">
+            <Button
+              variant="outline"
+              className="shadow-sm"
+              onClick={handleDiscard}
+              disabled={!isDirty}
+            >
               Discard
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isUpdating}
+              disabled={isUpdating || !isDirty}
               className="shadow-md shadow-primary/20"
             >
               {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -149,7 +227,6 @@ const Settings: React.FC = () => {
                 icon={<User size={18} />}
                 label="Account"
               />
-              {/* --- NEW MERCHANT TAB TRIGGER --- */}
               {user?.role === "merchant" && (
                 <NavTrigger
                   value="verification"
@@ -187,7 +264,9 @@ const Settings: React.FC = () => {
                   <div className="relative group">
                     <Avatar className="h-24 w-24 border-4 border-primary/10">
                       <AvatarImage src={user?.avatar} />
-                      <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
+                      <AvatarFallback className="text-2xl">
+                        {user?.name?.[0]}
+                      </AvatarFallback>
                     </Avatar>
                     <button
                       onClick={() => avatarInputRef.current?.click()}
@@ -229,16 +308,14 @@ const Settings: React.FC = () => {
                     <CardTitle>Personal Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <Field
-                        label="Full Name"
-                        id="name"
-                        value={formData.name}
-                        onChange={(val: string) =>
-                          setFormData({ ...formData, name: val })
-                        }
-                      />
-                    </div>
+                    <Field
+                      label="Full Name"
+                      id="name"
+                      value={formData.name}
+                      onChange={(val: string) =>
+                        setFormData({ ...formData, name: val })
+                      }
+                    />
                     <Field
                       label="Identifier (Email/Phone)"
                       id="email"
@@ -250,8 +327,8 @@ const Settings: React.FC = () => {
                       <Label htmlFor="bio">Bio</Label>
                       <Textarea
                         id="bio"
-                        placeholder="Brief description..."
-                        className="resize-none h-32"
+                        placeholder="Tell us a little about yourself..."
+                        className="resize-none h-32 focus-visible:ring-primary"
                         value={formData.bio}
                         onChange={(e) =>
                           setFormData({ ...formData, bio: e.target.value })
@@ -263,7 +340,7 @@ const Settings: React.FC = () => {
               </section>
             </TabsContent>
 
-            {/* --- NEW MERCHANT VERIFICATION TAB CONTENT --- */}
+            {/* Merchant Verification Tab */}
             {user?.role === "merchant" && (
               <TabsContent
                 value="verification"
@@ -284,37 +361,69 @@ const Settings: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
                         <Label>NRC Front Side</Label>
-                        <div className="group relative border-2 border-dashed rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer">
-                          <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
-                          <p className="text-xs text-muted-foreground">
-                            PNG, JPG up to 5MB
+                        <div
+                          className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.front ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
+                        >
+                          {nrcFiles.front ? (
+                            <CheckCircle2 className="mx-auto h-8 w-8 text-primary mb-2" />
+                          ) : (
+                            <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                          )}
+                          <p className="text-xs font-medium">
+                            {nrcFiles.front
+                              ? nrcFiles.front.name
+                              : "PNG, JPG up to 5MB"}
                           </p>
                           <input
                             type="file"
                             className="absolute inset-0 opacity-0 cursor-pointer"
                             accept="image/*"
+                            onChange={(e) => handleNrcUpload("front", e)}
                           />
                         </div>
                       </div>
                       <div className="space-y-3">
                         <Label>NRC Back Side</Label>
-                        <div className="group relative border-2 border-dashed rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer">
-                          <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
-                          <p className="text-xs text-muted-foreground">
-                            PNG, JPG up to 5MB
+                        <div
+                          className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.back ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
+                        >
+                          {nrcFiles.back ? (
+                            <CheckCircle2 className="mx-auto h-8 w-8 text-primary mb-2" />
+                          ) : (
+                            <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                          )}
+                          <p className="text-xs font-medium">
+                            {nrcFiles.back
+                              ? nrcFiles.back.name
+                              : "PNG, JPG up to 5MB"}
                           </p>
                           <input
                             type="file"
                             className="absolute inset-0 opacity-0 cursor-pointer"
                             accept="image/*"
+                            onChange={(e) => handleNrcUpload("back", e)}
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        <strong>Note:</strong> Verification usually takes 24-48
-                        hours. Your documents are stored securely and encrypted.
+                    <Button
+                      className="w-full"
+                      disabled={
+                        !nrcFiles.front || !nrcFiles.back || isSubmittingDocs
+                      }
+                      onClick={handleSubmitDocs}
+                    >
+                      {isSubmittingDocs && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Submit Documents
+                    </Button>
+                    <div className="p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 flex gap-3">
+                      <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                      <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+                        <strong>Verification Note:</strong> Process usually
+                        takes 24-48 hours. Your documents are encrypted and used
+                        only for identity validation.
                       </p>
                     </div>
                   </CardContent>
@@ -327,6 +436,39 @@ const Settings: React.FC = () => {
               value="security"
               className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
             >
+              <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
+                <CardHeader>
+                  <CardTitle>Change Password</CardTitle>
+                  <CardDescription>
+                    Ensure your account is using a long, random password to stay
+                    secure.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Field
+                    label="Current Password"
+                    id="curr_pass"
+                    type="password"
+                    value={passwords.current}
+                    onChange={(val: string) =>
+                      setPasswords({ ...passwords, current: val })
+                    }
+                  />
+                  <Field
+                    label="New Password"
+                    id="new_pass"
+                    type="password"
+                    value={passwords.next}
+                    onChange={(val: string) =>
+                      setPasswords({ ...passwords, next: val })
+                    }
+                  />
+                  <Button size="sm" onClick={handlePasswordUpdate}>
+                    Update Password
+                  </Button>
+                </CardContent>
+              </Card>
+
               <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
                   <CardTitle>Security Keys</CardTitle>
@@ -347,14 +489,82 @@ const Settings: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <ChevronRight
-                      size={18}
-                      className="text-muted-foreground group-hover:translate-x-1 transition-transform"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                      <ChevronRight
+                        size={18}
+                        className="text-muted-foreground group-hover:translate-x-1 transition-transform"
+                      />
+                    </div>
                   </div>
-                  <Button variant="outline" className="w-full border-dashed">
+                  <Button
+                    variant="outline"
+                    className="w-full border-dashed"
+                    onClick={() => toast.info("Key registration started...")}
+                  >
                     Add new key
                   </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Notifications Tab */}
+            <TabsContent
+              value="notifications"
+              className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
+            >
+              <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
+                <CardHeader>
+                  <CardTitle>Notification Channels</CardTitle>
+                  <CardDescription>
+                    Configure how you want to receive alerts.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Mail className="text-muted-foreground" size={20} />
+                      <div>
+                        <p className="text-sm font-medium">
+                          Email Notifications
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Receive updates via your email address.
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={notifications.email}
+                      onCheckedChange={(val) =>
+                        setNotifications({ ...notifications, email: val })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="text-muted-foreground" size={20} />
+                      <div>
+                        <p className="text-sm font-medium">
+                          Push Notifications
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Receive instant alerts on your mobile device.
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={notifications.push}
+                      onCheckedChange={(val) =>
+                        setNotifications({ ...notifications, push: val })
+                      }
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -408,7 +618,14 @@ const Settings: React.FC = () => {
                       Your data will be wiped from our servers.
                     </p>
                   </div>
-                  <Button variant="destructive">Deactivate</Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      toast.error("Please contact support to delete account")
+                    }
+                  >
+                    Deactivate
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -458,9 +675,9 @@ const Field = ({
       id={id}
       type={type}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange?.(e.target.value)}
       disabled={disabled}
-      className="bg-slate-50/50 dark:bg-slate-950/50"
+      className="bg-slate-50/50 dark:bg-slate-950/50 focus-visible:ring-primary"
     />
   </div>
 );

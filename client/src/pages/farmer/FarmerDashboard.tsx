@@ -20,10 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  useGetAllEntriesQuery,
-  useGetFinanceStatsQuery,
-} from "@/store/slices/farmerApi";
+import { useGetFinanceStatsQuery } from "@/store/slices/farmerApi";
+import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
 
 // Logic to generate matching seasons
 const generateFilterSeasons = () => {
@@ -132,7 +130,7 @@ function FarmerDashboard() {
 
       {/* RECENT ACTIVITY TABLE */}
       <Card>
-        <CardTitle className="p-6 border-b border-slate-50">
+        <CardTitle className="px-6 pb-6 border-b border-slate-50">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold tracking-tight">
               Recent Activity

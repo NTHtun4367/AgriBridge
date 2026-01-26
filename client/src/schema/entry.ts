@@ -4,7 +4,7 @@ export const entrySchema = z.object({
   date: z.date(),
   type: z.string(),
   category: z.string().min(1, "Category is required."),
-  season: z.string().min(1, "Season is required."), // Added
+  season: z.string().min(1, "Season is required.").optional(), // Added
   quantity: z.string().optional(),
   unit: z.string().optional(),
   value: z.string().min(1, "Value/Amount is required."),

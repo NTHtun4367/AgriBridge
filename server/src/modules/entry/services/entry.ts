@@ -1,5 +1,5 @@
 import { uploadSingleImage } from "../../../shared/utils/cloudinary";
-import { Entry } from "../models/entry";
+import { Entry } from "../../entry/models/entry";
 
 export class EntryService {
   async createEntry(userId: string, body: any, file?: Express.Multer.File) {
@@ -20,7 +20,7 @@ export class EntryService {
       date: new Date(date),
       type,
       category,
-      season, // FIX: Include season here so it saves to MongoDB
+      season: season ? season : undefined,
       quantity: quantity ? Number(quantity) : undefined,
       unit,
       value: Number(value),

@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { Entry } from "../models/entry";
+import { Entry } from "../../entry/models/entry";
 
 export class FinanceService {
   async calculateFinance(userId: string, season?: string) {

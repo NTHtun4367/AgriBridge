@@ -27,7 +27,7 @@ import MarketDashboard from "./pages/market/MarketDashboard.tsx";
 import MarketPriceLanding from "./pages/landing/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/landing/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
-import EntryDetailPage from "./pages/farmer/EntryDetailPage.tsx";
+import EntryDetailPage from "./components/farmer/EntryDetailPage.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 import Announcement from "./pages/admin/Announcement.tsx";
@@ -48,6 +48,7 @@ import FarmerDisputes from "./pages/farmer/Disputes.tsx";
 import Profile from "./pages/Profile.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
 import PendingApproval from "./pages/landing/PendingApproval.tsx";
+import MerchantRecords from "./pages/merchant/MerchantRecords.tsx";
 
 const router = createBrowserRouter([
   {
@@ -107,7 +108,9 @@ const router = createBrowserRouter([
                 path: "/merchant/manage-market",
                 element: <MerchantMarketManagement />,
               },
+              { path: "/merchant/records", element: <MerchantRecords /> },
               { path: "/merchant/preorders", element: <MerchantOrderList /> },
+              { path: "/merchant/records/:id", element: <EntryDetailPage /> },
               { path: "/merchant/invoices", element: <MerchantInvoices /> },
               {
                 path: "/merchant/invoices/create",
