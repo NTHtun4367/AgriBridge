@@ -67,7 +67,7 @@ const CROP_OPTIONS: Record<string, string[]> = {
 // Generate multi-year seasons
 const generateSeasons = () => {
   const currentYear = new Date().getFullYear();
-  const names = ["Monsoon", "Winter", "Summer"];
+  const names = ["Rainy", "Winter", "Summer"];
   const years = [currentYear - 1, currentYear, currentYear + 1];
   const options: string[] = [];
   years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
@@ -177,11 +177,11 @@ const AddEntryDialog = () => {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto rounded-3xl">
+        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b pb-4">
             <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
               <Landmark className="h-5 w-5 text-primary" />
-              {type === "expense" ? "Record Expenditure" : "Record Income"}
+              {type === "expense" ? "Record Investment" : "Record Income"}
             </DialogTitle>
           </DialogHeader>
 

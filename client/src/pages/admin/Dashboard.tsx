@@ -21,7 +21,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  Legend,
+  // Legend,
 } from "recharts";
 import { Link } from "react-router";
 

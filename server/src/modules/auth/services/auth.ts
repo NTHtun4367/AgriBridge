@@ -447,6 +447,62 @@ export class AuthService {
 
     return { activeFarmers, totalMerchants, formattedGrowth };
   }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await User.findById(userId).select("+password");
+    if (!user || !user.password) {
+      throw new Error("User not found");
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      throw new Error("Current password is incorrect");
+    }
+
+    if (newPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return { message: "Password updated successfully" };
+  }
+
+  async deleteAccount(userId: string) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Remove avatar
+    if (user.avatarPublicId) {
+      await deleteImage(user.avatarPublicId);
+    }
+
+    // Merchant cleanup
+    if (user.role === "merchant" && user.merchantId) {
+      const merchant = await Merchant.findById(user.merchantId);
+
+      if (merchant?.nrcFrontImage?.public_alt) {
+        await deleteImage(merchant.nrcFrontImage.public_alt);
+      }
+
+      if (merchant?.nrcBackImage?.public_alt) {
+        await deleteImage(merchant.nrcBackImage.public_alt);
+      }
+
+      await Merchant.findByIdAndDelete(user.merchantId);
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return { message: "Account deleted successfully" };
+  }
 }
 
 export const authService = new AuthService();

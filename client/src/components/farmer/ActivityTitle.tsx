@@ -1,14 +1,16 @@
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 function ActivityTitle({ id, title, cat, amount, date, type, season }: any) {
+  const { data: user } = useCurrentUserQuery();
   const navigate = useNavigate();
 
   return (
     <div
       className="flex items-center justify-between p-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl hover:border-primary dark:hover:border-primary transition-all cursor-pointer group bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-      onClick={() => navigate(`/farmer/records/${id}`)}
+      onClick={() => navigate(`/${user?.role}/records/${id}`)}
     >
       <div className="flex items-center gap-4">
         {/* Status Icon Container */}

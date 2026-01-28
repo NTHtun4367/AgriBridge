@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import {
@@ -45,11 +45,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { entrySchema, type EntryFormValues } from "@/schema/entry";
-// import { useAddMerchantEntryMutation } from "@/store/slices/merchantApi"; // Updated API hook name
 import { toast } from "sonner";
 import { useAddEntryMutation } from "@/store/slices/entryApi";
 
-// Purchase categories
 const PURCHASE_OPTIONS: Record<string, string[]> = {
   labor: ["Person", "Day", "Hour"],
   transport: ["Trip", "Km", "Tons"],
@@ -57,20 +55,22 @@ const PURCHASE_OPTIONS: Record<string, string[]> = {
   other: ["None"],
 };
 
-// Sales/Income categories
-const SALES_OPTIONS: Record<string, string[]> = {
-  paddy: ["Bag", "Basket", "Kg", "Tons"], // စပါး
-  beans: ["Bag", "Viss", "Kg", "Basket"], // ပဲ
-  other: ["Unit"],
-};
+interface MerchantEntryDialogProps {
+  rawData?: any; // Kept as any to handle potential object wrappers from API
+}
 
-const MerchantEntryDialog = () => {
+const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"expense" | "income">("expense");
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [addEntry, { isLoading }] = useAddEntryMutation();
+
+  // Ensure rawData is an array for mapping, even if an object is passed
+  const cropsArray = Array.isArray(rawData)
+    ? rawData
+    : rawData?.data || rawData?.prices || [];
 
   const form = useForm<EntryFormValues>({
     resolver: zodResolver(entrySchema),
@@ -80,22 +80,46 @@ const MerchantEntryDialog = () => {
       category: "",
       quantity: "",
       unit: "",
+      price: "",
       value: "",
       notes: "",
       billImage: null,
     },
   });
 
-  const selectedCategory = form.watch("category");
+  const selectedCategory = useWatch({
+    control: form.control,
+    name: "category",
+  });
+  const qty = useWatch({ control: form.control, name: "quantity" });
+  const unitPrice = useWatch({ control: form.control, name: "price" });
+
+  useEffect(() => {
+    if (type === "income" && qty && unitPrice) {
+      const total = parseFloat(qty) * parseFloat(unitPrice);
+      form.setValue("value", total.toString());
+    }
+  }, [qty, unitPrice, type, form]);
 
   const availableUnits = useMemo(() => {
     if (!selectedCategory) return [];
-    const options = type === "expense" ? PURCHASE_OPTIONS : SALES_OPTIONS;
-    return options[selectedCategory] || [];
-  }, [selectedCategory, type]);
+    if (type === "expense") {
+      return PURCHASE_OPTIONS[selectedCategory] || [];
+    } else {
+      const crop = cropsArray.find((c: any) => c.cropName === selectedCategory);
+      return crop ? [crop.unit] : ["Unit"];
+    }
+  }, [selectedCategory, type, cropsArray]);
 
-  const handleTriggerUpload = () => {
-    fileInputRef.current?.click();
+  const handleIncomeCropSelect = (cropName: string) => {
+    const selectedCrop = cropsArray.find(
+      (item: any) => item.cropName === cropName,
+    );
+    if (selectedCrop) {
+      form.setValue("category", cropName);
+      form.setValue("unit", selectedCrop.unit);
+      form.setValue("price", selectedCrop.buyingPrice?.toString() || "");
+    }
   };
 
   const handleFileChange = (
@@ -105,8 +129,7 @@ const MerchantEntryDialog = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (preview) URL.revokeObjectURL(preview);
-      const url = URL.createObjectURL(file);
-      setPreview(url);
+      setPreview(URL.createObjectURL(file));
       fieldOnChange(file);
     }
   };
@@ -115,14 +138,12 @@ const MerchantEntryDialog = () => {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     fieldOnChange(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleClose = () => {
     setOpen(false);
     setTimeout(() => {
       form.reset();
-      if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
     }, 300);
   };
@@ -130,28 +151,21 @@ const MerchantEntryDialog = () => {
   const onSubmit = async (data: EntryFormValues) => {
     try {
       const formData = new FormData();
-      formData.append("date", data.date.toISOString());
-      formData.append("type", type);
-      formData.append("category", data.category);
-      formData.append("quantity", data.quantity || "");
-      formData.append("unit", data.unit || "");
-      formData.append("value", data.value);
-      formData.append("notes", data.notes || "");
-      if (data.billImage) formData.append("billImage", data.billImage);
+      Object.entries(data).forEach(([key, val]) => {
+        if (key === "date") formData.append(key, (val as Date).toISOString());
+        else if (key === "billImage" && val instanceof File)
+          formData.append(key, val);
+        else if (val) formData.append(key, val.toString());
+      });
+      formData.set("type", type);
 
       await addEntry(formData).unwrap();
-      toast.success("Merchant record saved!");
-      setOpen(false);
-      form.reset();
+      toast.success("Transaction saved!");
+      handleClose();
     } catch (err) {
       toast.error("Failed to save transaction.");
     }
   };
-
-  useEffect(() => {
-    form.setValue("category", "");
-    form.setValue("unit", "");
-  }, [type, form]);
 
   return (
     <div className="flex justify-center">
@@ -175,10 +189,13 @@ const MerchantEntryDialog = () => {
             </DialogTitle>
           </DialogHeader>
 
-          {/* Toggle Switch */}
           <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200 mt-4">
             <div
-              onClick={() => setType("expense")}
+              onClick={() => {
+                setType("expense");
+                form.setValue("category", "");
+                form.setValue("unit", "");
+              }}
               className={cn(
                 "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "expense"
@@ -189,7 +206,11 @@ const MerchantEntryDialog = () => {
               Expense
             </div>
             <div
-              onClick={() => setType("income")}
+              onClick={() => {
+                setType("income");
+                form.setValue("category", "");
+                form.setValue("unit", "");
+              }}
               className={cn(
                 "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
                 type === "income"
@@ -206,90 +227,94 @@ const MerchantEntryDialog = () => {
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-6 py-4"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* DATE PICKER */}
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Transaction Date
-                      </FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "pl-3 text-left font-normal border-slate-200",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              {field.value
-                                ? format(field.value, "PPP")
-                                : "Select Date"}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* CATEGORY */}
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Category
-                      </FormLabel>
-                      <Select
-                        onValueChange={(val) => {
-                          field.onChange(val);
-                          form.setValue("unit", "");
-                        }}
-                        value={field.value}
-                      >
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-slate-600 font-semibold">
+                      Date
+                    </FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
                         <FormControl>
-                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize">
-                            <SelectValue placeholder="Select Category" />
-                          </SelectTrigger>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "pl-3 text-left font-normal border-slate-200",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            {field.value
+                              ? format(field.value, "PPP")
+                              : "Select Date"}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                         </FormControl>
-                        <SelectContent>
-                          {Object.keys(
-                            type === "expense"
-                              ? PURCHASE_OPTIONS
-                              : SALES_OPTIONS,
-                          ).map((cat) => (
-                            <SelectItem
-                              key={cat}
-                              value={cat}
-                              className="capitalize"
-                            >
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-600 font-semibold">
+                      {type === "expense" ? "Expense Category" : "Crop Name"}
+                    </FormLabel>
+                    <Select
+                      onValueChange={(val) =>
+                        type === "expense"
+                          ? field.onChange(val)
+                          : handleIncomeCropSelect(val)
+                      }
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-12 border-slate-200 capitalize">
+                          <SelectValue
+                            placeholder={
+                              type === "expense"
+                                ? "Select Category"
+                                : "Select Crop"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {type === "expense"
+                          ? Object.keys(PURCHASE_OPTIONS).map((cat) => (
+                              <SelectItem
+                                key={cat}
+                                value={cat}
+                                className="capitalize"
+                              >
+                                {cat}
+                              </SelectItem>
+                            ))
+                          : cropsArray.map((item: any) => (
+                              <SelectItem key={item._id} value={item.cropName}>
+                                {item.cropName}
+                              </SelectItem>
+                            ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
@@ -304,7 +329,6 @@ const MerchantEntryDialog = () => {
                         <FormControl>
                           <Input type="number" placeholder="0.00" {...field} />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -323,23 +347,39 @@ const MerchantEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full h-11 border-slate-200">
+                          <SelectTrigger className="h-11 border-slate-200">
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {availableUnits.map((u) => (
+                          {availableUnits.map((u: string) => (
                             <SelectItem key={u} value={u.toLowerCase()}>
                               {u}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              {type === "income" && (
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-600 font-semibold">
+                        Unit Price (Buying Price)
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -351,13 +391,12 @@ const MerchantEntryDialog = () => {
                     </FormLabel>
                     <FormControl>
                       <Input
-                        className="text-lg font-medium"
+                        className="text-lg font-bold bg-indigo-50/30 border-indigo-100"
                         type="number"
                         placeholder="0"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -385,7 +424,7 @@ const MerchantEntryDialog = () => {
                 control={form.control}
                 name="billImage"
                 render={({
-                  field: { onChange, value: _, ref: fieldRef, ...fieldProps },
+                  field: { onChange, ref: _formRef, ...fieldProps },
                 }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 font-semibold">
@@ -401,7 +440,6 @@ const MerchantEntryDialog = () => {
                           onChange={(e) => handleFileChange(e, onChange)}
                           {...fieldProps}
                         />
-
                         {preview ? (
                           <div className="relative group w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50">
                             <img
@@ -422,8 +460,8 @@ const MerchantEntryDialog = () => {
                           </div>
                         ) : (
                           <div
-                            onClick={handleTriggerUpload}
-                            className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer group"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-slate-100 cursor-pointer group"
                           >
                             <UploadCloud className="h-8 w-8 text-indigo-500 mb-2" />
                             <p className="text-sm font-bold text-slate-700">
@@ -438,7 +476,11 @@ const MerchantEntryDialog = () => {
               />
 
               <DialogFooter className="pt-2">
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full h-12"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     "Saving..."
                   ) : (

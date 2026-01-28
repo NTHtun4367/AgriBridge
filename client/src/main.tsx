@@ -27,7 +27,7 @@ import MarketDashboard from "./pages/market/MarketDashboard.tsx";
 import MarketPriceLanding from "./pages/landing/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/landing/FarmerLanding.tsx";
 import Records from "./pages/farmer/Records.tsx";
-import EntryDetailPage from "./components/farmer/EntryDetailPage.tsx";
+import EntryDetailPage from "./components/EntryDetailPage.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 import Announcement from "./pages/admin/Announcement.tsx";
@@ -49,6 +49,10 @@ import Profile from "./pages/Profile.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
 import PendingApproval from "./pages/landing/PendingApproval.tsx";
 import MerchantRecords from "./pages/merchant/MerchantRecords.tsx";
+import About from "./pages/landing/About.tsx";
+import Contact from "./pages/landing/Contact.tsx";
+import PrivacyPolicy from "./pages/landing/PrivacyPolicy.tsx";
+import MerchantLanding from "./pages/landing/MerchantLanding.tsx";
 
 const router = createBrowserRouter([
   {
@@ -62,7 +66,11 @@ const router = createBrowserRouter([
       { path: "/pending-approval", element: <PendingApproval /> },
       { path: "/markets", element: <MarketPriceLanding /> },
       { path: "/farmers-landing", element: <FarmerLanding /> },
+      { path: "/merchants-landing", element: <MerchantLanding /> },
       { path: "/crop-price-history", element: <CropPriceHistoryLanding /> },
+      { path: "/about", element: <About /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/privacy-policy", element: <PrivacyPolicy /> },
       {
         path: "/farmer",
         element: <FarmerPanel />,

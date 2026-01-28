@@ -7,6 +7,7 @@ export const entrySchema = z.object({
   season: z.string().min(1, "Season is required.").optional(), // Added
   quantity: z.string().optional(),
   unit: z.string().optional(),
+  price: z.string().optional(), // Added for income tracking
   value: z.string().min(1, "Value/Amount is required."),
   notes: z.string().optional(),
   // For file uploads, we expect a File object or null

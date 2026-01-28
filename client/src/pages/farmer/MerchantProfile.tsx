@@ -390,7 +390,7 @@ function MerchantProfile() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <CardTitle className="text-xl font-bold">
-                Live Procurement Rates
+                Live Buying Rates
               </CardTitle>
               <CardDescription className="text-slate-500 mt-1">
                 Current buying prices offered by this merchant.
@@ -407,7 +407,7 @@ function MerchantProfile() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search crops..."
+                placeholder="Search crops by name..."
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

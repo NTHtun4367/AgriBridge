@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useGetEntryByIdQuery } from "@/store/slices/entryApi";
+import {
+  useGetEntryByIdQuery,
+  useDeleteEntryMutation,
+} from "@/store/slices/entryApi";
 import {
   Calendar,
   ChevronLeft,
@@ -17,11 +20,33 @@ import {
   CloudSun,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import EditEntryDialog from "./EditEntryDialog";
+import ConfirmModal from "@/common/ConfirmModel";
 
 function EntryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // States
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const { data: entry, isLoading } = useGetEntryByIdQuery(id as string);
+  const [deleteEntry, { isLoading: isDeleting }] = useDeleteEntryMutation();
+
+  const handleDelete = async () => {
+    try {
+      await deleteEntry(id as string).unwrap();
+      toast.success("Entry deleted successfully");
+      navigate(-1);
+    } catch (err) {
+      toast.error("Failed to delete entry");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -42,6 +67,17 @@ function EntryDetailPage() {
 
   return (
     <div className="w-full h-screen p-4 pb-12 animate-in slide-in-from-bottom-4 duration-500">
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        title="Delete Entry"
+        description={`Are you sure you want to delete this ${entry.category} entry? This action cannot be undone.`}
+        confirmText="Delete Entry"
+      />
+
       {/* Top Navigation Bar */}
       <div>
         <div className="flex items-center justify-between">
@@ -74,24 +110,35 @@ function EntryDetailPage() {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {/* EDIT DIALOG TRIGGER */}
+              <EditEntryDialog
+                initialData={entry}
+                open={isEditDialogOpen}
+                setOpen={setIsEditDialogOpen}
+              />
               <Button
                 variant="outline"
                 size={"sm"}
+                onClick={() => setIsEditDialogOpen(true)}
                 className="dark:border-slate-800 dark:hover:bg-slate-800"
               >
                 <Pencil className="h-4 w-4 mr-1" />
                 Edit
               </Button>
-              <Button variant="destructive" size={"sm"}>
+              <Button
+                variant="destructive"
+                size={"sm"}
+                onClick={() => setIsDeleteModalOpen(true)}
+                disabled={isDeleting}
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete
+                {isDeleting ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </div>
 
           <main className="pt-8">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              {/* Left Column: Primary Details */}
               <div className="lg:col-span-7 space-y-6">
                 <section className="space-y-1">
                   <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white capitalize">
@@ -164,7 +211,6 @@ function EntryDetailPage() {
                   </CardContent>
                 </Card>
 
-                {/* Notes Section */}
                 {entry.notes && (
                   <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm">
                     <div className="mb-3 flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -180,7 +226,6 @@ function EntryDetailPage() {
                 )}
               </div>
 
-              {/* Right Column: Attachment & Metadata */}
               <div className="lg:col-span-5 space-y-6">
                 <div>
                   <h3 className="mt-6 mb-4 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -232,7 +277,8 @@ function EntryDetailPage() {
   );
 }
 
-// Helper Component for the Detail Rows
+// ... DetailRow remains the same ...
+
 function DetailRow({
   icon,
   label,

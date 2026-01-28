@@ -3,11 +3,12 @@ import { upload } from "../../../shared/utils/upload";
 import { entryValidator } from "../../entry/validators/entry";
 import { validateRequest } from "../../../shared/middleware/validateRequest";
 import { protect } from "../../../shared/middleware/authMiddleware";
-import { allowRoles } from "../../../shared/middleware/role";
 import {
   createEntry,
   getAllEntries,
   getEntryById,
+  updateEntry,
+  deleteEntry,
 } from "../../entry/controllers/entry";
 
 const router = Router();
@@ -23,5 +24,13 @@ router.post(
 );
 router.get("/", getAllEntries);
 router.get("/:id", getEntryById);
+router.put(
+  "/:id",
+  upload.single("billImage"),
+  entryValidator,
+  validateRequest,
+  updateEntry,
+);
+router.delete("/:id", deleteEntry);
 
 export default router;

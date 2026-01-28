@@ -15,7 +15,7 @@ import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
 // Helper to match seasons
 const generateFilterSeasons = () => {
   const currentYear = new Date().getFullYear();
-  const names = ["Summer", "Monsoon", "Winter"];
+  const names = ["Summer", "Rainy", "Winter"];
   const years = [currentYear - 1, currentYear, currentYear + 1];
   const options: string[] = [];
   years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));

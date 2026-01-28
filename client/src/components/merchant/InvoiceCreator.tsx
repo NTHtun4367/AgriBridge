@@ -11,11 +11,13 @@ import {
   ShieldCheck,
   FileText,
   Printer,
+  // BookOpen, // Added for Save to Entry
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+// import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox component
 import {
   Card,
   CardContent,
@@ -37,6 +39,15 @@ import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { type RootState } from "@/store";
 import { useGetMerchantPreordersQuery } from "@/store/slices/preorderApi";
+import { useAddEntryMutation } from "@/store/slices/entryApi";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Save } from "lucide-react";
 
 // NRC Data Import
 import nrcDataRaw from "@/utils/nrcData.json";
@@ -56,6 +67,7 @@ interface InvoiceFormValues {
   nrcTownship: string;
   nrcType: string;
   nrcNumber: string;
+  saveToEntry: boolean; // Added this field
   items: {
     cropName: string;
     quantity: number;
@@ -86,6 +98,13 @@ export function InvoiceCreator({
 
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
 
+  const [addEntry, { isLoading: isAddingEntry }] = useAddEntryMutation();
+
+  const [pendingInvoiceData, setPendingInvoiceData] =
+    useState<InvoiceFormValues | null>(null);
+
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+
   const { register, control, handleSubmit, reset, setValue } =
     useForm<InvoiceFormValues>({
       defaultValues: {
@@ -100,6 +119,7 @@ export function InvoiceCreator({
         nrcTownship: "",
         nrcType: "(N)",
         nrcNumber: "",
+        saveToEntry: true, // Defaulted to true
         items: [{ cropName: "", quantity: 0, unit: "", price: 0 }],
       },
     });
@@ -110,9 +130,9 @@ export function InvoiceCreator({
   const invoiceId = useMemo(
     () =>
       `INV-${new Date().getFullYear()}-${Math.floor(
-        1000 + Math.random() * 9000
+        1000 + Math.random() * 9000,
       )}`,
-    []
+    [],
   );
 
   const selectedNrcRegion = formValues.nrcRegion;
@@ -144,6 +164,7 @@ export function InvoiceCreator({
         nrcTownship: selected.nrc?.township || "",
         nrcType: selected.nrc?.type || "(N)",
         nrcNumber: selected.nrc?.number || "",
+        saveToEntry: true,
         items: selected.items.map((item: any) => ({
           cropName: item.cropName,
           quantity: Number(item.quantity),
@@ -160,10 +181,49 @@ export function InvoiceCreator({
       formValues.items?.reduce(
         (acc, item) =>
           acc + (Number(item?.quantity) || 0) * (Number(item?.price) || 0),
-        0
+        0,
       ) || 0
     );
   }, [formValues.items]);
+
+  const handleSaveToEntry = async () => {
+    if (!pendingInvoiceData) return;
+
+    try {
+      const items = pendingInvoiceData.items || [];
+
+      const totalQuantity = items.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0),
+        0,
+      );
+
+      const uniqueUnits = Array.from(new Set(items.map((i) => i.unit)));
+
+      const displayUnit = uniqueUnits.length === 1 ? uniqueUnits[0] : "Mixed";
+
+      const itemSummary = items
+        .map((i) => `${i.cropName} (${i.quantity} ${i.unit})`)
+        .join(", ");
+
+      const formData = new FormData();
+      formData.append("date", new Date().toISOString());
+      formData.append("type", "expense");
+      formData.append("category", "crops");
+      // formData.append("season", "");
+      formData.append("quantity", totalQuantity.toString());
+      formData.append("unit", displayUnit);
+      formData.append("value", subtotal.toString());
+      formData.append("notes", `Invoice #${invoiceId} | Items: ${itemSummary}`);
+
+      await addEntry(formData).unwrap();
+
+      toast.success("Saved to Income Ledger!");
+      setShowSaveConfirm(false);
+      navigate("/merchant/invoices");
+    } catch (err) {
+      toast.error("Failed to save to ledger");
+    }
+  };
 
   const onSubmit = async (data: InvoiceFormValues) => {
     if (mode === "preorder" && !data.farmerId) {
@@ -183,11 +243,18 @@ export function InvoiceCreator({
         items: data.items,
         notes: data.notes,
         totalAmount: subtotal,
+        saveToEntry: data.saveToEntry, // Logic added to payload
         status: mode === "preorder" ? "pending" : "paid",
       };
       await createInvoice(payload).unwrap();
       toast.success("Invoice sent to farmer successfully!");
-      navigate("/merchant/invoices");
+
+      if (data.saveToEntry) {
+        setPendingInvoiceData(data);
+        setShowSaveConfirm(true);
+      } else {
+        navigate("/merchant/invoices");
+      }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create invoice");
     }
@@ -440,7 +507,7 @@ export function InvoiceCreator({
                       append({
                         cropName: "",
                         quantity: 0,
-                        unit: "kg",
+                        unit: "Bag (108lb)",
                         price: 0,
                       })
                     }
@@ -569,6 +636,34 @@ export function InvoiceCreator({
                 </div>
               </div>
 
+              {/* SAVE TO ENTRY SECTION */}
+              {/* <div className="flex items-center space-x-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <Controller
+                  control={control}
+                  name="saveToEntry"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="saveToEntry"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  )}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="saveToEntry"
+                    className="text-sm font-bold flex items-center gap-2 cursor-pointer"
+                  >
+                    <BookOpen size={14} className="text-primary" /> Save to
+                    Accounting Entry
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Automatically record this invoice in your ledger entries.
+                  </p>
+                </div>
+              </div> */}
+
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
                   <FileText size={14} /> Notes & Payment Terms
@@ -591,7 +686,6 @@ export function InvoiceCreator({
               ref={invoicePreviewRef}
               className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col"
             >
-              {/* THE GREEN HEADER LINE - Removed no-print and changed color */}
               <div className="h-3 bg-primary w-full" />
 
               <CardContent className="p-8 flex-1 flex flex-col">
@@ -670,7 +764,7 @@ export function InvoiceCreator({
                                 MMK
                               </td>
                             </tr>
-                          )
+                          ),
                       )}
                     </tbody>
                   </table>
@@ -719,6 +813,43 @@ export function InvoiceCreator({
                   </>
                 )}
               </Button>
+              <Dialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
+                <DialogContent className="max-w-md rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Save className="text-primary" />
+                      Save to Income Ledger?
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <p className="text-sm text-slate-500">
+                    Do you want to record this invoice (
+                    <strong>{subtotal.toLocaleString()} MMK</strong>) as an
+                    income entry?
+                  </p>
+
+                  <DialogFooter className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={handleSaveToEntry}
+                      disabled={isAddingEntry}
+                    >
+                      {isAddingEntry ? "Saving..." : "Yes, Save"}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowSaveConfirm(false);
+                        navigate("/merchant/invoices");
+                      }}
+                    >
+                      No thanks
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>

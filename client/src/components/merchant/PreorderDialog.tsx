@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,9 @@ import {
   Loader2,
   ShieldCheck,
   User,
-  MapPin, // Added icon
+  MapPin,
+  ChevronRight,
+  Info,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,12 +52,13 @@ import { useParams } from "react-router";
 
 // Import NRC Data
 import nrcDataRaw from "@/utils/nrcData.json";
+import { Checkbox } from "../ui/checkbox";
 const nrcData = nrcDataRaw as Record<string, string[]>;
 
 const formSchema = z.object({
   name: z.string().min(1, "Full name is required"),
   phone: z.string().min(1, "Phone number is required"),
-  address: z.string().min(5, "Please provide a complete delivery address"), // New Field
+  address: z.string().min(5, "Please provide a complete delivery address"),
   items: z
     .array(
       z.object({
@@ -94,12 +97,16 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   const { user } = useSelector((state: RootState) => state.auth);
   const [createPreorder, { isLoading }] = useCreatePreorderMutation();
 
+  // --- New State for Terms Gate ---
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const [tempCheck, setTempCheck] = useState(false);
+
   const form = useForm<PreorderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       phone: "",
-      address: "", // New Field
+      address: "",
       items: [{ cropName: "", price: "", quantity: "", unit: "" }],
       nrcRegion: "",
       nrcTownship: "",
@@ -131,13 +138,21 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
     }
   }, [selectedNrcRegion, form]);
 
+  // Reset terms gate when dialog opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHasAcceptedTerms(false);
+      setTempCheck(false);
+    }
+  }, [isOpen]);
+
   const onSubmit = async (values: PreorderFormValues) => {
     const payload = {
       farmerId: user?.id,
       merchantId: userId,
       fullName: values.name,
       phone: values.phone,
-      address: values.address, // Added to payload
+      address: values.address,
       items: values.items.map((item) => ({
         ...item,
         quantity: Number(item.quantity),
@@ -187,162 +202,269 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Place Preorder</DialogTitle>
-          <DialogDescription>
-            Requesting crops from{" "}
-            <span className="font-bold text-primary">
-              {merchant.merchantId.businessName}
-            </span>
-          </DialogDescription>
-        </DialogHeader>
+        {!hasAcceptedTerms ? (
+          /* SECTION 1: TERMS AND PRIVACY POLICY */
+          <div className="space-y-6 py-4 animate-in fade-in zoom-in duration-200">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Info className="w-5 h-5 text-primary" /> Terms & Conditions
+              </DialogTitle>
+              <DialogDescription>
+                Please review our terms and privacy policy before placing a
+                preorder with{" "}
+                <span className="font-semibold text-foreground">
+                  {merchant.merchantId.businessName}
+                </span>
+                .
+              </DialogDescription>
+            </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 py-2"
-          >
-            {/* Contact & Identity Section */}
-            <div className="p-4 border rounded-xl bg-slate-50/50 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5" /> Full Name
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="bg-slate-50 border rounded-lg p-4 text-sm text-slate-600 space-y-4 max-h-[300px] overflow-y-auto">
+              <section>
+                <h4 className="font-bold text-slate-900 mb-1">
+                  1. Preorder Agreement
+                </h4>
+                <p>
+                  By placing a preorder, you agree to provide accurate
+                  identification (NRC) and contact details. This request is
+                  subject to merchant availability.
+                </p>
+              </section>
+              <section>
+                <h4 className="font-bold text-slate-900 mb-1">
+                  2. Privacy Policy
+                </h4>
+                <p>
+                  Your data (Name, Phone, NRC, and Address) will be shared with
+                  the merchant only for the purpose of fulfilling this order.
+                </p>
+              </section>
+              <section>
+                <h4 className="font-bold text-slate-900 mb-1">
+                  3. Delivery Timeline
+                </h4>
+                <p>
+                  The expected delivery timing is an estimate. Actual delivery
+                  may vary based on crop harvest conditions and logistics.
+                </p>
+              </section>
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5" /> Phone Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="+95..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <div className="flex items-start gap-3 p-2">
+              <Checkbox
+                id="terms"
+                checked={tempCheck}
+                onCheckedChange={(checked) => setTempCheck(checked as boolean)}
+                className="mt-1"
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm leading-tight text-slate-600 cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I have read and agree to the <strong>Terms of Service</strong>{" "}
+                and <strong>Privacy Policy</strong>. I understand my information
+                will be processed to complete this transaction.
+              </label>
+            </div>
+            <DialogFooter>
+              <Button
+                className="w-full gap-2"
+                disabled={!tempCheck}
+                onClick={() => setHasAcceptedTerms(true)}
+              >
+                Continue to Preorder <ChevronRight className="w-4 h-4" />
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          /* SECTION 2: EXISTING PREORDER FORM UI */
+          <div className="animate-in slide-in-from-right-4 duration-300">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Place Preorder</DialogTitle>
+              <DialogDescription>
+                Requesting crops from{" "}
+                <span className="font-bold text-primary">
+                  {merchant.merchantId.businessName}
+                </span>
+              </DialogDescription>
+            </DialogHeader>
 
-              {/* NRC Section */}
-              <div className="space-y-3">
-                <FormLabel className="flex items-center gap-2">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Identity (NRC)
-                </FormLabel>
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="col-span-1">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6 py-2"
+              >
+                {/* Contact & Identity Section */}
+                <div className="p-4 border rounded-xl bg-slate-50/50 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="nrcRegion"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="No." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Object.keys(nrcData).map((reg) => (
-                                <SelectItem key={reg} value={reg}>
-                                  {reg}/
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel className="flex items-center gap-2">
+                            <User className="w-3.5 h-3.5" /> Full Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5" /> Phone Number
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="+95..." {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <FormField
-                      control={form.control}
-                      name="nrcTownship"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            disabled={!selectedNrcRegion}
-                          >
+
+                  {/* NRC Section */}
+                  <div className="space-y-3">
+                    <FormLabel className="flex items-center gap-2">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Identity (NRC)
+                    </FormLabel>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="col-span-1">
+                        <FormField
+                          control={form.control}
+                          name="nrcRegion"
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="No." />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Object.keys(nrcData).map((reg) => (
+                                    <SelectItem key={reg} value={reg}>
+                                      {reg}/
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <FormField
+                          control={form.control}
+                          name="nrcTownship"
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                disabled={!selectedNrcRegion}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Township" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {nrcTownshipOptions.map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                      {t}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <FormField
+                          control={form.control}
+                          name="nrcType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {[
+                                    "(N)",
+                                    "(P)",
+                                    "(E)",
+                                    "(T)",
+                                    "(S)",
+                                    "(C)",
+                                  ].map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                      {type}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-span-12">
+                      <FormField
+                        control={form.control}
+                        name="nrcNumber"
+                        render={({ field }) => (
+                          <FormItem>
                             <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Township" />
-                              </SelectTrigger>
+                              <Input
+                                placeholder="6-digit serial number"
+                                {...field}
+                                maxLength={6}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              {nrcTownshipOptions.map((t) => (
-                                <SelectItem key={t} value={t}>
-                                  {t}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <FormField
-                      control={form.control}
-                      name="nrcType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {["(N)", "(P)", "(E)", "(T)", "(S)", "(C)"].map(
-                                (type) => (
-                                  <SelectItem key={type} value={type}>
-                                    {type}
-                                  </SelectItem>
-                                ),
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col-span-12">
+
+                {/* Address Section */}
+                <div className="p-4 border rounded-xl bg-blue-50/30 space-y-4">
                   <FormField
                     control={form.control}
-                    name="nrcNumber"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5" /> Delivery Address
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="6-digit serial number"
+                          <Textarea
+                            placeholder="Enter your full street address, village, or landmark"
+                            className="resize-none h-20 bg-white"
                             {...field}
-                            maxLength={6}
                           />
                         </FormControl>
                         <FormMessage />
@@ -350,214 +472,198 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                     )}
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Address Section */}
-            <div className="p-4 border rounded-xl bg-blue-50/30 space-y-4">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5" /> Delivery Address
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter your full street address, village, or landmark"
-                        className="resize-none h-20 bg-white"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Crops Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase text-slate-500">
-                  Selected Crops
-                </h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    append({ cropName: "", price: "", quantity: "", unit: "" })
-                  }
-                  className="h-8 border-dashed"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Crop
-                </Button>
-              </div>
-
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="p-4 border rounded-xl space-y-4 shadow-sm bg-secondary"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-400">
-                      Crop #{index + 1}
-                    </span>
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="h-7 w-7 text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                {/* Crops Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold uppercase text-slate-500">
+                      Selected Crops
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        append({
+                          cropName: "",
+                          price: "",
+                          quantity: "",
+                          unit: "",
+                        })
+                      }
+                      className="h-8 border-dashed"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Crop
+                    </Button>
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.cropName`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select
-                          onValueChange={(val) => handleCropChange(index, val)}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a crop" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {rawData?.map((item) => (
-                              <SelectItem
-                                key={item.cropName}
-                                value={item.cropName}
-                              >
-                                {item.cropName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {fields.map((field, index) => (
+                    <div
+                      key={field.id}
+                      className="p-4 border rounded-xl space-y-4 shadow-sm bg-secondary"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-400">
+                          Crop #{index + 1}
+                        </span>
+                        {fields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="h-7 w-7 text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.cropName`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select
+                              onValueChange={(val) =>
+                                handleCropChange(index, val)
+                              }
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a crop" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {rawData?.map((item) => (
+                                  <SelectItem
+                                    key={item.cropName}
+                                    value={item.cropName}
+                                  >
+                                    {item.cropName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.quantity`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px]">Qty</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormItem>
+                          <FormLabel className="text-[10px]">Price</FormLabel>
+                          <Input
+                            value={form.watch(`items.${index}.price`)}
+                            readOnly
+                            className="bg-slate-50 font-mono"
+                          />
+                        </FormItem>
+                        <FormItem>
+                          <FormLabel className="text-[10px]">Unit</FormLabel>
+                          <Input
+                            value={form.watch(`items.${index}.unit`)}
+                            readOnly
+                            className="bg-slate-50"
+                          />
+                        </FormItem>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Delivery Timeline */}
+                <div className="p-4 border rounded-xl bg-orange-50/30 space-y-3">
+                  <FormLabel className="flex items-center gap-2">
+                    <CalendarClock className="w-3.5 h-3.5" /> Expected Delivery
+                    Timing
+                  </FormLabel>
+                  <div className="flex gap-2">
                     <FormField
                       control={form.control}
-                      name={`items.${index}.quantity`}
+                      name="deliveryCount"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px]">Qty</FormLabel>
+                        <FormItem className="w-24">
                           <FormControl>
-                            <Input type="number" {...field} />
+                            <Input type="number" min="1" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <FormItem>
-                      <FormLabel className="text-[10px]">Price</FormLabel>
-                      <Input
-                        value={form.watch(`items.${index}.price`)}
-                        readOnly
-                        className="bg-slate-50 font-mono"
-                      />
-                    </FormItem>
-                    <FormItem>
-                      <FormLabel className="text-[10px]">Unit</FormLabel>
-                      <Input
-                        value={form.watch(`items.${index}.unit`)}
-                        readOnly
-                        className="bg-slate-50"
-                      />
-                    </FormItem>
+                    <FormField
+                      control={form.control}
+                      name="deliveryUnit"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="days">Day(s)</SelectItem>
+                              <SelectItem value="months">Month(s)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Delivery Timeline */}
-            <div className="p-4 border rounded-xl bg-orange-50/30 space-y-3">
-              <FormLabel className="flex items-center gap-2">
-                <CalendarClock className="w-3.5 h-3.5" /> Expected Delivery
-                Timing
-              </FormLabel>
-              <div className="flex gap-2">
                 <FormField
                   control={form.control}
-                  name="deliveryCount"
+                  name="notes"
                   render={({ field }) => (
-                    <FormItem className="w-24">
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5" />
+                        Additional Notes (Optional)
+                      </FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" {...field} />
+                        <Textarea {...field} className="resize-none h-20" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="deliveryUnit"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="days">Day(s)</SelectItem>
-                          <SelectItem value="months">Month(s)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    Additional Notes (Optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea {...field} className="resize-none h-20" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter className="pt-4 border-t">
-              <Button
-                type="submit"
-                className="w-full h-12"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  "Confirm Preorder"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                <DialogFooter className="pt-4 border-t">
+                  <Button
+                    type="submit"
+                    className="w-full h-12"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      "Confirm Preorder"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

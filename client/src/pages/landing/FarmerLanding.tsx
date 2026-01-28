@@ -51,7 +51,7 @@ const FarmerLanding = () => {
             className="rounded-full px-10 bg-primary hover:bg-primary/90 text-md h-14 shadow-xl hover:scale-110 transition-transform duration-500"
             onClick={() => navigate("/register")}
           >
-            Create Account <ArrowRight className="h-4 w-4" />
+            Create Account <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <Button
             size="lg"
@@ -71,7 +71,7 @@ const FarmerLanding = () => {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                  <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">
                     Financial Clarity & Market Access
                   </h2>
                   <p className="text-slate-500 text-lg">
@@ -82,88 +82,66 @@ const FarmerLanding = () => {
 
                 <div className="grid gap-6">
                   {/* Feature: Income & Outcome */}
-                  <div className="flex gap-4 p-4 rounded-xl transition-colors hover:bg-slate-50">
-                    <div className="bg-primary/10 p-3 rounded-lg h-fit">
-                      <Calculator className="text-primary w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-base">
-                        Income & Outcome Tracking
-                      </h4>
-                      {/* Font size changed to small (text-sm) */}
-                      <p className="text-slate-600 text-sm">
+                  <FarmerFeature
+                    icon={<Calculator className="w-5 h-5" />}
+                    title="Income & Outcome Tracking"
+                    desc={
+                      <>
                         Log every expense and sale with our simplified ledger.
                         Keep records of sales income and{" "}
                         <strong>automatically calculate net profit</strong>{" "}
                         without manual math.
-                      </p>
-                    </div>
-                  </div>
+                      </>
+                    }
+                  />
 
                   {/* Feature: Seasonal Records */}
-                  <div className="flex gap-4 p-4 rounded-xl transition-colors hover:bg-slate-50">
-                    <div className="bg-primary/10 p-3 rounded-lg h-fit">
-                      <Calendar className="text-primary w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-base">
-                        Seasonal & Annual Summaries
-                      </h4>
-                      {/* Font size changed to small (text-sm) */}
-                      <p className="text-slate-600 text-sm">
+                  <FarmerFeature
+                    icon={<Calendar className="w-5 h-5" />}
+                    title="Seasonal & Annual Summaries"
+                    desc={
+                      <>
                         Record your expenses for each farming season and
                         conveniently view a detailed{" "}
                         <strong>annual expense summary</strong> to plan for next
                         year.
-                      </p>
-                    </div>
-                  </div>
+                      </>
+                    }
+                  />
 
                   {/* Feature: National Prices */}
-                  <div className="flex gap-4 p-4 rounded-xl transition-colors hover:bg-slate-50">
-                    <div className="bg-primary/10 p-3 rounded-lg h-fit">
-                      <Globe className="text-primary w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-base">
-                        Country-wide Market Analytics
-                      </h4>
-                      {/* Font size changed to small (text-sm) */}
-                      <p className="text-slate-600 text-sm">
-                        View commodity prices from markets{" "}
+                  <FarmerFeature
+                    icon={<Globe className="w-5 h-5" />}
+                    title="Country-wide Market Analytics"
+                    desc={
+                      <>
+                        View market prices from markets{" "}
                         <strong>across the entire country</strong>. Monitor
-                        benchmark prices updated daily by regional
-                        administrators.
-                      </p>
-                    </div>
-                  </div>
+                        standard prices updated daily by regional merchants.
+                      </>
+                    }
+                  />
 
                   {/* Feature: Merchant Communication */}
-                  <div className="flex gap-4 p-4 rounded-xl transition-colors hover:bg-slate-50">
-                    <div className="bg-primary/10 p-3 rounded-lg h-fit">
-                      <MessageSquare className="text-primary w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-base">
-                        Direct Communication
-                      </h4>
-                      {/* Font size changed to small (text-sm) */}
-                      <p className="text-slate-600 text-sm">
+                  <FarmerFeature
+                    icon={<MessageSquare className="w-5 h-5" />}
+                    title="Direct Communication"
+                    desc={
+                      <>
                         Eliminate middlemen. You can easily{" "}
-                        <strong>communicate directly with merchants</strong>
-                        to negotiate better deals for your harvest.
-                      </p>
-                    </div>
-                  </div>
+                        <strong>communicate directly with merchants</strong> to
+                        negotiate better deals for your harvest.
+                      </>
+                    }
+                  />
                 </div>
               </div>
 
               {/* Visual Mockup Component with Hover Rotation */}
               <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-primary/20 to-blue-500/20 rounded-2xl blur-2xl"></div>
-                {/* Added transition and hover:rotate-2 */}
-                <Card className="relative shadow-2xl border-slate-200 transition-transform duration-500 ease-in-out rotate-2 group-hover:rotate-0">
-                  <CardHeader className="bg-slate-900 text-white rounded-t-xl py-4">
+                <div className="absolute -inset-1 bg-linear-to-r from-primary/20 to-blue-500/20 rounded-2xl blur-2xl opacity-50"></div>
+                <Card className="relative shadow-2xl border-slate-200 transition-transform duration-500 ease-in-out rotate-2 group-hover:rotate-0 rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                  <CardHeader className="bg-slate-900 text-white py-4">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-sm font-medium">
                         Profitability Report: Season 2025
@@ -173,14 +151,13 @@ const FarmerLanding = () => {
                   </CardHeader>
                   <CardContent className="p-8">
                     <div className="space-y-6">
-                      {/* Summary Stats Preview */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-xs text-slate-500 uppercase font-bold">
                             Annual Expenses
                           </p>
                           <p className="text-xl font-bold text-red-500">
-                            $2,840.00
+                            2,840.00 MMK
                           </p>
                         </div>
                         <div className="space-y-1 text-right">
@@ -188,22 +165,21 @@ const FarmerLanding = () => {
                             Total Sales
                           </p>
                           <p className="text-xl font-bold text-green-600">
-                            $7,120.00
+                            7,120.00 MMK
                           </p>
                         </div>
                       </div>
 
-                      {/* Benchmark Preview */}
-                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                        <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700">
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                           <TrendingUp className="w-4 h-4 text-primary" />{" "}
                           National Market Price (Rice)
                         </div>
                         <div className="flex justify-between items-end">
-                          <p className="text-2xl font-bold text-slate-900">
-                            $0.95
-                            <span className="text-sm font-normal text-slate-500">
-                              /kg
+                          <p className="text-2xl font-bold">
+                            0.95 MMK
+                            <span className="text-sm font-normal text-slate-500 ml-1">
+                              /bag
                             </span>
                           </p>
                           <p className="text-xs text-blue-600">
@@ -212,24 +188,23 @@ const FarmerLanding = () => {
                         </div>
                       </div>
 
-                      {/* Net Profit Preview */}
-                      <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100">
-                        <p className="text-sm text-green-800 font-medium mb-1">
+                      <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl text-center border border-green-100 dark:border-green-900/30">
+                        <p className="text-sm text-green-800 dark:text-green-400 font-medium mb-1">
                           Net Seasonal Profit
                         </p>
-                        <p className="text-4xl font-black text-green-700">
-                          $4,280.00
+                        <p className="text-4xl font-black text-green-700 dark:text-green-500">
+                          4,280.00 MMK
                         </p>
                         <div className="mt-4 flex justify-center gap-2">
                           <Badge
                             variant="secondary"
-                            className="bg-green-200/50 text-green-800 border-none"
+                            className="bg-green-200/50 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-none"
                           >
                             Record Logged
                           </Badge>
                           <Badge
                             variant="secondary"
-                            className="bg-green-200/50 text-green-800 border-none"
+                            className="bg-green-200/50 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-none"
                           >
                             Verified Sale
                           </Badge>
@@ -278,7 +253,7 @@ const FarmerLanding = () => {
                   <CardTitle className="text-xl">Ledger Integrity</CardTitle>
                   <CardDescription className="text-slate-400">
                     Your digital records are kept safe and organized, making it
-                    easier to apply for agricultural loans.
+                    easier to apply for agricultural.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -311,5 +286,31 @@ const FarmerLanding = () => {
     </div>
   );
 };
+
+// --- Helper Component ---
+
+function FarmerFeature({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-5 group p-4 rounded-xl transition-all duration-300 hover:bg-white/50 dark:hover:bg-slate-800">
+      <div className="bg-primary/10 p-4 rounded-2xl h-fit text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+        {icon}
+      </div>
+      <div className="space-y-1">
+        <h4 className="font-bold text-xl text-slate-900 dark:text-white">
+          {title}
+        </h4>
+        <p className="text-slate-600 leading-relaxed text-sm">{desc}</p>
+      </div>
+    </div>
+  );
+}
 
 export default FarmerLanding;

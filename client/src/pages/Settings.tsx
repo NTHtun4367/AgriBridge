@@ -6,7 +6,9 @@ import {
   useCurrentUserQuery,
   useUpdateProfileMutation,
   useUpdateAvatarMutation,
-  // useUpdateMerchantDocsMutation, // Uncomment when available
+  useUpdateMerchantDocsMutation,
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
 } from "@/store/slices/userApi";
 import { toast } from "sonner";
 
@@ -17,8 +19,6 @@ import {
   Lock,
   Trash2,
   CheckCircle2,
-  Key,
-  ChevronRight,
   Camera,
   Loader2,
   ShieldCheck,
@@ -26,6 +26,7 @@ import {
   Mail,
   Smartphone,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,35 +43,85 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { useNavigate } from "react-router";
+import ConfirmModal from "@/common/ConfirmModel";
 
 const Settings: React.FC = () => {
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.mode);
 
-  // RTK Query Logic
+  // Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const navigate = useNavigate();
+
+  // RTK Query Hooks
   const { data: user, isLoading: isUserLoading } = useCurrentUserQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
   const [updateAvatar, { isLoading: isUploadingAvatar }] =
     useUpdateAvatarMutation();
+  const [updateMerchantDocs, { isLoading: isUpdatingDocs }] =
+    useUpdateMerchantDocsMutation();
+  const [changePassword, { isLoading: isUpdatingPassword }] =
+    useChangePasswordMutation();
+  const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
+
+  const handlePasswordUpdate = async () => {
+    if (!passwords.current || !passwords.next || !passwords.confirm) {
+      return toast.error("All fields are required");
+    }
+    if (passwords.next !== passwords.confirm) {
+      return toast.error("Passwords do not match");
+    }
+    try {
+      await changePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.next,
+      }).unwrap();
+      toast.success("Password updated successfully");
+      setPasswords({ current: "", next: "", confirm: "" });
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update password");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount().unwrap();
+      toast.success("Account deleted");
+      setShowDeleteModal(false);
+      navigate("/login");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete account");
+    }
+  };
 
   // Form States
   const [formData, setFormData] = useState({ name: "", bio: "", email: "" });
-  const [passwords, setPasswords] = useState({ current: "", next: "" });
+  const [passwords, setPasswords] = useState({
+    current: "",
+    next: "",
+    confirm: "",
+  });
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
     marketing: false,
   });
+
   const [nrcFiles, setNrcFiles] = useState<{
     front: File | null;
     back: File | null;
-  }>({ front: null, back: null });
-
-  const [isSubmittingDocs, setIsSubmittingDocs] = useState(false);
+    frontPreview?: string;
+    backPreview?: string;
+  }>({
+    front: null,
+    back: null,
+  });
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form with user data
+  // Sync user data to form
   useEffect(() => {
     if (user) {
       setFormData({
@@ -78,17 +129,22 @@ const Settings: React.FC = () => {
         bio: user.bio || "",
         email: user.email || user.phone || "",
       });
+      if (user.merchantId) {
+        setNrcFiles((prev) => ({
+          ...prev,
+          frontPreview: user.merchantId?.nrcFrontImage?.url,
+          backPreview: user.merchantId?.nrcBackImage?.url,
+        }));
+      }
     }
   }, [user]);
 
-  // Check if form is dirty (has changes)
   const isDirty = useMemo(() => {
     return (
       formData.name !== (user?.name || "") || formData.bio !== (user?.bio || "")
     );
   }, [formData, user]);
 
-  // Apply theme to the document head
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
@@ -108,8 +164,8 @@ const Settings: React.FC = () => {
     try {
       await updateProfile({ name: formData.name, bio: formData.bio }).unwrap();
       toast.success("Profile updated successfully");
-    } catch (err) {
-      toast.error("Failed to update profile");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update profile");
     }
   };
 
@@ -127,11 +183,8 @@ const Settings: React.FC = () => {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Client-side validation
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024)
       return toast.error("Image must be less than 2MB");
-    }
 
     const body = new FormData();
     body.append("avatar", file);
@@ -149,30 +202,32 @@ const Settings: React.FC = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      setNrcFiles((prev) => ({ ...prev, [side]: file }));
+      const previewUrl = URL.createObjectURL(file);
+      setNrcFiles((prev) => ({
+        ...prev,
+        [side]: file,
+        [`${side}Preview`]: previewUrl,
+      }));
       toast.success(`${side.toUpperCase()} side attached`);
     }
   };
 
   const handleSubmitDocs = async () => {
-    setIsSubmittingDocs(true);
-    // Simulate API Call
-    setTimeout(() => {
-      setIsSubmittingDocs(false);
-      toast.success("Documents submitted for review");
-      setNrcFiles({ front: null, back: null });
-    }, 2000);
-  };
+    if (!nrcFiles.front && !nrcFiles.back) {
+      return toast.error("Please select at least one document to update");
+    }
 
-  const handlePasswordUpdate = () => {
-    if (!passwords.current || !passwords.next) {
-      return toast.error("Please fill in all password fields");
+    const formData = new FormData();
+    if (nrcFiles.front) formData.append("nrcFront", nrcFiles.front);
+    if (nrcFiles.back) formData.append("nrcBack", nrcFiles.back);
+
+    try {
+      await updateMerchantDocs(formData).unwrap();
+      toast.success("Documents submitted for review");
+      setNrcFiles((prev) => ({ ...prev, front: null, back: null }));
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to upload documents");
     }
-    if (passwords.next.length < 8) {
-      return toast.error("New password must be at least 8 characters");
-    }
-    toast.success("Password update requested");
-    setPasswords({ current: "", next: "" });
   };
 
   if (isUserLoading)
@@ -319,7 +374,6 @@ const Settings: React.FC = () => {
                     <Field
                       label="Identifier (Email/Phone)"
                       id="email"
-                      type="text"
                       value={formData.email}
                       disabled
                     />
@@ -364,16 +418,25 @@ const Settings: React.FC = () => {
                         <div
                           className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.front ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
                         >
-                          {nrcFiles.front ? (
-                            <CheckCircle2 className="mx-auto h-8 w-8 text-primary mb-2" />
+                          {nrcFiles.frontPreview ? (
+                            <div className="relative">
+                              <img
+                                src={nrcFiles.frontPreview}
+                                alt="NRC Front"
+                                className="mx-auto h-28 object-cover rounded-md"
+                              />
+                              {nrcFiles.front && (
+                                <CheckCircle2 className="absolute -top-2 -right-2 h-6 w-6 text-primary bg-white rounded-full" />
+                              )}
+                            </div>
                           ) : (
-                            <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                            <>
+                              <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                              <p className="text-xs font-medium">
+                                PNG, JPG up to 5MB
+                              </p>
+                            </>
                           )}
-                          <p className="text-xs font-medium">
-                            {nrcFiles.front
-                              ? nrcFiles.front.name
-                              : "PNG, JPG up to 5MB"}
-                          </p>
                           <input
                             type="file"
                             className="absolute inset-0 opacity-0 cursor-pointer"
@@ -387,16 +450,25 @@ const Settings: React.FC = () => {
                         <div
                           className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.back ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
                         >
-                          {nrcFiles.back ? (
-                            <CheckCircle2 className="mx-auto h-8 w-8 text-primary mb-2" />
+                          {nrcFiles.backPreview ? (
+                            <div className="relative">
+                              <img
+                                src={nrcFiles.backPreview}
+                                alt="NRC Back"
+                                className="mx-auto h-28 object-cover rounded-md"
+                              />
+                              {nrcFiles.back && (
+                                <CheckCircle2 className="absolute -top-2 -right-2 h-6 w-6 text-primary bg-white rounded-full" />
+                              )}
+                            </div>
                           ) : (
-                            <FileUp className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
+                            <>
+                              <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                              <p className="text-xs font-medium">
+                                PNG, JPG up to 5MB
+                              </p>
+                            </>
                           )}
-                          <p className="text-xs font-medium">
-                            {nrcFiles.back
-                              ? nrcFiles.back.name
-                              : "PNG, JPG up to 5MB"}
-                          </p>
                           <input
                             type="file"
                             className="absolute inset-0 opacity-0 cursor-pointer"
@@ -406,24 +478,28 @@ const Settings: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      className="w-full"
-                      disabled={
-                        !nrcFiles.front || !nrcFiles.back || isSubmittingDocs
-                      }
-                      onClick={handleSubmitDocs}
-                    >
-                      {isSubmittingDocs && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Submit Documents
-                    </Button>
+                    {user.verificationStatus === "verified" && (
+                      <Button
+                        className="w-full"
+                        disabled={
+                          (!nrcFiles.front && !nrcFiles.frontPreview) ||
+                          (!nrcFiles.back && !nrcFiles.backPreview) ||
+                          isUpdatingDocs
+                        }
+                        onClick={handleSubmitDocs}
+                      >
+                        {isUpdatingDocs && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Submit Documents
+                      </Button>
+                    )}
                     <div className="p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 flex gap-3">
                       <Info className="h-5 w-5 text-blue-600 shrink-0" />
                       <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
                         <strong>Verification Note:</strong> Process usually
-                        takes 24-48 hours. Your documents are encrypted and used
-                        only for identity validation.
+                        takes 24-48 hours. Documents are encrypted and used only
+                        for identity validation.
                       </p>
                     </div>
                   </CardContent>
@@ -463,52 +539,24 @@ const Settings: React.FC = () => {
                       setPasswords({ ...passwords, next: val })
                     }
                   />
-                  <Button size="sm" onClick={handlePasswordUpdate}>
-                    Update Password
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
-                <CardHeader>
-                  <CardTitle>Security Keys</CardTitle>
-                  <CardDescription>
-                    Add hardware security keys for secure login.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                        <Key size={20} />
-                      </div>
-                      <div>
-                        <p className="font-medium">Yubikey 5C</p>
-                        <p className="text-xs text-muted-foreground">
-                          Added on Oct 12, 2025
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      <ChevronRight
-                        size={18}
-                        className="text-muted-foreground group-hover:translate-x-1 transition-transform"
-                      />
-                    </div>
-                  </div>
+                  <Field
+                    label="Confirm New Password"
+                    id="confirm_pass"
+                    type="password"
+                    value={passwords.confirm}
+                    onChange={(val: string) =>
+                      setPasswords({ ...passwords, confirm: val })
+                    }
+                  />
                   <Button
-                    variant="outline"
-                    className="w-full border-dashed"
-                    onClick={() => toast.info("Key registration started...")}
+                    size="sm"
+                    onClick={handlePasswordUpdate}
+                    disabled={isUpdatingPassword}
                   >
-                    Add new key
+                    {isUpdatingPassword && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Update Password
                   </Button>
                 </CardContent>
               </Card>
@@ -602,6 +650,7 @@ const Settings: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* DANGER ZONE - Using Custom Modal */}
               <Card className="border-red-100 dark:border-red-950 bg-red-50/30 dark:bg-red-950/10">
                 <CardHeader>
                   <CardTitle className="text-red-600 flex items-center gap-2">
@@ -620,11 +669,10 @@ const Settings: React.FC = () => {
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={() =>
-                      toast.error("Please contact support to delete account")
-                    }
+                    onClick={() => setShowDeleteModal(true)} // Open Custom Modal
+                    disabled={isDeleting}
                   >
-                    Deactivate
+                    Delete Account
                   </Button>
                 </CardContent>
               </Card>
@@ -632,6 +680,18 @@ const Settings: React.FC = () => {
           </div>
         </Tabs>
       </div>
+
+      {/* --- CUSTOM CONFIRM MODAL --- */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        isLoading={isDeleting}
+        title="Delete your account?"
+        description="This action is permanent and cannot be undone. All your profile data, documents, and merchant information will be permanently deleted from AgriBridge."
+        confirmText="Yes, Delete Permanently"
+        icon={<AlertTriangle className="text-red-500" size={24} />}
+      />
     </div>
   );
 };
@@ -663,7 +723,14 @@ const Field = ({
   value,
   onChange,
   disabled,
-}: any) => (
+}: {
+  label: string;
+  id: string;
+  type?: string;
+  value: string;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
+}) => (
   <div className="space-y-2">
     <Label
       htmlFor={id}
@@ -677,7 +744,6 @@ const Field = ({
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
       disabled={disabled}
-      className="bg-slate-50/50 dark:bg-slate-950/50 focus-visible:ring-primary"
     />
   </div>
 );
@@ -693,10 +759,7 @@ const ThemeOption = ({
 }) => (
   <div className="space-y-3 cursor-pointer group" onClick={onClick}>
     <div
-      className={`
-      relative h-28 w-full rounded-xl border-2 p-2 transition-all
-      ${active ? "border-primary ring-2 ring-primary/10" : "border-transparent bg-slate-100 dark:bg-slate-800 group-hover:border-slate-300 dark:group-hover:border-slate-600"}
-    `}
+      className={`relative h-28 w-full rounded-xl border-2 p-2 transition-all ${active ? "border-primary ring-2 ring-primary/10" : "border-transparent bg-slate-100 dark:bg-slate-800 group-hover:border-slate-300 dark:group-hover:border-slate-600"}`}
     >
       <div
         className={`h-full w-full rounded-lg ${theme === "dark" ? "bg-slate-950" : theme === "light" ? "bg-white" : "bg-linear-to-r from-white to-slate-950"}`}

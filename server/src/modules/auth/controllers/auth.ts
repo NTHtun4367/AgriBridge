@@ -159,3 +159,32 @@ export const getVerifiedMerchants = asyncHandler(
     res.status(200).json(result);
   },
 );
+
+// --- PASSWORD & ACCOUNT MANAGEMENT ---
+
+export const changePassword = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400);
+      throw new Error("Current password and new password are required");
+    }
+
+    const result = await authService.changePassword(
+      req.user?._id as string,
+      currentPassword,
+      newPassword,
+    );
+
+    res.status(200).json(result);
+  },
+);
+
+export const deleteAccount = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const result = await authService.deleteAccount(req.user?._id as string);
+
+    res.status(200).json(result);
+  },
+);

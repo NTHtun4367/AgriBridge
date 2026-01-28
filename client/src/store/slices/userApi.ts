@@ -131,6 +131,24 @@ export const authApi = apiSlice.injectEndpoints({
         body: data,
       }),
     }),
+
+    changePassword: builder.mutation<
+      { message: string },
+      { currentPassword: string; newPassword: string }
+    >({
+      query: (data) => ({
+        url: "/auth/profile/change-password",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    deleteAccount: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: "/auth/profile",
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -146,4 +164,6 @@ export const {
   useUpdateProfileMutation,
   useUpdateAvatarMutation,
   useUpdateMerchantDocsMutation,
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
 } = authApi;

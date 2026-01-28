@@ -18,6 +18,8 @@ import {
   updateMerchantDocs,
   requestEmailChange,
   confirmEmailChange,
+  changePassword,
+  deleteAccount,
 } from "../controllers/auth";
 import { upload } from "../../../shared/utils/upload";
 import { protect } from "../../../shared/middleware/authMiddleware";
@@ -68,5 +70,9 @@ router.post(
 
 router.post("/request-email-change", protect, requestEmailChange);
 router.post("/confirm-email-change", protect, confirmEmailChange);
+
+// Password & Account
+router.post("/profile/change-password", protect, changePassword);
+router.delete("/profile", protect, deleteAccount);
 
 export default router;

@@ -31,3 +31,26 @@ export const getEntryById = asyncHandler(
     res.status(200).json(entry);
   },
 );
+
+export const updateEntry = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+    const { id } = req.params;
+    const updatedEntry = await entryService.updateEntry(
+      id,
+      userId?.toString()!,
+      req.body,
+      req.file,
+    );
+    res.status(200).json(updatedEntry);
+  },
+);
+
+export const deleteEntry = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+    const { id } = req.params;
+    const result = await entryService.deleteEntry(id, userId?.toString()!);
+    res.status(200).json(result);
+  },
+);

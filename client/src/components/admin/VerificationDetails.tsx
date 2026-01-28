@@ -96,7 +96,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                   </div>
                   <div className="flex justify-between py-2 border-b border-dashed">
                     <span className="text-slate-500">Phone</span>
-                    <span className="font-medium">{merchant?.phone}</span>
+                    <span className="font-medium">{merchant?.businessPhone}</span>
                   </div>
                 </div>
               </section>

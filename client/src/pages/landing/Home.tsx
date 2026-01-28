@@ -134,8 +134,7 @@ const HomePage = () => {
                           Market Price Analytics
                         </h4>
                         <p className="text-sm text-slate-500">
-                          See benchmark prices updated by regional
-                          administrators.
+                          See standard prices updated by regional merchants.
                         </p>
                       </div>
                     </div>
@@ -197,7 +196,7 @@ const HomePage = () => {
                         <LineChart size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">Benchmark Feeds</h4>
+                        <h4 className="font-bold text-sm">Standard Prices</h4>
                         <p className="text-sm text-slate-500">
                           Compare your offers against admin-verified market
                           rates.
@@ -210,7 +209,7 @@ const HomePage = () => {
                       </div>
                       <div>
                         <h4 className="font-bold text-sm">
-                          Digital Procurement
+                          Digital Buying/Collection
                         </h4>
                         <p className="text-sm text-slate-500">
                           Streamline how you receive and verify produce from

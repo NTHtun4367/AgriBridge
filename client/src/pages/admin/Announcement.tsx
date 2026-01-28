@@ -290,7 +290,7 @@ function Announcement() {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search announcements..."
+                placeholder="Search announcements by title..."
                 value={
                   (table.getColumn("title")?.getFilterValue() as string) ?? ""
                 }

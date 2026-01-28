@@ -26,7 +26,7 @@ import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
 // Logic to generate matching seasons
 const generateFilterSeasons = () => {
   const currentYear = new Date().getFullYear();
-  const names = ["Summer", "Monsoon", "Winter"];
+  const names = ["Summer", "Rainy", "Winter"];
   const years = [currentYear - 1, currentYear, currentYear + 1];
   const options: string[] = [];
   years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
@@ -185,7 +185,7 @@ function FarmerDashboard() {
           <div>
             <h4 className="font-bold">Market Alert</h4>
             <p className="text-xs text-slate-500 font-medium">
-              Paddy prices are up 5% today in your region.
+              Market prices are change today in your region.
             </p>
           </div>
         </div>

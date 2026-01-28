@@ -192,8 +192,8 @@ export default function FarmerDisputes() {
                       icon={<Phone />}
                       label="Support Contact"
                       value={
-                        selectedDispute.merchantId?.merchantId?.phone ||
-                        selectedDispute.merchantId?.phone ||
+                        selectedDispute.merchantId?.merchantId?.businessPhone ||
+                        selectedDispute.merchantId?.businessPhone ||
                         "N/A"
                       }
                     />

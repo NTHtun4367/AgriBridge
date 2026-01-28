@@ -35,15 +35,15 @@ function MerchantPanel() {
         icon: <TrendingUp className="w-5 h-5" />,
       },
       {
-        name: "Records",
-        path: "/merchant/records",
-        icon: <BookOpenText className="w-5 h-5" />,
-      },
-      {
         name: "Market Management",
         path: "/merchant/manage-market",
         icon: <BarChart3 className="w-5 h-5" />,
         protected: true, // Custom flag to identify restricted routes
+      },
+      {
+        name: "Records",
+        path: "/merchant/records",
+        icon: <BookOpenText className="w-5 h-5" />,
       },
       {
         name: "Preorders",

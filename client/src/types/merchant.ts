@@ -5,6 +5,7 @@ export interface NRCImage {
 export interface MerchantInfo {
   _id: string;
   businessName: string;
+  businessPhone: string;
   phone: string;
   nrcRegion?: string;
   nrcTownship?: string;

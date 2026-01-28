@@ -27,6 +27,8 @@ import MerchantEntryDialog from "@/components/merchant/MerchantEntryDialog";
 // Hooks
 import { useGetFinanceStatsQuery } from "@/store/slices/farmerApi";
 import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
+import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 
 const EMPTY_INVOICE = {
   farmerName: "",
@@ -43,14 +45,19 @@ function MerchantDashboard() {
   const [selectedInvoiceData, setSelectedInvoiceData] =
     useState<any>(EMPTY_INVOICE);
 
+  const { data: user } = useCurrentUserQuery();
+
+  // --- DATA FETCHING ---
   const { data: finance } = useGetFinanceStatsQuery("all");
   const { data: entries, isLoading: entriesLoading } = useGetAllEntriesQuery();
 
-  // const handleProcessPreorder = (preorder: any) => {
-  //   setSelectedInvoiceData({ ...preorder });
-  //   setIsPreorderMode(true);
-  //   setView("invoice");
-  // };
+  // Fetch market data
+  const { data: marketData } = useGetMarketPricesQuery(
+    { userId: user?._id },
+    {
+      skip: !user?._id, // Don't fetch until we have a user ID
+    },
+  );
 
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -81,11 +88,14 @@ function MerchantDashboard() {
                   setView("invoice");
                 }}
                 variant="outline"
-                // className="h-14 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-2xl shadow-sm px-8 transition-all hover:shadow-lg active:scale-95"
               >
                 <Plus className="mr-2 h-5 w-5 text-blue-600" /> Manual Invoice
               </Button>
-              <MerchantEntryDialog />
+
+              {/* FIX: Pass the array inside the response, not the whole response object.
+                  Check your API slice: if the array is in 'data', use marketData.data
+              */}
+              <MerchantEntryDialog rawData={marketData?.data || []} />
             </div>
           </div>
 
@@ -124,7 +134,7 @@ function MerchantDashboard() {
                 <Button
                   variant="ghost"
                   className="text-blue-600 font-bold hover:bg-blue-50 rounded-xl"
-                  onClick={() => navigate("/merchant/transactions")}
+                  onClick={() => navigate("/merchant/records")}
                 >
                   View Full History
                 </Button>
@@ -156,7 +166,7 @@ function MerchantDashboard() {
               </Card>
             </div>
 
-            {/* --- RIGHT: BEAUTIFIED PREORDERS --- */}
+            {/* --- RIGHT: FARMER REQUESTS --- */}
             <div className="xl:col-span-5 space-y-6">
               <div className="flex items-center gap-3 px-2">
                 <div className="p-3 bg-blue-600 rounded-2xl">
@@ -185,7 +195,7 @@ function MerchantDashboard() {
                       key={order.id}
                       className="group border-none shadow-lg hover:shadow-2xl transition-all duration-300"
                     >
-                      <CardContent>
+                      <CardContent className="pt-6">
                         <div className="flex justify-between items-start mb-4">
                           <div className="space-y-1">
                             <h4 className="text-lg font-black group-hover:text-blue-600 transition-colors">
@@ -202,7 +212,7 @@ function MerchantDashboard() {
                           </div>
                         </div>
 
-                        <div className="bg-secondary rounded-2xl p-4">
+                        <div className="bg-slate-50 rounded-2xl p-4">
                           <div className="flex flex-wrap gap-4">
                             {order.items.map((item: any, idx: number) => (
                               <div key={idx} className="flex flex-col">
@@ -219,36 +229,12 @@ function MerchantDashboard() {
                             ))}
                           </div>
                         </div>
-
-                        {/* <div className="flex items-center gap-2">
-                          <Button
-                            className="flex-1 bg-slate-900 hover:bg-black text-white font-bold rounded-xl h-11"
-                            onClick={() => handleProcessPreorder(order)}
-                          >
-                            Generate Invoice
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-11 w-11 rounded-xl border-slate-200 text-emerald-600 hover:bg-emerald-50"
-                          >
-                            <CheckCircle2 size={20} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-11 w-11 rounded-xl border-slate-200 text-rose-600 hover:bg-rose-50"
-                          >
-                            <XCircle size={20} />
-                          </Button>
-                        </div> */}
                       </CardContent>
                     </Card>
                   ))
                 )}
               </div>
 
-              {/* ACTION TIP */}
               <div className="p-8 bg-linear-to-br from-indigo-600 to-blue-700 text-white rounded-2xl">
                 <AlertCircle className="mb-4 opacity-50" size={32} />
                 <h4 className="text-xl font-bold mb-2">Inventory Sync</h4>
@@ -261,26 +247,14 @@ function MerchantDashboard() {
           </div>
         </div>
       ) : (
-        /* --- INVOICE VIEW --- */
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="mb-8 flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setView("list")}
-              // className="rounded-2xl bg-white border border-slate-200 shadow-sm font-bold hover:bg-slate-50 px-6 h-12"
-            >
+            <Button variant="outline" onClick={() => setView("list")}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Exit Editor
             </Button>
-
-            {/* <div className="flex items-center gap-3 bg-slate-900 p-2 px-5 rounded-2xl text-white text-xs font-bold uppercase tracking-widest shadow-lg">
-              <span className="opacity-60">Hub</span>
-              <ChevronRight size={14} />
-              <span>{isPreorderMode ? "Invoice Generator" : "New Entry"}</span>
-            </div> */}
           </div>
 
           <div>
-            {/* <div className="h-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 w-full" /> */}
             <InvoiceCreator
               initialData={selectedInvoiceData}
               mode={isPreorderMode ? "preorder" : "manual"}
