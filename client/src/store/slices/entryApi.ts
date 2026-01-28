@@ -44,6 +44,24 @@ export const entryApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["FinanceStats", "Entries"],
     }),
+
+    getCategoryStats: builder.query<
+      {
+        overall: { income: number; expense: number; profit: number };
+        categories: Array<{
+          category: string;
+          income: number;
+          expense: number;
+          profit: number;
+        }>;
+      },
+      void
+    >({
+      query: () => "/entries/category-stats",
+      // Transformation to access the .data property from your backend response
+      transformResponse: (response: { data: any }) => response.data,
+      providesTags: ["Entries"],
+    }),
   }),
 });
 
@@ -53,4 +71,5 @@ export const {
   useGetEntryByIdQuery,
   useUpdateEntryMutation,
   useDeleteEntryMutation,
+  useGetCategoryStatsQuery,
 } = entryApi;

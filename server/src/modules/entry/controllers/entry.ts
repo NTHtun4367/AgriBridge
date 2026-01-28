@@ -1,7 +1,22 @@
+// controllers/entry.controller.ts
 import { Response } from "express";
 import { AuthRequest } from "../../../shared/middleware/authMiddleware";
 import asyncHandler from "../../../shared/utils/asyncHandler";
 import { entryService } from "../services/entry";
+
+export const getEntryStats = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const userId = req.user?._id;
+    if (!userId) throw new Error("Unauthorized");
+
+    const stats = await entryService.getStatsByCategory(userId.toString());
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  },
+);
 
 export const createEntry = asyncHandler(
   async (req: AuthRequest, res: Response) => {
@@ -26,7 +41,7 @@ export const getAllEntries = asyncHandler(
 export const getEntryById = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const id = req.params.id;
+    const { id } = req.params;
     const entry = await entryService.getEntryById(id, userId?.toString()!);
     res.status(200).json(entry);
   },

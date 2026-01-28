@@ -9,11 +9,24 @@ import {
   getEntryById,
   updateEntry,
   deleteEntry,
+  getEntryStats,
 } from "../../entry/controllers/entry";
 
 const router = Router();
 
+// Apply protection to all routes below
 router.use(protect);
+
+/**
+ * 1. SPECIFIC/STATIC ROUTES FIRST
+ * These must be defined before the /:id routes
+ */
+router.get("/category-stats", getEntryStats);
+
+/**
+ * 2. GENERAL COLLECTION ROUTES
+ */
+router.get("/", getAllEntries);
 
 router.post(
   "/add-entry",
@@ -22,8 +35,13 @@ router.post(
   validateRequest,
   createEntry,
 );
-router.get("/", getAllEntries);
+
+/**
+ * 3. DYNAMIC PARAMETER ROUTES LAST
+ * These are "catch-alls" for anything that wasn't matched above
+ */
 router.get("/:id", getEntryById);
+
 router.put(
   "/:id",
   upload.single("billImage"),
@@ -31,6 +49,7 @@ router.put(
   validateRequest,
   updateEntry,
 );
+
 router.delete("/:id", deleteEntry);
 
 export default router;

@@ -192,36 +192,34 @@ export function InvoiceCreator({
     try {
       const items = pendingInvoiceData.items || [];
 
-      const totalQuantity = items.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0),
-        0,
-      );
+      for (const item of items) {
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        const totalValue = quantity * price;
 
-      const uniqueUnits = Array.from(new Set(items.map((i) => i.unit)));
+        if (!item.cropName || quantity === 0) continue;
 
-      const displayUnit = uniqueUnits.length === 1 ? uniqueUnits[0] : "Mixed";
+        const formData = new FormData();
 
-      const itemSummary = items
-        .map((i) => `${i.cropName} (${i.quantity} ${i.unit})`)
-        .join(", ");
+        formData.append("date", new Date().toISOString());
+        formData.append("type", "expense");
+        formData.append("category", item.cropName); // crop name
+        formData.append("quantity", quantity.toString());
+        formData.append("unit", item.unit);
+        formData.append("value", totalValue.toString());
+        formData.append(
+          "notes",
+          `Invoice #${invoiceId} | ${item.cropName} (${quantity} ${item.unit})`,
+        );
 
-      const formData = new FormData();
-      formData.append("date", new Date().toISOString());
-      formData.append("type", "expense");
-      formData.append("category", "crops");
-      // formData.append("season", "");
-      formData.append("quantity", totalQuantity.toString());
-      formData.append("unit", displayUnit);
-      formData.append("value", subtotal.toString());
-      formData.append("notes", `Invoice #${invoiceId} | Items: ${itemSummary}`);
+        await addEntry(formData).unwrap();
+      }
 
-      await addEntry(formData).unwrap();
-
-      toast.success("Saved to Income Ledger!");
+      toast.success("Saved to ledger by crop successfully!");
       setShowSaveConfirm(false);
       navigate("/merchant/invoices");
     } catch (err) {
-      toast.error("Failed to save to ledger");
+      toast.error("Failed to save ledger entries");
     }
   };
 

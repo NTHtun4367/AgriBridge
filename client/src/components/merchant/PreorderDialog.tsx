@@ -222,30 +222,42 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
             <div className="bg-slate-50 border rounded-lg p-4 text-sm text-slate-600 space-y-4 max-h-[300px] overflow-y-auto">
               <section>
                 <h4 className="font-bold text-slate-900 mb-1">
-                  1. Preorder Agreement
+                  1. Farmer Commitment
                 </h4>
                 <p>
-                  By placing a preorder, you agree to provide accurate
-                  identification (NRC) and contact details. This request is
-                  subject to merchant availability.
+                  By participating in this preorder, you are required to provide
+                  a valid NRC and active contact information. Please be aware
+                  that your request is contingent upon the merchant's current
+                  capacity and stock availability.
                 </p>
               </section>
               <section>
                 <h4 className="font-bold text-slate-900 mb-1">
-                  2. Privacy Policy
+                  2. Data Usage Notice
                 </h4>
                 <p>
-                  Your data (Name, Phone, NRC, and Address) will be shared with
-                  the merchant only for the purpose of fulfilling this order.
+                  To process your order, your personal details (Name, Phone,
+                  NRC, and Address) will be shared with the designated merchant.
+                  This information is used strictly for logistical fulfillment.
                 </p>
               </section>
               <section>
                 <h4 className="font-bold text-slate-900 mb-1">
-                  3. Delivery Timeline
+                  3. Harvest & Logistics Warning
                 </h4>
                 <p>
-                  The expected delivery timing is an estimate. Actual delivery
-                  may vary based on crop harvest conditions and logistics.
+                  The delivery schedule is a preliminary estimate only. You must
+                  acknowledge that actual timing depends entirely on crop
+                  maturity, weather-related harvest conditions, and
+                  transportation availability.
+                </p>   
+              </section>
+              <section>
+                <h4 className="font-bold text-slate-900 mb-1">
+                  4. Price Adjustment Policy
+                </h4>
+                <p>
+                  ​"Note that pricing is subject to change based on the quality and specifications of the goods for delivery."
                 </p>
               </section>
             </div>

@@ -79,24 +79,26 @@ function MerchantDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button
-                size={"lg"}
-                onClick={() => {
-                  setSelectedInvoiceData(EMPTY_INVOICE);
-                  setIsPreorderMode(false);
-                  setView("invoice");
-                }}
-                variant="outline"
-              >
-                <Plus className="mr-2 h-5 w-5 text-blue-600" /> Manual Invoice
-              </Button>
+            {user?.verificationStatus === "verified" && (
+              <div className="flex items-center gap-3">
+                <Button
+                  size={"lg"}
+                  onClick={() => {
+                    setSelectedInvoiceData(EMPTY_INVOICE);
+                    setIsPreorderMode(false);
+                    setView("invoice");
+                  }}
+                  variant="outline"
+                >
+                  <Plus className="mr-2 h-5 w-5 text-blue-600" /> Manual Invoice
+                </Button>
 
-              {/* FIX: Pass the array inside the response, not the whole response object.
+                {/* FIX: Pass the array inside the response, not the whole response object.
                   Check your API slice: if the array is in 'data', use marketData.data
               */}
-              <MerchantEntryDialog rawData={marketData?.data || []} />
-            </div>
+                <MerchantEntryDialog rawData={marketData?.data || []} />
+              </div>
+            )}
           </div>
 
           {/* --- STATS OVERVIEW --- */}

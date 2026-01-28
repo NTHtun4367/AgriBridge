@@ -10,7 +10,7 @@ interface ActivityTitleProps {
   amount: number;
   date: string | Date;
   type: "income" | "expense";
-  season: string;
+  season?: string;
 }
 
 function ActivityTitle({

@@ -5,20 +5,7 @@ export const entryValidator = [
   body("type")
     .isIn(["income", "expense"])
     .withMessage("Type must be income or expense"),
-  body("category")
-    .notEmpty()
-    .isIn([
-      "seeds",
-      "fertilizer",
-      "pesticide",
-      "labor",
-      "machinery",
-      "transport",
-      "crops", // Added for Income
-      "beans", // Added for Income
-      "other",
-    ])
-    .withMessage("Invalid category"),
+  body("category").notEmpty().withMessage("Invalid category"),
   body("value")
     .isNumeric()
     .withMessage("Value must be a number")

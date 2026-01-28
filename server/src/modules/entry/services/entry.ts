@@ -1,3 +1,5 @@
+// services/entry.service.ts
+import { Types } from "mongoose";
 import { uploadSingleImage } from "../../../shared/utils/cloudinary";
 import { Entry } from "../../entry/models/entry";
 
@@ -13,8 +15,8 @@ export class EntryService {
       );
     }
 
-    const entryData = {
-      userId,
+    return await Entry.create({
+      userId: new Types.ObjectId(userId),
       date: new Date(date),
       type,
       category,
@@ -24,12 +26,9 @@ export class EntryService {
       value: Number(value),
       notes,
       billImageUrl: uploadedBill ? uploadedBill.image_url : undefined,
-    };
-
-    return await Entry.create(entryData);
+    });
   }
 
-  // --- NEW: Update Entry Logic ---
   async updateEntry(
     id: string,
     userId: string,
@@ -67,7 +66,6 @@ export class EntryService {
     });
   }
 
-  // --- NEW: Delete Entry Logic ---
   async deleteEntry(id: string, userId: string) {
     const entry = await Entry.findOneAndDelete({ _id: id, userId });
     if (!entry) throw new Error("Entry not found or unauthorized");
@@ -82,6 +80,47 @@ export class EntryService {
     const entry = await Entry.findOne({ _id: id, userId });
     if (!entry) throw new Error("Entry not found.");
     return entry;
+  }
+
+  async getStatsByCategory(userId: string) {
+    const match = { userId: new Types.ObjectId(userId) };
+
+    const categoryStats = await Entry.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: "$category",
+          totalIncome: {
+            $sum: { $cond: [{ $eq: ["$type", "income"] }, "$value", 0] },
+          },
+          totalExpense: {
+            $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$value", 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          category: "$_id",
+          income: "$totalIncome",
+          expense: "$totalExpense",
+          profit: { $subtract: ["$totalIncome", "$totalExpense"] },
+          _id: 0,
+        },
+      },
+      { $sort: { profit: -1 } },
+    ]);
+
+    const overall = categoryStats.reduce(
+      (acc, curr) => {
+        acc.income += curr.income;
+        acc.expense += curr.expense;
+        acc.profit += curr.profit;
+        return acc;
+      },
+      { income: 0, expense: 0, profit: 0 },
+    );
+
+    return { overall, categories: categoryStats };
   }
 }
 
