@@ -19,15 +19,36 @@ function Footer() {
         <div>
           <h4 className="text-white font-bold mb-4">Roles</h4>
           <ul className="space-y-2 text-sm">
-            <li>Farmers</li>
-            <li>Merchants</li>
+            <li>
+              <NavLink
+                to={"/farmers-landing"}
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-base font-bold text-primary"
+                    : "text-sm hover:text-primary transition-colors"
+                }
+              >
+                Farmers
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to={"/merchants-landing"}
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-base font-bold text-primary"
+                    : "text-sm hover:text-primary transition-colors"
+                }
+              >
+                Merchants
+              </NavLink>
+            </li>
           </ul>
         </div>
         <div>
           <h4 className="text-white font-bold mb-4">Company</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              {" "}
               <NavLink
                 to={"/about"}
                 className={({ isActive }) =>

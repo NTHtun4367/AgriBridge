@@ -49,7 +49,7 @@ const MerchantLanding = () => {
               className="rounded-full px-10 bg-primary hover:bg-primary/90 text-md h-14 shadow-xl hover:scale-110 transition-transform duration-500"
               onClick={() => navigate("/register?role=merchant")}
             >
-              Become a Merchant <ArrowRight className="ml-2 h-4 w-4" />
+              Create Account <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button
               size="lg"
@@ -82,12 +82,12 @@ const MerchantLanding = () => {
                 <MerchantFeature
                   icon={<LineChart />}
                   title="Dynamic Price Management"
-                  desc="Set your custom buying rates based on regional demand. Your prices are broadcasted directly to farmers in your vicinity."
+                  desc="Set your custom buying rates based on regional demand. Your prices are broadcasted directly to farmers in your environment."
                 />
                 <MerchantFeature
                   icon={<Users />}
-                  title="Verified Farmer Network"
-                  desc="Access a list of farmers with digital track records. Know exactly what crops are being harvested and when."
+                  title="Focus on Relationships & Loyalty"
+                  desc="Build long-term partnerships with a curated directory of local farmers. View historical yield data and reliability ratings to secure your supply chain with trusted partners."
                 />
                 <MerchantFeature
                   icon={<Truck />}

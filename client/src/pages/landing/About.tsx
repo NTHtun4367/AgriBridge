@@ -1,22 +1,21 @@
 import {
   Users,
-  Target,
+  // Target,
   CheckCircle2,
-  ArrowRight,
-  ShieldCheck,
+  // ArrowRight,
+  // ShieldCheck,
   Wheat,
-  Landmark,
+  // Landmark,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 const AboutPage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
@@ -30,12 +29,9 @@ const AboutPage = () => {
 
         <ScrollReveal>
           <div className="flex justify-center mb-6">
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest font-bold"
-            >
+            <p className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold">
               Our Vision & Mission
-            </Badge>
+            </p>
           </div>
           <h1 className="text-4xl md:text-7xl font-extrabold mb-6 tracking-tight leading-[1.1]">
             Digitalizing the heart of <br />
@@ -151,7 +147,7 @@ const AboutPage = () => {
       </section>
 
       {/* 3. Core Values Grid */}
-      <section className="py-24 max-w-7xl mx-auto px-6">
+      {/* <section className="py-24 max-w-7xl mx-auto px-6">
         <ScrollReveal>
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
@@ -181,10 +177,10 @@ const AboutPage = () => {
             description="We don't just build software; we build local solutions that work offline, support MMK currency, and respect local traditions."
           />
         </div>
-      </section>
+      </section> */}
 
       {/* 4. Security & Trust Banner */}
-      <ScrollReveal>
+      {/* <ScrollReveal>
         <div className="px-6 mb-24">
           <div className="max-w-7xl mx-auto bg-slate-900 rounded-[3rem] p-12 lg:p-20 relative overflow-hidden text-center text-white">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
@@ -213,10 +209,10 @@ const AboutPage = () => {
             </div>
           </div>
         </div>
-      </ScrollReveal>
+      </ScrollReveal> */}
 
       {/* 5. Final CTA */}
-      <ScrollReveal>
+      {/* <ScrollReveal>
         <section className="py-24 text-center px-6">
           <h2 className="text-3xl md:text-6xl font-black mb-8 tracking-tighter">
             Ready to grow <span className="text-primary">smarter?</span>
@@ -239,7 +235,7 @@ const AboutPage = () => {
             </Button>
           </div>
         </section>
-      </ScrollReveal>
+      </ScrollReveal> */}
 
       {/* --- FOOTER --- */}
       <Footer />
@@ -248,28 +244,28 @@ const AboutPage = () => {
 };
 
 // Internal Sub-component for Value Cards
-function ValueCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <ScrollReveal>
-      <div className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 group h-full">
-        <div className="mb-8 p-5 bg-primary/10 w-fit rounded-3xl text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
-          {icon}
-        </div>
-        <h3 className="text-2xl font-bold mb-4">{title}</h3>
-        <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-base">
-          {description}
-        </p>
-      </div>
-    </ScrollReveal>
-  );
-}
+// function ValueCard({
+//   icon,
+//   title,
+//   description,
+// }: {
+//   icon: React.ReactNode;
+//   title: string;
+//   description: string;
+// }) {
+//   return (
+//     <ScrollReveal>
+//       <div className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 group h-full">
+//         <div className="mb-8 p-5 bg-primary/10 w-fit rounded-3xl text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
+//           {icon}
+//         </div>
+//         <h3 className="text-2xl font-bold mb-4">{title}</h3>
+//         <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-base">
+//           {description}
+//         </p>
+//       </div>
+//     </ScrollReveal>
+//   );
+// }
 
 export default AboutPage;

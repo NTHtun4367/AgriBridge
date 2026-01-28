@@ -3,9 +3,7 @@ import {
   Lock,
   EyeOff,
   Database,
-  FileText,
   RefreshCw,
-  Trash2,
   Wheat,
   Scale,
   CheckCircle2,
@@ -30,12 +28,9 @@ export default function PrivacyPolicy() {
 
         <ScrollReveal>
           <div className="flex justify-center mb-6">
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest font-bold"
-            >
+            <p className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold">
               Trust & Transparency
-            </Badge>
+            </p>
           </div>
           <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">
             Protecting Your{" "}
@@ -75,7 +70,7 @@ export default function PrivacyPolicy() {
             <div className="h-2 bg-linear-to-r from-primary via-emerald-500 to-primary w-full" />
             <CardContent className="p-8 md:p-16 space-y-16">
               {/* Section 1: Collection */}
-              <div className="space-y-6">
+              <div className="space-y-3">
                 <SectionHeader
                   icon={<Database />}
                   title="1. The Information We Guard"
@@ -101,7 +96,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 2: Usage */}
-              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-12">
+              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <SectionHeader
                   icon={<RefreshCw />}
                   title="2. Cultivating Your Growth"
@@ -139,7 +134,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 3: Security */}
-              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-12">
+              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <SectionHeader
                   icon={<Lock />}
                   title="3. A Digital Fence Around Your Records"
@@ -160,19 +155,20 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 4: Rights */}
-              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-12">
+              <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <SectionHeader icon={<EyeOff />} title="4. You Hold the Keys" />
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                   You are the owner of your information. AgriBridge is simply
                   the tool. You have the right to:
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-sm font-bold">
-                    <FileText className="h-4 w-4" /> Review All Entries
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                    <span className="font-medium">Review All Entries</span>
                   </div>
-                  <div className="flex items-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-sm font-bold">
-                    <Trash2 className="h-4 w-4 text-red-500" /> Permanently
-                    Delete
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                    <span className="font-medium">Permanently Delete</span>
                   </div>
                 </div>
               </div>

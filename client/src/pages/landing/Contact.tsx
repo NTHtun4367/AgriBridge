@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Mail, Phone, MapPin, Send, Clock, Globe } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Clock} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -29,12 +28,11 @@ export default function ContactPage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent -z-10" />
         <ScrollReveal>
           <div className="flex justify-center mb-6">
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest font-bold"
+            <p
+              className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold"
             >
               Support Center
-            </Badge>
+            </p>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
             How can we <span className="text-primary">help you grow?</span>
@@ -79,8 +77,8 @@ export default function ContactPage() {
               <ContactMethodCard
                 icon={<MapPin className="h-6 w-6" />}
                 label="Main Office"
-                value="Yangon, Myanmar"
-                description="Hledan Centre, Pyay Road, Kamayut Tsp."
+                value="Pathein, Myanmar"
+                description="No. (45), Kanna Road, Ward (1), Pathein."
                 delay={400}
               />
             </div>
@@ -153,7 +151,7 @@ export default function ContactPage() {
 
                     <Button
                       disabled={isSubmitting}
-                      className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                      className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                     >
                       {isSubmitting ? (
                         <div className="flex items-center gap-2">
@@ -180,7 +178,7 @@ export default function ContactPage() {
       </section>
 
       {/* 3. Location / Global Reach */}
-      <ScrollReveal>
+      {/* <ScrollReveal>
         <section className="py-20 bg-secondary/30 text-center px-6">
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="p-4 bg-primary/10 w-fit rounded-full mx-auto">
@@ -194,7 +192,7 @@ export default function ContactPage() {
             </p>
           </div>
         </section>
-      </ScrollReveal>
+      </ScrollReveal> */}
 
       {/* --- FOOTER --- */}
       <Footer />

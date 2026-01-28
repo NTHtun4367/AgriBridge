@@ -53,6 +53,7 @@ import About from "./pages/landing/About.tsx";
 import Contact from "./pages/landing/Contact.tsx";
 import PrivacyPolicy from "./pages/landing/PrivacyPolicy.tsx";
 import MerchantLanding from "./pages/landing/MerchantLanding.tsx";
+import Report from "./pages/farmer/Report.tsx";
 
 const router = createBrowserRouter([
   {
@@ -91,6 +92,7 @@ const router = createBrowserRouter([
           { path: "/farmer/disputes", element: <FarmerDisputes /> },
           { path: "/farmer/settings", element: <Settings /> },
           { path: "/farmer/profile", element: <Profile /> },
+          { path: "/farmer/reports", element: <Report /> },
         ],
       },
       {

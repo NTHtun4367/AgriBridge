@@ -12,6 +12,7 @@ import entriesRoutes from "./modules/entry/routes/entry";
 import preorderRoutes from "./modules/preorder/routes/preorder";
 import notificationRoutes from "./modules/notification/routes/notification";
 import disputeRoutes from "./modules/notification/routes/dispute";
+import reportsRoutes from "./modules/entry/routes/report";
 import errorHandler from "./shared/middleware/errorHandler";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -58,6 +59,7 @@ app.use("/api/v1/entries", entriesRoutes);
 app.use("/api/v1/preorder", preorderRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/disputes", disputeRoutes);
+app.use("/api/v1", reportsRoutes);
 
 // Error handler
 app.use(errorHandler);
