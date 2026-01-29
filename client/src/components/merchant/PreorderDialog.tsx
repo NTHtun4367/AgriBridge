@@ -250,14 +250,15 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                   acknowledge that actual timing depends entirely on crop
                   maturity, weather-related harvest conditions, and
                   transportation availability.
-                </p>   
+                </p>
               </section>
               <section>
                 <h4 className="font-bold text-slate-900 mb-1">
                   4. Price Adjustment Policy
                 </h4>
                 <p>
-                  ​"Note that pricing is subject to change based on the quality and specifications of the goods for delivery."
+                  Note that pricing is subject to change based on the quality
+                  and specifications of the goods for delivery.
                 </p>
               </section>
             </div>
@@ -470,7 +471,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5" /> Delivery Address
+                          <MapPin className="w-3.5 h-3.5" /> Your Address
                         </FormLabel>
                         <FormControl>
                           <Textarea

@@ -51,6 +51,13 @@ export function MarketPriceTable({
           >
             Category {getSortIcon("category")}
           </TableHead>
+          {/* Added Amount Header */}
+          <TableHead
+            className="text-center font-bold py-4 cursor-pointer select-none"
+            onClick={() => onSort("amount")}
+          >
+            Amount(Qty) {getSortIcon("amount")}
+          </TableHead>
           <TableHead className="text-center font-bold py-4">Unit</TableHead>
           <TableHead
             className="text-center font-bold py-4 cursor-pointer select-none"
@@ -79,13 +86,19 @@ export function MarketPriceTable({
               <TableCell className="text-center font-medium">
                 {market.category}
               </TableCell>
+              {/* Added Amount Cell */}
+              <TableCell className="text-center font-medium">
+                {market.amount !== undefined && market.amount !== null
+                  ? market.amount.toLocaleString()
+                  : "-"}
+              </TableCell>
               <TableCell className="text-center">
                 <Badge variant="outline">{market.unit}</Badge>
               </TableCell>
               <TableCell className="text-center font-bold italic text-slate-500">
                 {market.previousPrice
                   ? market.previousPrice.toLocaleString()
-                  : "0.00"}
+                  : "0.00"}{" "}
                 MMK
               </TableCell>
               <TableCell className="text-center font-bold">
@@ -106,7 +119,9 @@ export function MarketPriceTable({
         ) : (
           <TableRow>
             <TableCell
-              colSpan={6}
+              colSpan={
+                7
+              } /* Updated colSpan from 6 to 7 to match new column count */
               className="h-24 text-center text-muted-foreground"
             >
               No results found.

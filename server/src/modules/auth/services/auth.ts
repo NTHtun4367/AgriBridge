@@ -155,6 +155,7 @@ export class AuthService {
     if (!(await user.matchPassword(password)))
       throw new Error("Invalid credentials");
 
+    if(user.status === "ban") throw new Error("Your account has banned. Please try again later!")
     // Block unverified email users
     if (user.verificationStatus === "unverified" && user.email) {
       throw new Error("Please verify your email via OTP before logging in.");

@@ -22,7 +22,6 @@ import MerchantsView from "./pages/farmer/MerchantView.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
-import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 import MarketDashboard from "./pages/market/MarketDashboard.tsx";
 import MarketPriceLanding from "./pages/landing/MarketPriceLanding.tsx";
 import FarmerLanding from "./pages/landing/FarmerLanding.tsx";
@@ -54,7 +53,7 @@ import Contact from "./pages/landing/Contact.tsx";
 import PrivacyPolicy from "./pages/landing/PrivacyPolicy.tsx";
 import MerchantLanding from "./pages/landing/MerchantLanding.tsx";
 import Report from "./pages/farmer/Report.tsx";
-import CategoryDashboard from "./pages/merchant/CategoryDashboard.tsx";
+import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 
 const router = createBrowserRouter([
   {
@@ -123,7 +122,7 @@ const router = createBrowserRouter([
               { path: "/merchant/preorders", element: <MerchantOrderList /> },
               { path: "/merchant/records/:id", element: <EntryDetailPage /> },
               { path: "/merchant/invoices", element: <MerchantInvoices /> },
-              { path: "/merchant/analytics", element: <CategoryDashboard /> },
+              // { path: "/merchant/analytics", element: <CategoryDashboard /> },
               {
                 path: "/merchant/invoices/create",
                 element: <MerchantInvoiceCreate />,

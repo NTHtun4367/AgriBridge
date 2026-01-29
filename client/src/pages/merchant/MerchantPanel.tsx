@@ -12,7 +12,6 @@ import {
   ShoppingBag,
   Receipt,
   BookOpenText,
-  BarChartHorizontal,
 } from "lucide-react";
 
 function MerchantPanel() {
@@ -30,12 +29,12 @@ function MerchantPanel() {
         path: "/merchant/dashboard",
         icon: <LayoutDashboard className="w-5 h-5" />,
       },
-      {
-        name: "Analytics",
-        path: "/merchant/analytics",
-        icon: <BarChartHorizontal className="w-5 h-5" />,
-        protected: true,
-      },
+      // {
+      //   name: "Analytics",
+      //   path: "/merchant/analytics",
+      //   icon: <BarChartHorizontal className="w-5 h-5" />,
+      //   protected: true,
+      // },
       {
         name: "Market Prices",
         path: "/merchant/markets",

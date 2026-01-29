@@ -5,6 +5,7 @@ interface IMarketPrice extends Document {
   marketId?: Types.ObjectId;
   cropId: Types.ObjectId;
   price: number;
+  amount?: number;
   unit: string;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +26,9 @@ const marketPriceSchema = new Schema<IMarketPrice>(
       ref: "Crop",
       required: true,
     },
+    amount: {
+      type: Number,
+    },
     price: {
       type: Number,
       required: true,
@@ -34,7 +38,7 @@ const marketPriceSchema = new Schema<IMarketPrice>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Optimization for Admin (Market lookups)
@@ -44,5 +48,5 @@ marketPriceSchema.index({ userId: 1, cropId: 1, createdAt: -1 });
 
 export const MarketPrice = model<IMarketPrice>(
   "MarketPrice",
-  marketPriceSchema
+  marketPriceSchema,
 );

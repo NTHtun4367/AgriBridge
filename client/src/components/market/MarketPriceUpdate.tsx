@@ -43,14 +43,13 @@ import { toast } from "sonner";
 
 type PriceUpdates = Record<string, string>;
 type UnitUpdates = Record<string, string>;
+type AmountUpdates = Record<string, string>; // Added amount type
 
 export const UNITS = [
   "Viss (1.63kg)",
   "Bag",
   "Tin",
   "Basket",
-  // "Basket (Rice - 20.9kg)",
-  // "Basket (Pulses - 32.7kg)",
   "Metric Ton",
   "Pound (lb)",
 ];
@@ -60,30 +59,25 @@ interface MarketPriceUpdateProps {
 }
 
 const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
-  // If merchant, start at step 2 (Select Crops)
   const [step, setStep] = useState<1 | 2 | 3>(role === "merchant" ? 2 : 1);
   const [selectedMarket, setSelectedMarket] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [priceUpdates, setPriceUpdates] = useState<PriceUpdates>({});
   const [unitUpdates, setUnitUpdates] = useState<UnitUpdates>({});
+  const [amountUpdates, setAmountUpdates] = useState<AmountUpdates>({}); // Added state
 
-  // RTK Query hooks
   const { data: CROP_DATA, isLoading: isLoadingCrops } =
     useGetAllCropsQuery(undefined);
 
-  // Only fetch markets if the user is an admin
   const { data: MARKETS, isLoading: isLoadingMarkets } = useGetAllMarketsQuery(
     undefined,
-    {
-      skip: role === "merchant",
-    },
+    { skip: role === "merchant" },
   );
 
   const [updateMarketPrices, { isLoading: isUpdating }] =
     useUpdateMarketPricesMutation();
 
-  // filter crops for search
   const filteredCrops = useMemo(() => {
     return (CROP_DATA || []).filter(
       (crop) =>
@@ -106,6 +100,10 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
     setUnitUpdates((prev) => ({ ...prev, [_id]: value }));
   };
 
+  const handleAmountChange = (_id: string, value: string): void => {
+    setAmountUpdates((prev) => ({ ...prev, [_id]: value }));
+  };
+
   const selectedCropsData = (CROP_DATA || []).filter((crop) =>
     selectedIds.includes(crop._id),
   );
@@ -117,11 +115,13 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
       updates: selectedCropsData.map((crop) => ({
         cropId: crop._id,
         price: parseFloat(priceUpdates[crop._id]),
+        amount: amountUpdates[crop._id]
+          ? parseFloat(amountUpdates[crop._id])
+          : undefined, // Added to payload
         unit: unitUpdates[crop._id],
       })),
     };
 
-    // If Admin, add the marketId to the payload
     if (role === "admin") {
       const market = MARKETS?.find((m) => m.name === selectedMarket);
       if (!market) {
@@ -134,13 +134,12 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
     try {
       await updateMarketPrices(payload).unwrap();
       toast.success("Prices updated successfully!");
-
-      // Reset
       setStep(role === "merchant" ? 2 : 1);
       setSelectedIds([]);
       setSelectedMarket("");
       setPriceUpdates({});
       setUnitUpdates({});
+      setAmountUpdates({}); // Reset state
     } catch (error) {
       toast.error("Failed to update prices.");
     }
@@ -156,7 +155,6 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
 
   return (
     <div className="w-full h-screen p-4 space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -167,12 +165,11 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
           <p className="text-muted-foreground">
             {step === 1 && "Start by choosing a marketplace."}
             {step === 2 && "Select the crops you want to update."}
-            {step === 3 && "Assign current rates and units."}
+            {step === 3 && "Assign current rates, quantity, and units."}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="px-3 py-1">
-            {/* Adjust step count for Merchant UI */}
             Step {role === "merchant" ? step - 1 : step} of{" "}
             {role === "merchant" ? 2 : 3}
           </Badge>
@@ -182,7 +179,6 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
         </div>
       </div>
 
-      {/* STEP 1: SELECT MARKETPLACE (ADMIN ONLY) */}
       {step === 1 && role === "admin" && (
         <Card className="border-2 shadow-sm">
           <CardHeader>
@@ -210,7 +206,6 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
         </Card>
       )}
 
-      {/* STEP 2: SELECT CROPS (SHARED) */}
       {step === 2 && (
         <Card className="border-2 shadow-sm">
           <CardHeader>
@@ -278,13 +273,13 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
         </Card>
       )}
 
-      {/* STEP 3: PRICE & UNIT UPDATE (SHARED) */}
       {step === 3 && (
         <form onSubmit={handleSubmit}>
           <Card className="border-2 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" /> Finalize Prices
+                <TrendingUp className="w-5 h-5 text-blue-600" /> Finalize
+                Details
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -293,10 +288,9 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
                   <thead className="bg-secondary border-b">
                     <tr>
                       <th className="p-4 text-left">Crop</th>
+                      <th className="p-4 text-left">Amount (Qty)</th>
                       <th className="p-4 text-left">Unit Type</th>
-                      <th className="p-4 text-left w-[200px]">
-                        New Price (MMK)
-                      </th>
+                      <th className="p-4 text-left w-[180px]">Price (MMK)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -304,14 +298,25 @@ const MarketPriceUpdate: React.FC<MarketPriceUpdateProps> = ({ role }) => {
                       <tr key={crop._id}>
                         <td className="p-4 font-medium">{crop.name}</td>
                         <td className="p-4">
+                          <Input
+                            type="number"
+                            placeholder="Qty"
+                            value={amountUpdates[crop._id] || ""}
+                            onChange={(e) =>
+                              handleAmountChange(crop._id, e.target.value)
+                            }
+                            className="w-24"
+                          />
+                        </td>
+                        <td className="p-4">
                           <Select
                             onValueChange={(val) =>
                               handleUnitChange(crop._id, val)
                             }
                             required
                           >
-                            <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Select unit" />
+                            <SelectTrigger className="w-36">
+                              <SelectValue placeholder="Unit" />
                             </SelectTrigger>
                             <SelectContent>
                               {UNITS.map((u) => (

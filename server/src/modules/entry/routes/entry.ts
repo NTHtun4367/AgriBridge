@@ -14,7 +14,6 @@ import {
 
 const router = Router();
 
-// Apply protection to all routes below
 router.use(protect);
 
 /**

@@ -1,7 +1,7 @@
 import { MarketPrice } from "../models/marketPrice";
 import { Market } from "../models/market";
 import { Crop } from "../models/crop";
-import { PipelineStage, Types } from "mongoose"; // Added this import
+import { PipelineStage, Types } from "mongoose";
 
 export class MarketService {
   // --- CROP CRUD ---
@@ -23,7 +23,6 @@ export class MarketService {
   }
 
   async deleteCrop(id: string) {
-    // Check if crop is being used in prices before deleting (Optional)
     const inUse = await MarketPrice.findOne({ cropId: id });
     if (inUse) throw new Error("Cannot delete crop that has price history");
     return await Crop.findByIdAndDelete(id);
@@ -59,7 +58,6 @@ export class MarketService {
   ) {
     let marketInfo = null;
 
-    // 1. Only look up market if marketId is provided (Admin path)
     if (marketId) {
       marketInfo = await Market.findById(marketId);
       if (!marketInfo) {
@@ -67,11 +65,11 @@ export class MarketService {
       }
     }
 
-    // 2. Map entries - marketId will be undefined for Merchants
     const priceEntries = updates.map((item: any) => ({
       marketId: marketId || undefined,
       cropId: item.cropId,
       price: item.price,
+      amount: item.amount, // Added amount
       unit: item.unit,
       userId,
     }));
@@ -91,18 +89,16 @@ export class MarketService {
   async getLatestMarketAnalytics(filters: {
     userId?: string;
     official?: boolean;
-    marketId?: string; // Add this
+    marketId?: string;
   }) {
     const matchStage: any = {};
 
-    // 1. FILTERING
     if (filters.official) {
       matchStage.marketId = { $exists: true, $ne: null };
     } else if (filters.userId) {
       matchStage.userId = new Types.ObjectId(filters.userId);
     }
 
-    // NEW: Add specific market filtering
     if (filters.marketId && filters.marketId !== "all") {
       matchStage.marketId = new Types.ObjectId(filters.marketId);
     }
@@ -120,6 +116,7 @@ export class MarketService {
           records: {
             $push: {
               price: "$price",
+              amount: "$amount", // Added to grouping
               unit: "$unit",
               createdAt: "$createdAt",
             },
@@ -159,6 +156,7 @@ export class MarketService {
           cropName: "$cropDetails.name",
           category: "$cropDetails.category",
           currentPrice: "$latest.price",
+          amount: "$latest.amount", // Added to final projection
           unit: "$latest.unit",
           updatedAt: "$latest.createdAt",
           previousPrice: { $ifNull: ["$previous.price", null] },
@@ -212,13 +210,14 @@ export class MarketService {
           marketId: new Types.ObjectId(marketId),
         },
       },
-      { $sort: { createdAt: 1 } }, // Sort oldest to newest for the chart
-      { $limit: 30 }, // Get last 30 days/entries
+      { $sort: { createdAt: 1 } },
+      { $limit: 30 },
       {
         $project: {
           _id: 0,
           date: "$createdAt",
           price: "$price",
+          amount: "$amount", // Added to history for tooltip data
         },
       },
     ]);

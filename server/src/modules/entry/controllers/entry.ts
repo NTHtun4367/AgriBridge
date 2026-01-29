@@ -1,4 +1,3 @@
-// controllers/entry.controller.ts
 import { Response } from "express";
 import { AuthRequest } from "../../../shared/middleware/authMiddleware";
 import asyncHandler from "../../../shared/utils/asyncHandler";
