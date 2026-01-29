@@ -53,7 +53,14 @@ import { Save } from "lucide-react";
 import nrcDataRaw from "@/utils/nrcData.json";
 const nrcData = nrcDataRaw as Record<string, string[]>;
 
-const UNITS = ["Bag (108lb)", "Viss (1.6kg)", "Basket", "Metric Ton"];
+export const UNITS = [
+  "Viss (1.63kg)",
+  "Bag",
+  "Tin",
+  "Basket",
+  "Metric Ton",
+  "Pound (lb)",
+];
 
 interface InvoiceFormValues {
   farmerId: string;
@@ -411,7 +418,7 @@ export function InvoiceCreator({
                             <SelectContent>
                               {Object.keys(nrcData).map((reg) => (
                                 <SelectItem key={reg} value={reg}>
-                                  {reg}/
+                                  {reg}
                                 </SelectItem>
                               ))}
                             </SelectContent>

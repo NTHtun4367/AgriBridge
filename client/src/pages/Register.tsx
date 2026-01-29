@@ -620,8 +620,9 @@ function Register() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="N">N</SelectItem>
-                            <SelectItem value="P">P</SelectItem>
+                            <SelectItem value="(N)">(N)</SelectItem>
+                            <SelectItem value="(P)">(P)</SelectItem>
+                            <SelectItem value="(E)">(E)</SelectItem>
                           </SelectContent>
                         </Select>
                       )}

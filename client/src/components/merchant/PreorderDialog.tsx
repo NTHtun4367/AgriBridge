@@ -367,7 +367,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                 <SelectContent>
                                   {Object.keys(nrcData).map((reg) => (
                                     <SelectItem key={reg} value={reg}>
-                                      {reg}/
+                                      {reg}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -426,9 +426,6 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                     "(N)",
                                     "(P)",
                                     "(E)",
-                                    "(T)",
-                                    "(S)",
-                                    "(C)",
                                   ].map((type) => (
                                     <SelectItem key={type} value={type}>
                                       {type}
