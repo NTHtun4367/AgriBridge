@@ -30,12 +30,14 @@ function MerchantView() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchants</h1>
           <p className="text-muted-foreground mt-1">
-            Connect with verified merchants in your region.
+            {showAll
+              ? "Connect with all verified merchants."
+              : "Connect with verified merchants in your region."}
           </p>
         </div>
 
         <div className="flex items-center gap-3 bg-secondary p-2 px-4 rounded-full border">
-          <span className="text-sm font-semibold">{showAll ? "Show All Locations" : "My Location"}</span>
+          <span className="text-sm font-semibold">Show All Locations</span>
           <Switch checked={showAll} onCheckedChange={setShowAll} />
         </div>
       </div>

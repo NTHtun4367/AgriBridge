@@ -823,14 +823,14 @@ export function InvoiceCreator({
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Save className="text-primary" />
-                      Save to Income Ledger?
+                      Save to Expense Ledger?
                     </DialogTitle>
                   </DialogHeader>
 
                   <p className="text-sm text-slate-500">
                     Do you want to record this invoice (
                     <strong>{subtotal.toLocaleString()} MMK</strong>) as an
-                    income entry?
+                    expense transaction?
                   </p>
 
                   <DialogFooter className="flex gap-2">

@@ -116,7 +116,7 @@ export class MarketService {
           records: {
             $push: {
               price: "$price",
-              amount: "$amount", // Added to grouping
+              amount: "$amount",
               unit: "$unit",
               createdAt: "$createdAt",
             },
@@ -156,7 +156,7 @@ export class MarketService {
           cropName: "$cropDetails.name",
           category: "$cropDetails.category",
           currentPrice: "$latest.price",
-          amount: "$latest.amount", // Added to final projection
+          amount: "$latest.amount",
           unit: "$latest.unit",
           updatedAt: "$latest.createdAt",
           previousPrice: { $ifNull: ["$previous.price", null] },
@@ -217,7 +217,7 @@ export class MarketService {
           _id: 0,
           date: "$createdAt",
           price: "$price",
-          amount: "$amount", // Added to history for tooltip data
+          amount: "$amount",
         },
       },
     ]);

@@ -67,7 +67,7 @@ export const updateMarketPrices = asyncHandler(
       userId,
     );
 
-    // 2. Notification logic: ONLY if marketId was provided (Official Update)
+    // 2. Notification: ONLY if marketId was provided (Official Update)
     if (marketId && marketInfo) {
       const message = `Market Update: Prices in ${marketInfo.name} have been updated!`;
       const title = "New Price Update";
