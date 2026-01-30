@@ -45,7 +45,7 @@ import {
   useRegisterMerchantMutation,
 } from "@/store/slices/userApi";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import myanmarDataRaw from "../utils/myanmarLocationData.json";
 import nrcDataRaw from "../utils/nrcData.json";
 import {
@@ -345,7 +345,7 @@ function Register() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-extrabold text-primary italic">
-            AgriBridge
+            <Link to={"/"}>AgriBridge</Link>
           </CardTitle>
           <CardDescription>
             Step {step} of {totalSteps}: {stepsConfig[step - 1].label} info

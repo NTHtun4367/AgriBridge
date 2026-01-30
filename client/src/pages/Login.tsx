@@ -67,7 +67,7 @@ function Login() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-extrabold text-primary italic">
-            AgriBridge
+            <Link to={"/"}>AgriBridge</Link>
           </CardTitle>
           <CardDescription>Enter your information to login</CardDescription>
         </CardHeader>

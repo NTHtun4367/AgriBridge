@@ -1,15 +1,21 @@
-import { NavLink } from "react-router";
-
+import { Link, NavLink } from "react-router";
+import heroBg from "@/assets/logo.png";
 function Footer() {
   return (
     <footer className="px-8 py-12 bg-slate-900 text-slate-300">
       <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-2">
           <div className="flex items-center gap-2 mb-4">
-            {/* <Sprout className="text-emerald-500" size={24} /> */}
-            <span className="text-3xl italic font-bold text-white">
-              AgriBridge
-            </span>
+            <Link to="/" className="flex items-center">
+              <img
+                src={heroBg}
+                alt="Logo"
+                className="h-12 w-auto object-contain"
+              />
+              <span className="text-3xl italic font-bold text-primary">
+                AgriBridge
+              </span>
+            </Link>
           </div>
           <p className="max-w-xs">
             Making agriculture transparent, profitable, and accessible through
