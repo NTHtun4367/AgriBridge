@@ -36,6 +36,8 @@ function EntryDetailPage() {
   const { data: entry, isLoading } = useGetEntryByIdQuery(id as string);
   const [deleteEntry, { isLoading: isDeleting }] = useDeleteEntryMutation();
 
+  console.log(entry);
+
   const handleDelete = async () => {
     try {
       await deleteEntry(id as string).unwrap();
@@ -219,7 +221,7 @@ function EntryDetailPage() {
                         Notes
                       </span>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                    <p className="text-primary font-semibold leading-relaxed italic">
                       "{entry.notes}"
                     </p>
                   </div>

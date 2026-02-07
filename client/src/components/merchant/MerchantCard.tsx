@@ -57,7 +57,7 @@ export function MerchantCard({ user }: { user: any }) {
           className="w-full sm:w-auto px-6 h-9 text-xs font-semibold hover:bg-primary hover:text-white transition-all rounded-full"
         >
           <Link
-            to={`/farmer/merchants/${user._id}`}
+            to={`/${user.role}/merchants/${user._id}`}
             className="flex items-center gap-2"
           >
             View Details

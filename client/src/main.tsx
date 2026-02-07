@@ -18,7 +18,6 @@ import { PersistGate } from "redux-persist/integration/react";
 import Verification from "./pages/admin/Verification.tsx";
 import FarmerPanel from "./pages/farmer/FarmerPanel.tsx";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard.tsx";
-import MerchantsView from "./pages/farmer/MerchantView.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/index.ts";
 import MerchantPanel from "./pages/merchant/MerchantPanel.tsx";
@@ -30,7 +29,7 @@ import EntryDetailPage from "./components/EntryDetailPage.tsx";
 import MarketManagement from "./pages/admin/MarketManagement.tsx";
 import MerchantMarketManagement from "./pages/merchant/MerchantMarketManagement.tsx";
 import Announcement from "./pages/admin/Announcement.tsx";
-import MerchantProfile from "./pages/farmer/MerchantProfile.tsx";
+import MerchantProfile from "./common/MerchantProfile.tsx";
 import CropPriceHistoryLanding from "./pages/landing/CropPriceHistoryLanding.tsx";
 import CropPriceHistoryDashboard from "./pages/farmer/CropPriceHistoryDashboard.tsx";
 import PreorderList from "./pages/farmer/PreorderList.tsx";
@@ -54,6 +53,8 @@ import PrivacyPolicy from "./pages/landing/PrivacyPolicy.tsx";
 import MerchantLanding from "./pages/landing/MerchantLanding.tsx";
 import Report from "./pages/farmer/Report.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
+import MerchantList from "./common/MerchantList.tsx";
+import { AgricultureManager } from "./pages/farmer/AgriManager.tsx";
 
 const router = createBrowserRouter([
   {
@@ -78,7 +79,7 @@ const router = createBrowserRouter([
         children: [
           { path: "/farmer/dashboard", element: <FarmerDashboard /> },
           { path: "/farmer/markets", element: <MarketDashboard /> },
-          { path: "/farmer/merchants", element: <MerchantsView /> },
+          { path: "/farmer/merchants", element: <MerchantList /> },
           { path: "/farmer/merchants/:userId", element: <MerchantProfile /> },
           { path: "/farmer/records", element: <Records /> },
           { path: "/farmer/records/:id", element: <EntryDetailPage /> },
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
           { path: "/farmer/settings", element: <Settings /> },
           { path: "/farmer/profile", element: <Profile /> },
           { path: "/farmer/reports", element: <Report /> },
+          { path: "/farmer/agri-manager", element: <AgricultureManager /> },
         ],
       },
       {
@@ -102,6 +104,8 @@ const router = createBrowserRouter([
           // PUBLIC MERCHANT ROUTES
           { path: "/merchant/dashboard", element: <MerchantDashboard /> },
           { path: "/merchant/markets", element: <MarketDashboard /> },
+          { path: "/merchant/merchants/:userId", element: <MerchantProfile /> },
+          { path: "/merchant/merchants", element: <MerchantList /> },
           {
             path: "/merchant/crop-price-history",
             element: <CropPriceHistoryDashboard />,

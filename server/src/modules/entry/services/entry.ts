@@ -1,11 +1,20 @@
-// services/entry.service.ts
 import { Types } from "mongoose";
 import { uploadSingleImage } from "../../../shared/utils/cloudinary";
-import { Entry } from "../../entry/models/entry";
+import { Entry } from "../models/entry";
 
 export class EntryService {
   async createEntry(userId: string, body: any, file?: Express.Multer.File) {
-    const { date, type, category, season, quantity, unit, value, notes } = body;
+    const {
+      date,
+      type,
+      category,
+      season,
+      quantity,
+      unit,
+      value,
+      notes,
+      cropId,
+    } = body;
     let uploadedBill = undefined;
 
     if (file) {
@@ -17,6 +26,7 @@ export class EntryService {
 
     return await Entry.create({
       userId: new Types.ObjectId(userId),
+      cropId: cropId ? new Types.ObjectId(cropId) : undefined,
       date: new Date(date),
       type,
       category,
@@ -38,7 +48,17 @@ export class EntryService {
     const entry = await Entry.findOne({ _id: id, userId });
     if (!entry) throw new Error("Entry not found or unauthorized");
 
-    const { date, type, category, season, quantity, unit, value, notes } = body;
+    const {
+      date,
+      type,
+      category,
+      season,
+      quantity,
+      unit,
+      value,
+      notes,
+      cropId,
+    } = body;
     let billImageUrl = entry.billImageUrl;
 
     if (file) {
@@ -54,6 +74,12 @@ export class EntryService {
       type: type || entry.type,
       category: category || entry.category,
       season: season !== undefined ? season : entry.season,
+      cropId:
+        cropId !== undefined
+          ? cropId
+            ? new Types.ObjectId(cropId)
+            : null
+          : entry.cropId,
       quantity: quantity !== undefined ? Number(quantity) : entry.quantity,
       unit: unit || entry.unit,
       value: value !== undefined ? Number(value) : entry.value,
@@ -66,34 +92,19 @@ export class EntryService {
     });
   }
 
-  async deleteEntry(id: string, userId: string) {
-    const entry = await Entry.findOneAndDelete({ _id: id, userId });
-    if (!entry) throw new Error("Entry not found or unauthorized");
-    return { message: "Entry deleted successfully" };
-  }
-
-  async getAllEntries(userId: string) {
-    return await Entry.find({ userId }).sort({ date: -1 });
-  }
-
-  async getEntryById(id: string, userId: string) {
-    const entry = await Entry.findOne({ _id: id, userId });
-    if (!entry) throw new Error("Entry not found.");
-    return entry;
-  }
-
-  async getStatsByCategory(userId: string) {
-    const match = { userId: new Types.ObjectId(userId) };
+  async getFinancialOverview(userId: string, season?: string) {
+    const matchQuery: any = { userId: new Types.ObjectId(userId) };
+    if (season && season !== "all") matchQuery.season = season;
 
     const categoryStats = await Entry.aggregate([
-      { $match: match },
+      { $match: matchQuery },
       {
         $group: {
           _id: "$category",
-          totalIncome: {
+          income: {
             $sum: { $cond: [{ $eq: ["$type", "income"] }, "$value", 0] },
           },
-          totalExpense: {
+          expense: {
             $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$value", 0] },
           },
         },
@@ -101,9 +112,9 @@ export class EntryService {
       {
         $project: {
           category: "$_id",
-          income: "$totalIncome",
-          expense: "$totalExpense",
-          profit: { $subtract: ["$totalIncome", "$totalExpense"] },
+          income: 1,
+          expense: 1,
+          profit: { $subtract: ["$income", "$expense"] },
           _id: 0,
         },
       },
@@ -121,6 +132,22 @@ export class EntryService {
     );
 
     return { overall, categories: categoryStats };
+  }
+
+  async getAllEntries(userId: string) {
+    return await Entry.find({ userId }).sort({ date: -1 });
+  }
+
+  async getEntryById(id: string, userId: string) {
+    const entry = await Entry.findOne({ _id: id, userId });
+    if (!entry) throw new Error("Entry not found.");
+    return entry;
+  }
+
+  async deleteEntry(id: string, userId: string) {
+    const entry = await Entry.findOneAndDelete({ _id: id, userId });
+    if (!entry) throw new Error("Entry not found.");
+    return { message: "Entry deleted successfully" };
   }
 }
 

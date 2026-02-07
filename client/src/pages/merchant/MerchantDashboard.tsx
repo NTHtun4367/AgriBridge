@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { useGetCategoryStatsQuery } from "@/store/slices/entryApi";
 import {
   TrendingUp,
   TrendingDown,
@@ -66,6 +65,7 @@ import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 import MerchantEntryDialog from "@/components/merchant/MerchantEntryDialog";
 import { InvoiceCreator } from "@/components/merchant/InvoiceCreator";
+import { useGetFinancialOverviewQuery } from "@/store/slices/entryApi";
 
 // --- TYPES ---
 interface CategoryItem {
@@ -127,7 +127,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const MerchantDashboard = () => {
-  const { data, isLoading, error } = useGetCategoryStatsQuery();
+  const { data, isLoading, error } = useGetFinancialOverviewQuery({});
   const { data: user } = useCurrentUserQuery();
 
   // Table State

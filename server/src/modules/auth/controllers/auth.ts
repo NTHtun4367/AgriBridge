@@ -137,26 +137,33 @@ export const updateMerchantDocs = asyncHandler(
   },
 );
 
-// --- ADMINISTRATIVE & STATS ---
-
-export const getDashboardStats = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const result = await authService.getUserDashboardStats();
-    res.status(200).json(result);
-  },
-);
-
-export const getPendingVerifications = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const result = await authService.getPendingUsers();
-    res.status(200).json(result);
-  },
-);
-
 export const getVerifiedMerchants = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await authService.getVerifiedMerchants();
-    res.status(200).json(result);
+    const { division, district, township } = req.query;
+
+    // Base filter: only verified active merchants with a linked profile
+    const filter: any = {
+      role: "merchant",
+      verificationStatus: "verified",
+      status: "active",
+      merchantId: { $exists: true },
+    };
+
+    // Add location filters only if they are provided in the query
+    if (division && division !== "undefined") filter.division = division;
+    if (district && district !== "undefined") filter.district = district;
+    if (township && township !== "undefined") filter.township = township;
+
+    const merchants = await authService.getMerchants(filter);
+
+    res.status(200).json(merchants);
+  },
+);
+
+export const getMerchantInfoById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const merchant = await authService.getMerchantById(req.params.userId);
+    res.status(200).json(merchant);
   },
 );
 

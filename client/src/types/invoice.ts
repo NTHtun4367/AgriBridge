@@ -36,6 +36,7 @@ export interface CreateInvoiceRequest {
   items: IInvoiceItem[];
   notes?: string;
   status?: string;
+  totalAmount?: number;
 }
 
 export interface UpdateStatusRequest {

@@ -11,48 +11,16 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Search,
-  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useFinalizeInvoiceMutation,
   useGetFarmerInvoicesQuery,
 } from "@/store/slices/invoiceApi";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { useGetMerchantInfoQuery } from "@/store/slices/farmerApi";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAddEntryMutation } from "@/store/slices/entryApi";
-
-const getCurrentSeason = () => {
-  const now = new Date();
-  const month = now.getMonth(); // 0 = Jan, 11 = Dec
-  const year = now.getFullYear();
-
-  let seasonName = "";
-
-  // Logic:
-  // Summer: Mar(2) - Jun(5)
-  // Monsoon: Jul(6) - Oct(9)
-  // Winter: Nov(10) - Feb(1)
-  if (month >= 2 && month <= 5) {
-    seasonName = "Summer";
-  } else if (month >= 6 && month <= 9) {
-    seasonName = "Monsoon";
-  } else {
-    seasonName = "Winter";
-  }
-
-  // Adjust year for "Winter" if it's January/February but belongs to the previous cycle
-  // (Optional: depending on how you want to label your seasons)
-  return `${seasonName} ${year}`;
-};
-
-const CURRENT_SEASON = getCurrentSeason();
+import { useGetMerchantInfoQuery } from "@/store/slices/userApi";
+import { useGetActiveSeasonQuery } from "@/store/slices/farmerApi";
 
 // Utility to convert base64/dataUrl to a File object for FormData
 const dataURLtoFile = (dataurl: string, filename: string) => {
@@ -72,11 +40,11 @@ export default function InvoiceList() {
   const { data: invoices, isLoading: invoicesLoading } =
     useGetFarmerInvoicesQuery();
   const [finalize, { isLoading: isFinalizing }] = useFinalizeInvoiceMutation();
-  const [addEntry, { isLoading: isAddingEntry }] = useAddEntryMutation();
+  const [addEntry] = useAddEntryMutation();
+  const { data: activeSeason } = useGetActiveSeasonQuery();
 
   // Local State
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const actionButtonsRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +61,6 @@ export default function InvoiceList() {
 
     const loadingToast = toast.loading("Generating Receipt Image...");
 
-    // 🔴 HARD HIDE BUTTONS (SYNC)
     if (auto && actionButtonsRef.current) {
       actionButtonsRef.current.classList.add("print-hidden");
     }
@@ -138,45 +105,31 @@ export default function InvoiceList() {
         setSelectedInvoice({ ...selectedInvoice, status: "paid" });
       }
 
-      // Automatically trigger the download for the user's gallery
-      const imageUrl = await generateAndDownloadImage(true);
+      // Generate receipt image (hidden buttons)
+      const dataUrl = await generateAndDownloadImage(true);
 
-      if (imageUrl) {
-        // Show confirmation to save this specific transaction to the ledger
-        setShowSaveConfirm(true);
+      if (dataUrl && selectedInvoice && invoiceRef.current) {
+        await autoSaveToIncome(dataUrl);
+        toast.success("Saved to income ledger automatically!");
       }
     } catch (err) {
       toast.error("Failed to finalize transaction");
     }
   };
 
-  const handleSaveToIncome = async () => {
-    if (!selectedInvoice || !invoiceRef.current) return;
+  const autoSaveToIncome = async (dataUrl: string) => {
+    if (!selectedInvoice || !activeSeason?._id) return;
 
-    try {
-      const items = selectedInvoice.items || [];
+    const items = selectedInvoice.items || [];
 
-      const totalQuantity = items.reduce(
-        (sum: number, item: any) => sum + (Number(item.quantity) || 0),
-        0,
-      );
+    for (const item of items) {
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
 
-      const uniqueUnits = Array.from(
-        new Set(items.map((item: any) => item.unit)),
-      );
-      const displayUnit: any =
-        uniqueUnits.length === 1 ? uniqueUnits[0] : "Mixed";
+      if (!item.cropName || quantity === 0) continue;
 
-      const displayCategory = "crops";
+      const totalValue = quantity * price;
 
-      const itemSummary = items
-        .map((i: any) => `${i.cropName} (${i.quantity} ${i.unit})`)
-        .join(", ");
-
-      // Re-generate PNG for the ledger entry file
-      const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
-        quality: 0.8,
-      });
       const imageFile = dataURLtoFile(
         dataUrl,
         `receipt_${selectedInvoice.invoiceId}.png`,
@@ -185,26 +138,20 @@ export default function InvoiceList() {
       const formData = new FormData();
       formData.append("date", new Date().toISOString());
       formData.append("type", "income");
-      formData.append("category", displayCategory);
-      formData.append("season", CURRENT_SEASON); // Dynamic season
-      formData.append("quantity", totalQuantity.toString());
-      formData.append("unit", displayUnit);
-      formData.append("value", selectedInvoice.totalAmount.toString());
+      formData.append("category", item.cropName);
+      formData.append("season", activeSeason.name);
+      formData.append("quantity", quantity.toString());
+      formData.append("unit", item.unit);
+      formData.append("value", totalValue.toString());
       formData.append(
         "notes",
-        `Invoice #${selectedInvoice.invoiceId} | Items: ${itemSummary}`,
+        `Invoice #${selectedInvoice.invoiceId} | ${item.cropName}: ${quantity} ${item.unit} × ${price.toLocaleString()} = ${totalValue.toLocaleString()} MMK`,
       );
       formData.append("billImage", imageFile);
 
       await addEntry(formData).unwrap();
-      toast.success("Added to your Income Ledger!");
-      setShowSaveConfirm(false);
-    } catch (err) {
-      toast.error("Failed to save to ledger.");
     }
   };
-
-  // --- UI RENDERING ---
 
   if (invoicesLoading)
     return (
@@ -215,6 +162,8 @@ export default function InvoiceList() {
         </p>
       </div>
     );
+
+  console.log(merchant);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8">
@@ -354,6 +303,12 @@ export default function InvoiceList() {
                             <p className="font-bold">
                               {merchant?.merchantId?.businessName}
                             </p>
+                            <p className="font-bold text-xs text-slate-500">
+                              {merchant?.merchantId?.nrcRegion}/
+                              {merchant?.merchantId?.nrcTownship}(
+                              {merchant?.merchantId?.nrcType})
+                              {merchant?.merchantId?.nrcNumber}
+                            </p>
                             <p className="text-slate-500 text-xs">
                               {merchant?.township}, {merchant?.division}
                             </p>
@@ -448,40 +403,6 @@ export default function InvoiceList() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* SAVE TO LEDGER CONFIRMATION */}
-      <Dialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
-        <DialogContent className="max-w-md rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Save className="text-primary" />
-              Save to Income Ledger?
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-slate-500 text-sm">
-            Would you like to automatically record this{" "}
-            <strong>{selectedInvoice?.totalAmount.toLocaleString()} MMK</strong>{" "}
-            payment in your income history? We will attach the receipt image for
-            you.
-          </p>
-          <DialogFooter className="flex gap-2 sm:justify-start">
-            <Button
-              className="flex-1"
-              onClick={handleSaveToIncome}
-              disabled={isAddingEntry}
-            >
-              {isAddingEntry ? "Saving..." : "Yes, Save Entry"}
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex-1"
-              onClick={() => setShowSaveConfirm(false)}
-            >
-              No thanks
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

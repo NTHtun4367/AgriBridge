@@ -1,38 +1,56 @@
 import { apiSlice } from "./api";
 
-export interface IFinanceStats {
-  totalIncome: number;
-  totalExpense: number;
-  profit: number;
-}
-
 export const farmerApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // Updated to accept an optional season string
-    getFinanceStats: builder.query<IFinanceStats, string | void>({
-      query: (season) => ({
-        url: "/farmers/finance/stats",
-        params: season && season !== "all" ? { season } : {},
+    // Starts the season using the generated name string
+    startSeason: builder.mutation<any, string>({
+      query: (name) => ({
+        url: "/farmers/seasons/start",
+        method: "POST",
+        body: { name },
       }),
-      providesTags: ["FinanceStats"],
+      invalidatesTags: ["Season"],
     }),
 
-    getMerchants: builder.query<any[], any>({
-      query: (params) => ({
-        url: "/farmers/merchants",
-        params: params,
+    // Ends the season (updates isActive to false)
+    endSeason: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/farmers/seasons/${id}/end`,
+        method: "PATCH",
       }),
+      invalidatesTags: ["Season"],
     }),
 
-    getMerchantInfo: builder.query<any, string>({
-      query: (userId) => `/farmers/merchants/${userId}`,
-      providesTags: ["Merchant"],
+    // Submits the "Invoice" array of crop rows
+    registerCropsBulk: builder.mutation<
+      any,
+      { seasonId: string; crops: any[] }
+    >({
+      query: (body) => ({
+        url: "/farmers/crops/bulk",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Crop"],
+    }),
+
+    // Gets all crops registered for a specific season ID
+    getCrops: builder.query<any[], string>({
+      query: (seasonId) => `/farmers/crops?seasonId=${seasonId}`,
+      providesTags: ["Crop"],
+    }),
+
+    getActiveSeason: builder.query<any, void>({
+      query: () => "/farmers/seasons/active",
+      providesTags: ["Season"],
     }),
   }),
 });
 
 export const {
-  useGetFinanceStatsQuery,
-  useGetMerchantsQuery,
-  useGetMerchantInfoQuery,
+  useStartSeasonMutation,
+  useEndSeasonMutation,
+  useRegisterCropsBulkMutation,
+  useGetCropsQuery,
+  useGetActiveSeasonQuery,
 } = farmerApi;

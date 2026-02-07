@@ -48,7 +48,7 @@ import { useCreatePreorderMutation } from "@/store/slices/preorderApi";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 // Import NRC Data
 import nrcDataRaw from "@/utils/nrcData.json";
@@ -96,6 +96,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   const { userId } = useParams();
   const { user } = useSelector((state: RootState) => state.auth);
   const [createPreorder, { isLoading }] = useCreatePreorderMutation();
+  const navigate = useNavigate();
 
   // --- New State for Terms Gate ---
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
@@ -176,6 +177,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
       toast.success("Preorder successful!");
       setIsOpen(false);
       form.reset();
+      navigate("/farmer/preorders");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to place preorder");
     }
@@ -197,7 +199,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="rounded-full px-8 shadow-md gap-2">
-          <ShoppingCart className="w-4 h-4" /> Preorder Now
+          <ShoppingCart className="w-4 h-4" /> Pre-Selling
         </Button>
       </DialogTrigger>
 
@@ -422,11 +424,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {[
-                                    "(N)",
-                                    "(P)",
-                                    "(E)",
-                                  ].map((type) => (
+                                  {["(N)", "(P)", "(E)"].map((type) => (
                                     <SelectItem key={type} value={type}>
                                       {type}
                                     </SelectItem>

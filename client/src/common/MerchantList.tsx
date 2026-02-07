@@ -1,11 +1,13 @@
-import { useGetMerchantsQuery } from "@/store/slices/farmerApi";
-import { useCurrentUserQuery } from "@/store/slices/userApi";
+import {
+  useCurrentUserQuery,
+  useGetMerchantsQuery,
+} from "@/store/slices/userApi";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Info } from "lucide-react";
 import { MerchantCard } from "@/components/merchant/MerchantCard";
 
-function MerchantView() {
+function MerchantList() {
   const [showAll, setShowAll] = useState(false);
   const { data: currentUser } = useCurrentUserQuery();
 
@@ -26,7 +28,7 @@ function MerchantView() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl border shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 rounded-2xl">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchants</h1>
           <p className="text-muted-foreground mt-1">
@@ -36,7 +38,7 @@ function MerchantView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-secondary p-2 px-4 rounded-full border">
+        <div className="flex items-center gap-3 bg-secondary p-2 px-4 rounded-full border-2 border-primary">
           <span className="text-sm font-semibold">Show All Locations</span>
           <Switch checked={showAll} onCheckedChange={setShowAll} />
         </div>
@@ -53,7 +55,11 @@ function MerchantView() {
       ) : merchants && merchants.length > 0 ? (
         <div className="space-y-3">
           {merchants.map((merchant: any) => (
-            <MerchantCard key={merchant._id} user={merchant} />
+            <>
+              {currentUser?._id !== merchant._id && (
+                <MerchantCard key={merchant._id} user={merchant} />
+              )}
+            </>
           ))}
         </div>
       ) : (
@@ -70,4 +76,4 @@ function MerchantView() {
   );
 }
 
-export default MerchantView;
+export default MerchantList;

@@ -1,143 +1,162 @@
+// backend/src/modules/agriculture/routes/report.ts
 import express, { Request, Response } from "express";
 import { Types } from "mongoose";
-import axios from "axios";
+import Groq from "groq-sdk";
 import { Entry } from "../models/entry";
+import { FarmerCrop } from "../../farmer/models/crop";
+import { marketService } from "../../market/services/market";
+import { ENV } from "../../../shared/utils/env";
+import asyncHandler from "../../../shared/utils/asyncHandler";
 
 const router = express.Router();
-
-// Updated Hugging Face model (instruction-tuned)
-const HF_MODEL =
-  "https://router.huggingface.co/models/meta-llama/Llama-3-7b-instruct-hf";
+const groq = new Groq({ apiKey: ENV.GROQ_API_KEY! });
 
 /**
- * 1. Seasonal Summary
+ * AI-powered Farm Analysis with Filtered Market Context
  */
-router.get("/seasonal-summary/:userId", async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID format" });
-    }
-
-    const report = await Entry.aggregate([
-      { $match: { userId: new Types.ObjectId(userId) } },
-      {
-        $group: {
-          _id: "$season",
-          income: {
-            $sum: { $cond: [{ $eq: ["$type", "income"] }, "$value", 0] },
-          },
-          expense: {
-            $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$value", 0] },
-          },
-        },
-      },
-      {
-        $project: {
-          season: { $ifNull: ["$_id", "Unknown"] },
-          totalIncome: "$income",
-          totalExpense: "$expense",
-          netProfit: { $subtract: ["$income", "$expense"] },
-          _id: 0,
-        },
-      },
-      { $sort: { season: -1 } },
-    ]);
-
-    res.json(report);
-  } catch (err) {
-    console.error("Aggregation Error:", err);
-    res.status(500).json({ message: "Failed to generate seasonal report" });
-  }
-});
-
-/**
- * 2. AI Analysis (Hugging Face Router API)
- */
-router.post("/ai-analyze", async (req: Request, res: Response) => {
+(router.post("/ai-analyze", async (req: Request, res: Response) => {
   const { userId, season } = req.body;
 
-  try {
-    if (!userId || !season) {
-      return res
-        .status(400)
-        .json({ message: "UserId and Season are required" });
-    }
+  if (!userId || !season) {
+    return res.status(400).json({ message: "UserId and Season are required" });
+  }
 
-    const entries = await Entry.find({
-      userId: new Types.ObjectId(userId),
-      season,
-    });
+  // 1️⃣ Fetch Financials, Crop Allocations, and Market Prices
+  const [entries, farmerCrops, allMarketData] = await Promise.all([
+    Entry.find({ userId: new Types.ObjectId(userId), season }),
+    FarmerCrop.find({ userId: new Types.ObjectId(userId) }),
+    marketService.getLatestMarketAnalytics({ official: true }),
+  ]);
 
-    if (!entries.length) {
-      return res.json({
-        advice: "No financial records found for this season to analyze.",
-      });
-    }
-
-    const summary = entries
-      .map(
-        (e) =>
-          `- ${e.type.toUpperCase()}: ${e.category} (${e.value} MMK)${
-            e.notes ? ` - ${e.notes}` : ""
-          }`,
-      )
-      .join("\n");
-
-    const prompt = `
-You are an AI Agricultural Financial Consultant.
-
-Analyze the following records for the "${season}" season.
-
-DATA:
-${summary}
-
-TASKS:
-1. Summarize total income vs total expenses.
-2. Identify the highest expense category.
-3. Give 2 actionable farming tips to improve profit next season.
-
-Respond in Markdown. Be concise, professional, and practical.
-`;
-
-    // Call Hugging Face Router API
-    const response = await axios.post(
-      HF_MODEL,
-      {
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 500,
-          temperature: 0.4,
-        },
-        options: {
-          wait_for_model: true,
-          use_cache: false,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 120_000,
-      },
-    );
-
-    const advice =
-      response.data?.generated_text || "AI could not generate a response.";
-
-    res.json({ advice });
-  } catch (error: any) {
-    console.error(
-      "HF Router API Error:",
-      error?.response?.data || error.message,
-    );
-    res.status(500).json({
-      message: "AI Analysis failed to process.",
-      details: error?.response?.data || error.message,
+  if (!entries.length && !farmerCrops.length) {
+    return res.json({
+      advice:
+        "ခွဲခြမ်းစိတ်ဖြာရန် ဒေတာမလုံလောက်သေးပါ။ ဘဏ္ဍာရေးမှတ်တမ်းနှင့် စိုက်ပျိုးသီးနှံအချက်အလက်များ ထည့်သွင်းပါ။",
     });
   }
-});
+
+  // 2️⃣ Financial Processing
+  const totalExpense = entries
+    .filter((e) => e.type === "expense")
+    .reduce((s, e) => s + e.value, 0);
+  const totalIncome = entries
+    .filter((e) => e.type === "income")
+    .reduce((s, e) => s + e.value, 0);
+
+  // 3️⃣ Crop Allocation Processing
+  const totalAcres = farmerCrops.reduce((s, c) => s + (c.areaSize || 0), 0);
+  const userCropNames = farmerCrops.map((c) => c.cropName.toLowerCase());
+
+  const cropSummary = farmerCrops
+    .map((c) => `- ${c.cropName} (${c.variety}): ${c.areaSize || 0} ဧက`)
+    .join("\n");
+
+  // 4️⃣ Filter Market Prices to match User's Crops
+  // We filter market analytics to only show prices for what the farmer is currently growing
+  const relevantMarket = (allMarketData || []).filter((m: any) =>
+    userCropNames.includes(m.cropName.toLowerCase()),
+  );
+
+  // Fallback: If no direct matches, show top 5 general market trends
+  const marketDisplayList =
+    relevantMarket.length > 0
+      ? relevantMarket
+      : (allMarketData || []).slice(0, 5);
+
+  const marketText = marketDisplayList
+    .map(
+      (m: any) =>
+        `- ${m.cropName}: ${m.currentPrice.toLocaleString()} MMK (${m.priceChangePercent > 0 ? "📈 တက်" : "📉 ကျ"} ${m.priceChangePercent}%)`,
+    )
+    .join("\n");
+
+  // 5️⃣ Prompts
+  const systemPrompt = `
+You are an "Advanced Agricultural and Financial Advisor" for Myanmar farmers. 
+Analyze farm data and provide actionable advice in Burmese (Unicode). 
+Be concise, professional, and encouraging. Use Markdown for structure.
+`;
+
+  const userPrompt = `
+ရာသီ: ${season}
+စိုက်ပျိုးထားသော သီးနှံများ:
+${cropSummary}
+စုစုပေါင်းဧက: ${totalAcres} ဧက
+
+ဘဏ္ဍာရေးအခြေအနေ:
+- စုစုပေါင်းဝင်ငွေ: ${totalIncome.toLocaleString()} MMK
+- စုစုပေါင်းအသုံးစရိတ်: ${totalExpense.toLocaleString()} MMK
+- တစ်ဧက ပျှမ်းမျှကုန်ကျစရိတ်: ${totalAcres > 0 ? Math.round(totalExpense / totalAcres).toLocaleString() : 0} MMK
+
+သက်ဆိုင်ရာ ဈေးကွက်ပေါက်ဈေးများ:
+${marketText}
+
+အောက်ပါခေါင်းစဉ်များဖြင့် Markdown format သုံးပြီး အကြံပြုပေးပါ:
+
+## 1. Financial Health (စီးပွားရေးအခြေအနေ)
+- လက်ရှိအသုံးစရိတ်နှင့် ဝင်ငွေအပေါ်မူတည်၍ အမြတ်အစွန်းတွက်ချက်မှု။
+- ကုန်ကျစရိတ်လျှော့ချနိုင်မည့် နည်းလမ်းများ။
+
+## 2. Market Strategy (ဈေးကွက်ဗျူဟာ)
+- စိုက်ပျိုးထားသော သီးနှံများ၏ လက်ရှိဈေးကွက်လားရာအပေါ် သုံးသပ်ချက်။
+- ရောင်းချသင့်သည့် အချိန် သို့မဟုတ် သိုလှောင်သင့်သည့် အကြံပြုချက်။
+
+## 3. Strategic Recommendations (နောင်ရာသီအတွက် ပြင်ဆင်ချက်)
+- သီးနှံအလှည့်ကျစိုက်ပျိုးခြင်း သို့မဟုတ် ဧကတိုးချဲ့သင့်သည့် သီးနှံများ။
+`;
+
+  // 6️⃣ AI Request
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    temperature: 0.2,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+  });
+
+  res.json({
+    advice:
+      completion.choices[0]?.message?.content ||
+      "AI advice currently unavailable.",
+    isTailored: relevantMarket.length > 0,
+  });
+}),
+  /**
+   * Seasonal Dashboard Summary
+   */
+  router.get(
+    "/seasonal-summary/:userId",
+    asyncHandler(async (req: Request, res: Response) => {
+      const { userId } = req.params;
+
+      const report = await Entry.aggregate([
+        { $match: { userId: new Types.ObjectId(userId) } },
+        {
+          $group: {
+            _id: "$season",
+            income: {
+              $sum: { $cond: [{ $eq: ["$type", "income"] }, "$value", 0] },
+            },
+            expense: {
+              $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$value", 0] },
+            },
+          },
+        },
+        {
+          $project: {
+            season: { $ifNull: ["$_id", "အမည်မသိရာသီ"] },
+            totalIncome: "$income",
+            totalExpense: "$expense",
+            netProfit: { $subtract: ["$income", "$expense"] },
+            _id: 0,
+          },
+        },
+        { $sort: { season: -1 } },
+      ]);
+
+      res.json(report);
+    }),
+  ));
 
 export default router;

@@ -1,39 +1,22 @@
 import { Router } from "express";
-import { upload } from "../../../shared/utils/upload";
-import { entryValidator } from "../../entry/validators/entry";
-import { validateRequest } from "../../../shared/middleware/validateRequest";
+import {
+  handleStartSeason,
+  handleBulkAddCrops,
+  handleGetCrops,
+  handleEndSeason,
+  handleGetActiveSeason, // Import the new handler
+} from "../controllers/farmer";
 import { protect } from "../../../shared/middleware/authMiddleware";
-import { getStats } from "../controllers/finance";
-import {
-  getMerchantInfoById,
-  getVerifiedMerchants,
-} from "../controllers/merchant";
-import { allowRoles } from "../../../shared/middleware/role";
-import {
-  createEntry,
-  getAllEntries,
-  getEntryById,
-} from "../../entry/controllers/entry";
 
 const router = Router();
 
-router.use(protect, allowRoles("farmer"));
+// Season Management
+router.get("/seasons/active", protect, handleGetActiveSeason); // NEW ROUTE
+router.post("/seasons/start", protect, handleStartSeason);
+router.patch("/seasons/:id/end", protect, handleEndSeason);
 
-router.post(
-  "/add-entry",
-  upload.single("billImage"),
-  entryValidator,
-  validateRequest,
-  createEntry,
-);
-router.get("/finance/stats", getStats);
-router.get("/entries", getAllEntries);
-router.get("/entries/:id", getEntryById);
-
-// MOVE THIS LINE BEFORE THE DYNAMIC ROUTE
-router.get("/merchants", getVerifiedMerchants);
-
-// KEEP THIS AS THE LAST ROUTE
-router.get("/merchants/:userId", getMerchantInfoById);
+// Crop Management
+router.post("/crops/bulk", protect, handleBulkAddCrops);
+router.get("/crops", protect, handleGetCrops);
 
 export default router;

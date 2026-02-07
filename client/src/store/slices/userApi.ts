@@ -149,6 +149,18 @@ export const authApi = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    getMerchants: builder.query<any[], any>({
+      query: (params) => ({
+        url: "/auth/merchants",
+        params: params,
+      }),
+    }),
+
+    getMerchantInfo: builder.query<any, string>({
+      query: (userId) => `/auth/merchants/${userId}`,
+      providesTags: ["Merchant"],
+    }),
   }),
 });
 
@@ -166,4 +178,6 @@ export const {
   useUpdateMerchantDocsMutation,
   useChangePasswordMutation,
   useDeleteAccountMutation,
+  useGetMerchantsQuery,
+  useGetMerchantInfoQuery,
 } = authApi;

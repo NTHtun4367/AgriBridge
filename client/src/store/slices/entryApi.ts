@@ -45,7 +45,7 @@ export const entryApi = apiSlice.injectEndpoints({
       invalidatesTags: ["FinanceStats", "Entries"],
     }),
 
-    getCategoryStats: builder.query<
+    getFinancialOverview: builder.query<
       {
         overall: { income: number; expense: number; profit: number };
         categories: Array<{
@@ -55,10 +55,12 @@ export const entryApi = apiSlice.injectEndpoints({
           profit: number;
         }>;
       },
-      void
+      { season?: string } // Object argument
     >({
-      query: () => "/entries/category-stats",
-      // Transformation to access the .data property from your backend response
+      query: ({ season }) => ({
+        url: "/entries/category-stats",
+        params: { season }, // Automatically builds ?userId=...&season=...
+      }),
       transformResponse: (response: { data: any }) => response.data,
       providesTags: ["Entries"],
     }),
@@ -71,5 +73,5 @@ export const {
   useGetEntryByIdQuery,
   useUpdateEntryMutation,
   useDeleteEntryMutation,
-  useGetCategoryStatsQuery,
+  useGetFinancialOverviewQuery,
 } = entryApi;

@@ -20,6 +20,8 @@ import {
   confirmEmailChange,
   changePassword,
   deleteAccount,
+  getVerifiedMerchants,
+  getMerchantInfoById,
 } from "../controllers/auth";
 import { upload } from "../../../shared/utils/upload";
 import { protect } from "../../../shared/middleware/authMiddleware";
@@ -74,5 +76,19 @@ router.post("/confirm-email-change", protect, confirmEmailChange);
 // Password & Account
 router.post("/profile/change-password", protect, changePassword);
 router.delete("/profile", protect, deleteAccount);
+
+router.get(
+  "/merchants",
+  protect,
+  allowRoles("farmer", "merchant"),
+  getVerifiedMerchants,
+);
+
+router.get(
+  "/merchants/:userId",
+  protect,
+  allowRoles("farmer", "merchant"),
+  getMerchantInfoById,
+);
 
 export default router;

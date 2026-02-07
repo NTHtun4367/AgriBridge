@@ -1,4 +1,4 @@
-import { apiSlice } from "./api";
+import { apiSlice } from "./api"; // Ensure this matches your base API slice path
 
 export interface SeasonalData {
   season: string;
@@ -11,6 +11,7 @@ export const reportApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getSeasonalSummary: builder.query<SeasonalData[], string>({
       query: (userId) => `/seasonal-summary/${userId}`,
+      // providesTags: ["Report"],
     }),
     getAiAnalysis: builder.mutation<
       { advice: string },

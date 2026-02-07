@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -9,127 +9,177 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  BrainCircuit,
+  Loader2,
+  History,
+  Sparkles,
+  Download,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
   useGetAiAnalysisMutation,
   useGetSeasonalSummaryQuery,
 } from "@/store/slices/reportApi";
 
-interface SeasonalReportsProps {
-  userId: string;
-}
-
-const SeasonalReports = ({ userId }: SeasonalReportsProps) => {
+const SeasonalReports = ({ userId }: { userId: string }) => {
+  const [activeSeason, setActiveSeason] = useState<string | null>(null);
   const { data: reports, isLoading } = useGetSeasonalSummaryQuery(userId);
   const [getAiAdvice, { data: aiResponse, isLoading: isAiLoading }] =
     useGetAiAnalysisMutation();
 
+  const handleAskAi = async (season: string) => {
+    setActiveSeason(season);
+    await getAiAdvice({ userId, season });
+  };
+
   if (isLoading)
     return (
-      <div className="flex justify-center p-10">
-        <Loader2 className="animate-spin" />
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-emerald-500 h-12 w-12" />
       </div>
     );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Seasonal Financial Reports</h1>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8 pb-20">
+      {/* Header Area */}
+      <div className="flex justify-between items-end border-b pb-6">
+        <div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
+            SEASONAL INSIGHTS
+          </h1>
+          <p className="text-slate-500 font-bold uppercase text-sm tracking-widest">
+            Advanced Financial Intelligence
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="hidden md:flex"
+          onClick={() => window.print()}
+        >
+          <Download className="mr-2 h-4 w-4" /> Export Report
+        </Button>
+      </div>
 
-      {/* Seasonal Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Top 3 Quick Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {reports?.slice(0, 3).map((report) => (
-          <Card key={report.season} className="border-l-4 border-l-green-500">
+          <Card
+            key={report.season}
+            className="relative overflow-hidden border-2 hover:border-slate-900 transition-all group"
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">
-                {report.season}
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-slate-400">
+                  {report.season}
+                </span>
+                <Badge
+                  className={
+                    report.netProfit >= 0 ? "bg-emerald-500" : "bg-rose-500"
+                  }
+                >
+                  {report.netProfit >= 0 ? "SURPLUS" : "DEFICIT"}
+                </Badge>
+              </div>
+              <CardTitle className="text-2xl font-black">
+                {report.netProfit.toLocaleString()}{" "}
+                <span className="text-sm">MMK</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {report.netProfit.toLocaleString()} MMK
-              </div>
-              <p className="text-xs mt-1 flex items-center gap-1">
-                {report.netProfit >= 0 ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                Net Performance
-              </p>
               <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 w-full text-xs"
+                onClick={() => handleAskAi(report.season)}
                 disabled={isAiLoading}
-                onClick={() => getAiAdvice({ userId, season: report.season })}
+                className="w-full bg-slate-100 hover:bg-slate-900 text-slate-900 hover:text-white font-bold transition-colors"
               >
-                {isAiLoading ? "Analyzing..." : "Ask AI about this Season"}
+                {isAiLoading && activeSeason === report.season ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <BrainCircuit className="mr-2 h-4 w-4" />
+                )}
+                AI Audit
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* AI Advice Section */}
-      {(isAiLoading || aiResponse) && (
-        <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600">
-              <BrainCircuit className="h-5 w-5" /> AI Seasonal Insight
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isAiLoading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="animate-spin h-4 w-4" /> Analyzing data...
+      {/* AI ANALYSIS DISPLAY - "The Power Feature" */}
+      {aiResponse && (
+        <div className="animate-in slide-in-from-bottom-10 duration-500">
+          <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden rounded-3xl">
+            <div className="bg-linear-to-r from-indigo-600 to-emerald-600 p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                  <Sparkles className="text-yellow-300 fill-yellow-300" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black italic tracking-tight">
+                    AI ADVISOR LOG
+                  </h2>
+                  <p className="text-xs font-bold text-white/70">
+                    DEEP ANALYSIS FOR {activeSeason}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="prose prose-sm max-w-none prose-blue">
-                <ReactMarkdown>{aiResponse?.advice || ""}</ReactMarkdown>
+              <Badge variant="outline" className="text-white border-white/50">
+                Llama-3.3 Advanced
+              </Badge>
+            </div>
+            <CardContent className="p-8 md:p-12">
+              <div className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-white prose-strong:text-emerald-400">
+                <ReactMarkdown>{aiResponse.advice}</ReactMarkdown>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="mt-10 pt-6 border-t border-white/10 flex gap-4">
+                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                  Data Sources: Government Market API + Farmer Input Ledger +
+                  Satellite Price Trends
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* History Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Historical Seasonal Data</CardTitle>
+      {/* History List */}
+      <Card className="rounded-2xl border-2 border-slate-100">
+        <CardHeader className="bg-slate-50/50">
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-slate-400" />
+            Seasonal History
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Season</TableHead>
-                <TableHead>Total Income</TableHead>
-                <TableHead>Total Expense</TableHead>
-                <TableHead className="text-right">Profit/Loss</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="font-bold">Season</TableHead>
+              <TableHead className="font-bold">Total Income</TableHead>
+              <TableHead className="font-bold">Total Expense</TableHead>
+              <TableHead className="text-right font-bold">Net Profit</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reports?.map((r) => (
+              <TableRow key={r.season} className="hover:bg-slate-50">
+                <TableCell className="font-bold text-slate-900">
+                  {r.season}
+                </TableCell>
+                <TableCell className="text-emerald-600 font-bold">
+                  +{r.totalIncome.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-rose-500 font-medium">
+                  -{r.totalExpense.toLocaleString()}
+                </TableCell>
+                <TableCell
+                  className={`text-right font-black ${r.netProfit >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                >
+                  {r.netProfit.toLocaleString()}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reports?.map((r) => (
-                <TableRow key={r.season}>
-                  <TableCell className="font-medium">{r.season}</TableCell>
-                  <TableCell className="text-green-600">
-                    {r.totalIncome.toLocaleString()} MMK
-                  </TableCell>
-                  <TableCell className="text-red-600">
-                    {r.totalExpense.toLocaleString()} MMK
-                  </TableCell>
-                  <TableCell
-                    className={`text-right font-bold ${
-                      r.netProfit >= 0 ? "text-green-700" : "text-red-700"
-                    }`}
-                  >
-                    {r.netProfit.toLocaleString()} MMK
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );

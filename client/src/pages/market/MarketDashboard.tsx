@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, Calendar } from "lucide-react"; // Added Calendar icon
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,6 +17,7 @@ import {
 } from "@/store/slices/marketApi";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns"; // Import format for date handling
 
 function MarketDashboard() {
   const { data: user } = useCurrentUserQuery();
@@ -42,6 +43,14 @@ function MarketDashboard() {
 
   const navigate = useNavigate();
   const rawData = response?.data || [];
+
+  // --- Date Logic ---
+  // Get the most recent update date from the dataset
+  const lastUpdatedDate = useMemo(() => {
+    if (rawData.length === 0) return null;
+    const dates = rawData.map((item: any) => new Date(item.updatedAt || item.date).getTime());
+    return new Date(Math.max(...dates));
+  }, [rawData]);
 
   // Generate unique categories for the dropdown
   const categoryOptions = useMemo(() => {
@@ -110,10 +119,27 @@ function MarketDashboard() {
 
   return (
     <div className="w-full h-screen p-4">
-      <h2 className="text-2xl font-bold">Market Prices</h2>
-      <p className="text-muted-foreground mb-8 mt-2">
-        Real-time updates of the latest market prices.
-      </p>
+      {/* HEADER SECTION WITH DATE */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-2xl font-bold">Market Prices</h2>
+          <p className="text-muted-foreground mt-2">
+            Real-time updates of the latest market prices.
+          </p>
+        </div>
+        
+        {lastUpdatedDate && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <Calendar className="h-4 w-4 text-primary" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-tight">Latest Update</span>
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                {format(lastUpdatedDate, "dd MMMM yyyy")}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Horizontal Market Tags */}
       <div className="mb-8">
@@ -183,7 +209,7 @@ function MarketDashboard() {
       </Card>
 
       {/* Table Section */}
-      <div className="space-y-8">
+      <div className="space-y-8 pb-10">
         {selectedMarket === "all" ? (
           // Grouped Multi-Table View
           groupedData.map((group: any) => (

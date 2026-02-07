@@ -334,7 +334,7 @@ export class AuthService {
       .populate({
         path: "merchantId",
         select:
-          "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
+          "-nrcBackImage -nrcFrontImage",
       })
       .select("-password");
   }

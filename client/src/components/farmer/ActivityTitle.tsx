@@ -1,6 +1,6 @@
 import { useCurrentUserQuery } from "@/store/slices/userApi";
-import { formatDistanceToNow } from "date-fns";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowDownLeft, ArrowUpRight, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router";
 
 interface ActivityTitleProps {
@@ -25,59 +25,66 @@ function ActivityTitle({
   const { data: user } = useCurrentUserQuery();
   const navigate = useNavigate();
 
+  const isIncome = type === "income";
+
   return (
     <div
-      className="flex items-center justify-between p-3 md:p-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl hover:border-primary dark:hover:border-primary transition-all cursor-pointer group bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 w-full"
       onClick={() => navigate(`/${user?.role}/records/${id}`)}
+      className="group relative flex items-center justify-between p-4 mb-3 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-primary/50 hover:shadow-md transition-all cursor-pointer overflow-hidden"
     >
-      {/* Left Section: Icon and Labels */}
-      <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
-        {/* Status Icon Container - Fixed size to prevent shrinking */}
+      {/* Visual Accent for Record Type */}
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1 ${isIncome ? "bg-emerald-500" : "bg-red-500"}`}
+      />
+
+      <div className="flex items-center gap-4 min-w-0 flex-1">
+        {/* Icon Badge */}
         <div
-          className={`p-2.5 md:p-3 rounded-xl transition-colors shrink-0 ${
-            type === "income"
+          className={`shrink-0 p-3 rounded-xl ${
+            isIncome
               ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-              : "bg-red-100 text-destructive dark:bg-red-500/10 dark:text-red-400"
+              : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
           }`}
         >
-          {type === "income" ? (
-            <ArrowUpRight size={18} className="md:w-5 md:h-5" />
-          ) : (
-            <ArrowDownRight size={18} className="md:w-5 md:h-5" />
-          )}
+          {isIncome ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
         </div>
 
-        {/* Text Information - min-w-0 allows truncation to work */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-0.5">
-            <p className="font-bold text-xs md:text-sm capitalize text-slate-900 dark:text-slate-100 truncate">
+        {/* Content */}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 truncate">
               {title}
-            </p>
-            {/* Season Tag - shrink-0 ensures tag stays visible */}
-            <span className="shrink-0 text-[8px] md:text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded-full font-bold uppercase border dark:border-slate-700">
-              {season}
-            </span>
+            </h4>
+            {season && (
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider">
+                {season}
+              </span>
+            )}
           </div>
-          <p className="text-[9px] md:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight truncate">
-            {cat} • {formatDistanceToNow(new Date(date), { addSuffix: true })}
-          </p>
+
+          <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            <span>{cat}</span>
+            <span>•</span>
+            <div className="flex items-center gap-1">
+              <CalendarDays size={12} />
+              {format(new Date(date), "MMM dd, yyyy")}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Right Section: Amount */}
-      <div className="text-right shrink-0 ml-3">
+      {/* Amount Section */}
+      <div className="text-right ml-4">
         <p
-          className={`font-black text-sm md:text-base whitespace-nowrap ${
-            type === "income"
-              ? "text-primary dark:text-primary-light"
-              : "text-destructive/80 dark:text-red-400"
+          className={`text-lg font-black tracking-tight ${
+            isIncome
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-red-600 dark:text-red-400"
           }`}
         >
-          {type === "income" ? "+" : "-"}
-          {amount.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}{" "}
-          <span className="text-[9px] md:text-[10px] font-bold">MMK</span>
+          {isIncome ? "+" : "-"}
+          {amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+          <span className="ml-1 text-[10px] opacity-70">MMK</span>
         </p>
       </div>
     </div>

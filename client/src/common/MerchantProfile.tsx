@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router";
-import { useGetMerchantInfoQuery } from "@/store/slices/farmerApi";
 import {
   MapPin,
   Phone,
@@ -14,6 +13,7 @@ import {
   Search,
   EllipsisVertical,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MerchantMarketPriceTable } from "@/components/merchant/MerchantMarketPriceTable";
+// Updated import: Changed MerchantMarketPriceTable to MarketPriceTable
+import { MarketPriceTable } from "@/components/market/MarketPriceTable";
 import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -44,10 +45,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  useCurrentUserQuery,
+  useGetMerchantInfoQuery,
+} from "@/store/slices/userApi";
+import { format } from "date-fns";
 
 function MerchantProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { data: currentUser } = useCurrentUserQuery();
 
   // Dialog states
   const [isPreorderOpen, setIsPreorderOpen] = useState(false);
@@ -71,6 +78,15 @@ function MerchantProfile() {
   });
 
   const rawData = response?.data || [];
+
+  // --- Date Logic ---
+  const lastUpdatedDate = useMemo(() => {
+    if (rawData.length === 0) return null;
+    const dates = rawData.map((item: any) =>
+      new Date(item.updatedAt || item.date).getTime(),
+    );
+    return new Date(Math.max(...dates));
+  }, [rawData]);
 
   const categoryOptions = useMemo(() => {
     const unique = Array.from(
@@ -137,7 +153,7 @@ function MerchantProfile() {
           variant="outline"
           className="gap-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Go Back
+          <ArrowLeft className="w-4 h-4" /> Go
         </Button>
       </div>
     );
@@ -194,45 +210,41 @@ function MerchantProfile() {
             </div>
 
             <div className="pt-4 flex flex-wrap justify-center md:justify-start gap-3">
-              {/* <Button
-                variant="outline"
-                className="rounded-full border-slate-200"
-              >
-                Contact Merchant
-              </Button> */}
-
-              <PreorderDialog
-                merchant={merchant}
-                rawData={rawData}
-                isOpen={isPreorderOpen}
-                setIsOpen={setIsPreorderOpen}
-              />
+              {currentUser?.role !== "merchant" && (
+                <PreorderDialog
+                  merchant={merchant}
+                  rawData={rawData}
+                  isOpen={isPreorderOpen}
+                  setIsOpen={setIsPreorderOpen}
+                />
+              )}
             </div>
           </div>
 
-          <div className="absolute top-6 right-6">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                >
-                  <EllipsisVertical className="h-5 w-5 text-slate-500" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem
-                  className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                  onClick={() => setIsDisputeOpen(true)}
-                >
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  <span>Report Merchant Dispute</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
+          {currentUser?.role !== "merchant" && (
+            <div className="absolute top-6 right-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                  >
+                    <EllipsisVertical className="h-5 w-5 text-slate-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                    onClick={() => setIsDisputeOpen(true)}
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    <span>Report Merchant Dispute</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
           <ReportDisputeDialog
             merchant={merchant}
             isOpen={isDisputeOpen}
@@ -396,14 +408,24 @@ function MerchantProfile() {
                 Current buying prices offered by this merchant.
               </CardDescription>
             </div>
-            <Badge className="bg-primary/15 text-primary animate-pulse">
-              ● Live Updates
-            </Badge>
+            <div className="flex items-center gap-3">
+              {lastUpdatedDate && (
+                <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-destructive">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span className="text-xs font-semibold">
+                    Last Updated: {format(lastUpdatedDate, "MMM dd, yyyy")}
+                  </span>
+                </div>
+              )}
+              <Badge className="bg-primary/15 text-primary animate-pulse">
+                ● Live Updates
+              </Badge>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          <div className="relative flex gap-6 mb-6">
+          <div className="relative flex flex-col md:flex-row gap-6 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -431,10 +453,16 @@ function MerchantProfile() {
             </Select>
           </div>
 
-          <MerchantMarketPriceTable
+          {/* Updated Component Call: Changed MerchantMarketPriceTable to MarketPriceTable */}
+          <MarketPriceTable
             data={processedData}
             onSort={handleSort}
             sortConfig={sortConfig}
+            onRowClick={(cropId, marketId) =>
+              navigate(
+                `/crop-price-history?cropId=${cropId}&marketId=${marketId}`,
+              )
+            }
           />
         </CardContent>
       </Card>

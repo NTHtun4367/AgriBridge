@@ -36,6 +36,8 @@ export const apiSlice = createApi({
     "Announcement",
     "Dispute",
     "Dashboard",
+    "Crop",
+    "Season",
   ], // used for auto re-fetching
   endpoints: () => ({}),
 });

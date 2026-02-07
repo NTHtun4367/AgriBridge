@@ -6,14 +6,12 @@ import { entryService } from "../services/entry";
 export const getEntryStats = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    if (!userId) throw new Error("Unauthorized");
-
-    const stats = await entryService.getStatsByCategory(userId.toString());
-
-    res.status(200).json({
-      success: true,
-      data: stats,
-    });
+    const { season } = req.query as { season?: string };
+    const stats = await entryService.getFinancialOverview(
+      userId!.toString(),
+      season,
+    );
+    res.status(200).json({ success: true, data: stats });
   },
 );
 
@@ -21,7 +19,7 @@ export const createEntry = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
     const newEntry = await entryService.createEntry(
-      userId?.toString()!,
+      userId!.toString(),
       req.body,
       req.file,
     );
@@ -32,7 +30,7 @@ export const createEntry = asyncHandler(
 export const getAllEntries = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const entries = await entryService.getAllEntries(userId?.toString()!);
+    const entries = await entryService.getAllEntries(userId!.toString());
     res.status(200).json(entries);
   },
 );
@@ -40,8 +38,10 @@ export const getAllEntries = asyncHandler(
 export const getEntryById = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const { id } = req.params;
-    const entry = await entryService.getEntryById(id, userId?.toString()!);
+    const entry = await entryService.getEntryById(
+      req.params.id,
+      userId!.toString(),
+    );
     res.status(200).json(entry);
   },
 );
@@ -49,22 +49,23 @@ export const getEntryById = asyncHandler(
 export const updateEntry = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const { id } = req.params;
-    const updatedEntry = await entryService.updateEntry(
-      id,
-      userId?.toString()!,
+    const updated = await entryService.updateEntry(
+      req.params.id,
+      userId!.toString(),
       req.body,
       req.file,
     );
-    res.status(200).json(updatedEntry);
+    res.status(200).json(updated);
   },
 );
 
 export const deleteEntry = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
-    const { id } = req.params;
-    const result = await entryService.deleteEntry(id, userId?.toString()!);
+    const result = await entryService.deleteEntry(
+      req.params.id,
+      userId!.toString(),
+    );
     res.status(200).json(result);
   },
 );

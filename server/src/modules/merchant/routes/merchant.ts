@@ -9,29 +9,10 @@ import {
 } from "../controllers/invoice";
 import { protect } from "../../../shared/middleware/authMiddleware";
 import { allowRoles } from "../../../shared/middleware/role";
-import { upload } from "../../../shared/utils/upload";
-import { entryValidator } from "../../entry/validators/entry";
-import { validateRequest } from "../../../shared/middleware/validateRequest";
-import {
-  createEntry,
-  getAllEntries,
-  getEntryById,
-} from "../../entry/controllers/entry";
 
 const router = Router();
 
 router.use(protect);
-
-router.post(
-  "/add-entry",
-  upload.single("billImage"),
-  entryValidator,
-  validateRequest,
-  createEntry,
-);
-// router.get("/finance/stats", getStats);
-router.get("/entries", getAllEntries);
-router.get("/entries/:id", getEntryById);
 
 // --- Merchant Specific ---
 router.post("/", allowRoles("merchant"), createInvoice);
