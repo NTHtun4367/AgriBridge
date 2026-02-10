@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGetMyDisputesQuery } from "@/store/slices/disputeApi";
 import { format } from "date-fns";
 import {
@@ -19,6 +20,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
 export default function FarmerDisputes() {
+  const { t } = useTranslation();
   const { data: disputesRes, isLoading } = useGetMyDisputesQuery(undefined);
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
 
@@ -33,35 +35,34 @@ export default function FarmerDisputes() {
   return (
     <div className="min-h-screen p-4 md:p-8 lg:p-12 font-sans">
       <div className="max-w-6xl mx-auto space-y-10">
-        {/* --- Header & Stats --- */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-primary font-semibold text-sm tracking-tight">
+            <div className="flex items-center gap-2 text-primary font-semibold text-sm tracking-tight mm:leading-loose">
               <ShieldCheck className="h-4 w-4" />
-              <span>Trust & Safety</span>
+              <span>{t("farmer_disputes.trust_safety")}</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Dispute Center
+            <h1 className="text-3xl font-bold tracking-tight mm:leading-loose">
+              {t("farmer_disputes.title")}
             </h1>
-            <p className="text-slate-500 text-sm">
-              Monitor and manage your active trade resolutions.
+            <p className="text-slate-500 text-sm mm:leading-loose">
+              {t("farmer_disputes.subtitle")}
             </p>
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             <StatBox
-              label="Total"
+              label={t("farmer_disputes.stats.total")}
               value={stats.total}
               bgColor="bg-blue-500/35"
             />
             <StatBox
-              label="Pending"
+              label={t("farmer_disputes.stats.pending")}
               value={stats.pending}
               bgColor="bg-yellow-500/35"
               highlight="text-amber-600"
             />
             <StatBox
-              label="Resolved"
+              label={t("farmer_disputes.stats.resolved")}
               value={stats.resolved}
               bgColor="bg-green-500/35"
               highlight="text-emerald-600"
@@ -69,7 +70,6 @@ export default function FarmerDisputes() {
           </div>
         </header>
 
-        {/* --- Content Area --- */}
         <main>
           {isLoading ? (
             <LoadingSkeleton />
@@ -88,7 +88,6 @@ export default function FarmerDisputes() {
           )}
         </main>
 
-        {/* --- Detail Modal --- */}
         <Dialog
           open={!!selectedDispute}
           onOpenChange={() => setSelectedDispute(null)}
@@ -96,33 +95,30 @@ export default function FarmerDisputes() {
           <DialogContent className="max-w-2xl p-0 overflow-hidden border-none rounded-2xl shadow-2xl">
             {selectedDispute && (
               <div>
-                {/* Modal Header */}
                 <div
-                  className={`px-8 py-4 border-b ${
-                    selectedDispute.status === "pending"
-                      ? "bg-amber-50/50"
-                      : "bg-emerald-50/50"
-                  }`}
+                  className={`px-8 py-4 border-b ${selectedDispute.status === "pending" ? "bg-amber-50/50" : "bg-emerald-50/50"}`}
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-4 mm:mb-0">
                     <Badge
                       variant="outline"
                       className="font-mono text-[10px] uppercase tracking-widest"
                     >
-                      ID: {selectedDispute._id.slice(-8)}
+                      {t("farmer_disputes.labels.id")}:{" "}
+                      {selectedDispute._id.slice(-8)}
                     </Badge>
                     <StatusBadge status={selectedDispute.status} />
                   </div>
                   <h2 className="text-2xl font-bold capitalize">
-                    {selectedDispute.reason.replace("_", " ")}
+                    {t(`farmer_disputes.reasons.${selectedDispute.reason}`, {
+                      defaultValue: selectedDispute.reason.replace("_", " "),
+                    })}
                   </h2>
                 </div>
 
-                {/* Modal Body */}
-                <div className="p-8 space-y-8">
+                <div className="p-8 space-y-8 mm:space-y-4">
                   <section className="space-y-3">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      Description
+                      {t("farmer_disputes.labels.description")}
                     </h4>
                     <p className="text-slate-600 leading-relaxed text-sm p-4 rounded-xl border italic">
                       "{selectedDispute.description}"
@@ -132,27 +128,27 @@ export default function FarmerDisputes() {
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                        Merchant
+                        {t("farmer_disputes.labels.merchant")}
                       </h4>
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
                           <Building2 className="h-5 w-5 text-slate-500" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold">
+                        <div className="mm:-mb-4">
+                          <p className="text-sm font-bold mm:-mb-0.5">
                             {selectedDispute.merchantId?.merchantId
                               ?.businessName ||
                               selectedDispute.merchantId?.name}
                           </p>
                           <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                            Verified Merchant
+                            {t("farmer_disputes.labels.verified_merchant")}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                        Timeline
+                        {t("farmer_disputes.labels.timeline")}
                       </h4>
                       <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
                         <Calendar className="h-4 w-4 text-slate-400" />
@@ -166,17 +162,16 @@ export default function FarmerDisputes() {
 
                   <Separator />
 
-                  {/* Merchant Address Section */}
                   <section className="space-y-4">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      Business Location
+                      {t("farmer_disputes.labels.location")}
                     </h4>
                     <div className="flex items-start gap-3 p-4 rounded-xl border">
                       <MapPin className="h-5 w-5 text-slate-400 mt-0.5" />
                       <div>
                         <p className="text-sm text-slate-700 font-medium leading-relaxed">
                           {selectedDispute.merchantId?.merchantAddress ||
-                            "No physical address on file"}
+                            t("farmer_disputes.labels.no_location")}
                         </p>
                       </div>
                     </div>
@@ -185,31 +180,30 @@ export default function FarmerDisputes() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ContactItem
                       icon={<Mail />}
-                      label="Email"
+                      label={t("farmer_disputes.labels.email")}
                       value={selectedDispute.merchantId?.email}
                     />
                     <ContactItem
                       icon={<Phone />}
-                      label="Support Contact"
+                      label={t("farmer_disputes.labels.support")}
                       value={
                         selectedDispute.merchantId?.merchantId?.businessPhone ||
-                        selectedDispute.merchantId?.businessPhone ||
-                        "N/A"
+                        selectedDispute.merchantId?.businessPhone
                       }
                     />
                   </div>
                 </div>
 
-                {/* Modal Footer */}
                 <div className="px-8 py-5 flex items-center justify-between border-t">
                   <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
-                    <Clock className="h-3 w-3" /> Average resolution: 72 hours
+                    <Clock className="h-3 w-3" />{" "}
+                    {t("farmer_disputes.labels.resolution_time")}
                   </span>
                   <button
                     onClick={() => setSelectedDispute(null)}
                     className="px-6 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-all shadow-md active:scale-95"
                   >
-                    Close
+                    {t("farmer_disputes.actions.close")}
                   </button>
                 </div>
               </div>
@@ -221,32 +215,20 @@ export default function FarmerDisputes() {
   );
 }
 
-/** --- Sub-components --- **/
-
 function DisputeRow({ dispute, onClick }: any) {
+  const { t } = useTranslation();
   const isPending = dispute.status === "pending";
   return (
     <Card
       onClick={onClick}
-      className="relative p-0 group overflow-hidden border-none shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-all duration-300 cursor-pointer"
+      className="relative p-0 group overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
     >
-      {/* Visual Accent Bar */}
       <div
-        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${
-          isPending
-            ? "bg-amber-400 group-hover:w-2"
-            : "bg-emerald-400 group-hover:w-2"
-        }`}
+        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${isPending ? "bg-amber-400" : "bg-emerald-400"}`}
       />
-
       <div className="flex items-center p-5 md:p-7 gap-6">
-        {/* Icon Container */}
         <div
-          className={`hidden md:flex h-14 w-14 rounded-2xl items-center justify-center shadow-inner ${
-            isPending
-              ? "bg-amber-50 text-amber-600"
-              : "bg-emerald-50 text-emerald-600"
-          }`}
+          className={`hidden md:flex h-14 w-14 rounded-2xl items-center justify-center ${isPending ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}
         >
           {isPending ? (
             <Clock className="h-7 w-7" />
@@ -255,13 +237,12 @@ function DisputeRow({ dispute, onClick }: any) {
           )}
         </div>
 
-        {/* Info Grid */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          <div className="md:col-span-4">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1.5">
-              Merchant Partner
+          <div className="md:col-span-4 mm:-mb-6">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1.5 mm:leading-loose">
+              {t("farmer_disputes.labels.merchant_partner")}
             </p>
-            <p className="font-bold text-lg tracking-tight truncate group-hover:text-primary transition-colors">
+            <p className="font-bold text-lg tracking-tight truncate group-hover:text-primary transition-colors mm:leading-loose">
               {dispute.merchantId?.merchantId?.businessName ||
                 dispute.merchantId?.name}
             </p>
@@ -269,24 +250,26 @@ function DisputeRow({ dispute, onClick }: any) {
 
           <div className="md:col-span-3">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1.5">
-              Case Reason
+              {t("farmer_disputes.labels.case_reason")}
             </p>
             <div className="flex items-center gap-2">
               <div
                 className={`h-2 w-2 rounded-full ${isPending ? "bg-amber-400" : "bg-emerald-400"}`}
               />
               <span className="text-sm font-semibold text-slate-600 capitalize">
-                {dispute.reason.replace("_", " ")}
+                {t(`farmer_disputes.reasons.${dispute.reason}`, {
+                  defaultValue: dispute.reason.replace("_", " "),
+                })}
               </span>
             </div>
           </div>
 
-          <div className="md:col-span-3 text-left md:text-center">
+          <div className="md:col-span-3 text-left md:text-center mm:-mb-6">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1.5">
-              Submission Date
+              {t("farmer_disputes.labels.submission_date")}
             </p>
             <div className="flex items-center md:justify-center gap-2 text-slate-600">
-              <Calendar className="h-3.5 w-3.5 text-slate-300" />
+              <Calendar className="h-3.5 w-3.5 text-slate-300 mm:mb-6" />
               <p className="text-sm font-medium">
                 {format(new Date(dispute.createdAt), "MMM dd, yyyy")}
               </p>
@@ -305,30 +288,46 @@ function DisputeRow({ dispute, onClick }: any) {
   );
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const isPending = status === "pending";
+  return (
+    <div
+      className={`text-[10px] font-black px-4 py-1.5 rounded-lg border-2 shadow-sm ${isPending ? "bg-amber-50 text-amber-700 border-amber-100/50" : "bg-green-600/15 text-emerald-700 border-emerald-100/50"}`}
+    >
+      {t(`farmer_disputes.status.${status}`).toUpperCase()}
+    </div>
+  );
+}
+
+function EmptyState() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+      <div className="bg-slate-50 p-8 rounded-full mb-6">
+        <ShieldCheck className="h-12 w-12 text-slate-300" />
+      </div>
+      <h3 className="text-xl font-bold tracking-tight">
+        {t("farmer_disputes.empty.title")}
+      </h3>
+      <p className="text-slate-500 text-sm max-w-xs text-center mt-2 leading-relaxed">
+        {t("farmer_disputes.empty.desc")}
+      </p>
+    </div>
+  );
+}
+
 function StatBox({ label, value, bgColor, highlight = "text-slate-900" }: any) {
   return (
     <div
       className={`flex-1 md:w-36 border p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow ${bgColor}`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-widest mb-1">
-        {label}
-      </p>
-      <p className={`text-2xl font-black ${highlight}`}>{value}</p>
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const isPending = status === "pending";
-  return (
-    <div
-      className={`text-[10px] font-black px-4 py-1.5 rounded-lg border-2 shadow-sm ${
-        isPending
-          ? "bg-amber-50 text-amber-700 border-amber-100/50"
-          : "bg-green-600/15 text-emerald-700 border-emerald-100/50"
-      }`}
-    >
-      {status.toUpperCase()}
+      <div className="mm:-mb-6">
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1 mm:leading-loose">
+          {label}
+        </p>
+        <p className={`text-2xl font-black ${highlight}`}>{value}</p>
+      </div>
     </div>
   );
 }
@@ -341,22 +340,6 @@ function ContactItem({ icon, label, value }: any) {
       </p>
       <p className="text-sm font-semibold text-slate-700 truncate">
         {value || "Not provided"}
-      </p>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
-      <div className="bg-slate-50 p-8 rounded-full mb-6">
-        <ShieldCheck className="h-12 w-12 text-slate-300" />
-      </div>
-      <h3 className="text-xl font-bold tracking-tight">
-        Everything looks good!
-      </h3>
-      <p className="text-slate-500 text-sm max-w-xs text-center mt-2 leading-relaxed">
-        You don't have any active disputes. Your business is running smoothly.
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   DollarSign,
   TrendingDown,
@@ -40,7 +41,6 @@ import {
 } from "@/store/slices/entryApi";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 
-// Consistent with AgricultureManager
 const SEASONS = [
   "Summer 2026",
   "Rainy 2026",
@@ -51,6 +51,7 @@ const SEASONS = [
 ];
 
 function FarmerDashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: user } = useCurrentUserQuery();
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
@@ -68,7 +69,7 @@ function FarmerDashboard() {
       selectedSeason === "all"
         ? entries
         : entries.filter((en: any) => en.season === selectedSeason);
-    return baseList.slice(0, 8); // Showing top 8 for dashboard view
+    return baseList.slice(0, 8);
   }, [entries, selectedSeason]);
 
   return (
@@ -76,38 +77,38 @@ function FarmerDashboard() {
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
-            Farm Dashboard
+          <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white mm:leading-loose">
+            {t("farmer_dash.title")}
           </h2>
-          <p className="text-slate-500 text-sm font-medium">
-            Real-time monitoring of your agricultural enterprise
+          <p className="text-slate-500 text-sm font-medium mm:leading-loose">
+            {t("farmer_dash.subtitle")}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* AGRIMANAGER BUTTON */}
           <Button
             onClick={() => navigate("/farmer/agri-manager")}
             variant="outline"
-            className="border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold"
+            className="border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold mm:leading-loose"
           >
             <Sprout className="w-4 h-4" />
-            AgriManager
+            {t("farmer_dash.btn_agri_manager")}
           </Button>
 
           <AddEntryDialog />
 
-          {/* SEASON SELECTOR - Updated to match AgriManager Style */}
           <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-            <SelectTrigger className="w-48 h-14 border-slate-200 bg-white dark:bg-slate-950 font-bold">
+            <SelectTrigger className="w-48 h-14 border-slate-200 bg-white dark:bg-slate-950 font-bold mm:leading-loose">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-slate-400" />
-                <SelectValue placeholder="Select Cycle" />
+                <SelectValue
+                  placeholder={t("farmer_dash.filter_placeholder")}
+                />
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem key="all" value="all">
-                All Seasons
+                {t("farmer_dash.filter_all")}
               </SelectItem>
               {SEASONS.map((s) => (
                 <SelectItem key={s} value={s}>
@@ -122,19 +123,19 @@ function FarmerDashboard() {
       {/* FINANCE OVERVIEW CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatusCard
-          title="Total Revenue"
+          title={t("farmer_dash.card_revenue")}
           bgColor="bg-emerald-500/10"
           value={finance?.income || 0}
           icon={<TrendingUp className="w-6 h-6 text-emerald-600" />}
         />
         <StatusCard
-          title="Total Cost"
+          title={t("farmer_dash.card_cost")}
           bgColor="bg-red-500/10"
           value={finance?.expense || 0}
           icon={<TrendingDown className="w-6 h-6 text-red-600" />}
         />
         <StatusCard
-          title="Net Profit"
+          title={t("farmer_dash.card_profit")}
           bgColor="bg-primary/10"
           value={finance?.profit || 0}
           icon={<DollarSign className="w-6 h-6 text-primary" />}
@@ -146,14 +147,14 @@ function FarmerDashboard() {
         <div className="flex items-center justify-between px-1">
           <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <LayoutDashboard className="text-primary w-5 h-5" />
-            Recent Ledger Entries
+            {t("farmer_dash.ledger_title")}
           </h3>
           <Button
             variant="link"
             className="text-primary font-bold"
             onClick={() => navigate("/farmer/records")}
           >
-            See Full Ledger
+            {t("farmer_dash.ledger_see_full")}
           </Button>
         </div>
 
@@ -162,13 +163,21 @@ function FarmerDashboard() {
             <Table>
               <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                 <TableRow className="border-slate-100 dark:border-slate-800">
-                  <TableHead className="font-bold">Date</TableHead>
-                  <TableHead className="font-bold">Category</TableHead>
-                  <TableHead className="hidden md:table-cell font-bold">
-                    Season
+                  <TableHead className="font-bold">
+                    {t("farmer_dash.table_date")}
                   </TableHead>
-                  <TableHead className="font-bold">Type</TableHead>
-                  <TableHead className="text-right font-bold">Amount</TableHead>
+                  <TableHead className="font-bold">
+                    {t("farmer_dash.table_category")}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell font-bold">
+                    {t("farmer_dash.table_season")}
+                  </TableHead>
+                  <TableHead className="font-bold">
+                    {t("farmer_dash.table_type")}
+                  </TableHead>
+                  <TableHead className="text-right font-bold">
+                    {t("farmer_dash.table_amount")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,7 +187,7 @@ function FarmerDashboard() {
                       colSpan={5}
                       className="h-40 text-center animate-pulse"
                     >
-                      Loading...
+                      {t("farmer_dash.table_loading")}
                     </TableCell>
                   </TableRow>
                 ) : recentEntries.length === 0 ? (
@@ -187,7 +196,7 @@ function FarmerDashboard() {
                       <div className="flex flex-col items-center text-slate-400">
                         <AlertCircle className="mb-2 opacity-20" />
                         <p className="font-medium">
-                          No records for this selection
+                          {t("farmer_dash.table_empty")}
                         </p>
                       </div>
                     </TableCell>
@@ -219,7 +228,7 @@ function FarmerDashboard() {
                               {en.category}
                             </span>
                             <span className="text-xs text-slate-400 line-clamp-1">
-                              {en.notes || "No notes"}
+                              {en.notes || t("farmer_dash.no_notes")}
                             </span>
                           </div>
                         </TableCell>
@@ -268,25 +277,24 @@ function FarmerDashboard() {
               <MarketIcon size={20} />
             </div>
             <h4 className="font-black text-slate-900 dark:text-slate-100">
-              Market Trends
+              {t("farmer_dash.market_title")}
             </h4>
           </div>
           <Button
             className="w-full bg-white hover:bg-slate-50 text-slate-900 border-none shadow-sm font-bold h-11 rounded-xl"
             onClick={() => navigate("/farmer/markets")}
           >
-            Check Live Prices
+            {t("farmer_dash.market_btn")}
           </Button>
         </div>
 
         <div className="p-6 rounded-3xl bg-slate-900 text-white flex flex-col justify-between">
           <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
             <Calendar size={14} />
-            Cloud Sync Active
+            {t("farmer_dash.sync_status")}
           </div>
           <p className="mt-4 text-sm font-medium text-slate-300">
-            All your farm records are securely backed up to your agricultural
-            cloud storage.
+            {t("farmer_dash.sync_desc")}
           </p>
         </div>
       </div>

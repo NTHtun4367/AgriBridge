@@ -1,0 +1,441 @@
+{
+  "nav": {
+    "market_prices": "Market Prices",
+    "farmers": "Farmers",
+    "merchants": "Merchants",
+    "login": "Login",
+    "register": "Register",
+    "about": "About Us",
+    "contact": "Contact",
+    "privacy": "Privacy Policy"
+  },
+  "footer": {
+    "description": "Making agriculture transparent, profitable, and accessible through technology.",
+    "roles": "Roles",
+    "company": "Company"
+  },
+  "navbar": {
+    "my_account": "My Account",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "home": {
+    "hero": {
+      "tag": "Digitalizing the Agriculture Supply Chain",
+      "title_start": "Bridging the gap from",
+      "title_span": "Farm to Market.",
+      "desc": "A specialized digital ecosystem empowering farmers with financial clarity and connecting merchants directly to the source. Transparent pricing, better profits.",
+      "btn_farmer": "I am Farmer",
+      "btn_merchant": "I am Merchant"
+    },
+    "dual_pathway": {
+      "title": "Tailored Experiences for Every Role",
+      "farmer": {
+        "title": "Empowering Farmers",
+        "desc": "Comprehensive tools to manage your farm as a business.",
+        "feat1_title": "Income & Outcome Tracking",
+        "feat1_desc": "Log every expense and sale with our simplified ledger system.",
+        "feat2_title": "Market Price Analytics",
+        "feat2_desc": "See standard prices updated by regional merchants.",
+        "feat3_title": "Profitability Reports",
+        "feat3_desc": "Automated harvest reports to help you plan for the next season."
+      },
+      "merchant": {
+        "title": "Merchant Solutions",
+        "desc": "Source directly and manage your competitive buying rates.",
+        "feat1_title": "Custom Buying Prices",
+        "feat1_desc": "Update your own prices to attract farmers in your vicinity.",
+        "feat2_title": "Standard Prices",
+        "feat2_desc": "Compare your offers against admin-verified market rates.",
+        "feat3_title": "Digital Buying/Collection",
+        "feat3_desc": "Streamline how you receive and verify produce from your farmers."
+      }
+    }
+  },
+  "market": {
+    "hero": {
+      "today": "Today's",
+      "title": "Market Prices",
+      "subtitle": "Real-time updates of the latest market prices from major trading centers across the country, all in one place."
+    },
+    "filters": {
+      "search_placeholder": "Search crops...",
+      "all_categories": "All Categories",
+      "filter_by_market": "FILTER BY MARKET",
+      "all_markets": "All Markets"
+    },
+    "table": {
+      "market_as_of": "Prices for {{marketName}} as of {{date}}",
+      "crops_found": "{{count}} crops found",
+      "no_data": "No price data available for this selection."
+    }
+  },
+  "farmer": {
+    "hero_badge": "Empowering Farmers",
+    "hero_title": "Maximize your harvest",
+    "hero_title_accent": "with data-driven farming.",
+    "hero_desc": "AgriBridge provides comprehensive tools to manage your farm as a business. Track finances, monitor national trends, and connect directly to the source.",
+    "cta_create": "Create Account",
+    "cta_markets": "View Market Prices",
+    "features_heading": "Financial Clarity & Market Access",
+    "features_subheading": "Everything you need to move from manual logging to a professional digital ecosystem.",
+    "feature_income_title": "Income & Outcome Tracking",
+    "feature_income_desc": "Log every expense and sale with our simplified ledger. Keep records of sales income and automatically calculate net profit without manual math.",
+    "feature_seasonal_title": "Seasonal & Annual Summaries",
+    "feature_seasonal_desc": "Record your expenses for each farming season and conveniently view a detailed annual expense summary to plan for next year.",
+    "feature_market_title": "Country-wide Market Analytics",
+    "feature_market_desc": "View market prices from markets across the entire country. Monitor standard prices updated daily by regional merchants.",
+    "feature_direct_title": "Direct Communication",
+    "feature_direct_desc": "Eliminate middlemen. You can easily communicate directly with merchants to negotiate better deals for your harvest.",
+    "mockup_title": "Profitability Report: Season 2025",
+    "mockup_badge": "Auto-Calculated",
+    "mockup_label_exp": "Annual Expenses",
+    "mockup_val_exp": "2,840.00 MMK",
+    "mockup_label_sales": "Total Sales",
+    "mockup_val_sales": "7,120.00 MMK",
+    "mockup_market_price": "National Market Price (Rice)",
+    "mockup_val_market": "0.95 MMK",
+    "mockup_unit": "/bag",
+    "mockup_trend": "+4% from last week",
+    "mockup_net_profit_label": "Net Seasonal Profit",
+    "mockup_net_profit_val": "4,280.00 MMK",
+    "mockup_badge_logged": "Record Logged",
+    "mockup_badge_verified": "Verified Sale",
+    "trust_heading": "How AgriBridge Protects Your Business",
+    "trust_1_title": "Admin Verified",
+    "trust_1_desc": "Every price update and merchant account is manually verified by our team to prevent fraud.",
+    "trust_2_title": "Automated Reporting",
+    "trust_2_desc": "Generate instant profitability reports to help you plan your next season with data-driven confidence.",
+    "trust_3_title": "Ledger Integrity",
+    "trust_3_desc": "Your digital records are kept safe and organized, making it easier to apply for agricultural.",
+    "cta_final_title": "Ready to digitalize your farm?",
+    "cta_final_desc": "Join a community of farmers who are using data to grow their profits and secure their future.",
+    "cta_final_btn": "Register as a Farmer"
+  },
+  "merchant": {
+    "hero_badge": "Supply Chain Excellence",
+    "hero_title": "Source Directly.",
+    "hero_title_accent": "Buy with Confidence.",
+    "hero_desc": "AgriBridge connects professional merchants to a verified network of farmers. Set your rates, manage collections, and stabilize your supply chain with real-time data.",
+    "cta_create": "Create Account",
+    "cta_markets": "View Market Prices",
+    "features_heading": "Modern Solutions for Bulk Sourcing",
+    "features_desc": "Stop relying on fragmented phone calls. Manage your entire buying operation from a single dashboard.",
+    "feature_price_title": "Dynamic Price Management",
+    "feature_price_desc": "Set your custom buying rates based on regional demand. Your prices are broadcasted directly to farmers in your environment.",
+    "feature_loyalty_title": "Focus on Relationships & Loyalty",
+    "feature_loyalty_desc": "Build long-term partnerships with a curated directory of local farmers. View historical yield data and reliability ratings to secure your supply chain with trusted partners.",
+    "feature_logs_title": "Digital Collection Logs",
+    "feature_logs_desc": "Eliminate paperwork. Log every bag received and every payment made with instant digital receipts.",
+    "mockup_portal_title": "Merchant Buying Portal",
+    "mockup_sync_badge": "Live Market Sync",
+    "mockup_rate_label": "Your Active Buying Rate (Rice)",
+    "mockup_rate_val": "0.98 MMK",
+    "mockup_unit": "/bag",
+    "mockup_comparison": "+2% vs Market",
+    "mockup_recent_logs": "Recent Collection Logs",
+    "trust_heading": "Built on Integrity",
+    "trust_desc": "AgriBridge isn't just a platform; it's a verification layer for Myanmar's agriculture. We ensure that every transaction builds a data history that benefits both the buyer and the seller.",
+    "trust_source_title": "Source Transparency",
+    "trust_source_desc": "Every farmer on our platform is verified. Know the origin of your produce and build long-term buying partnerships.",
+    "trust_market_title": "Market Competitiveness",
+    "trust_market_desc": "Compare your rates against national averages. Stay competitive and attract the best harvests in your region.",
+    "cta_final_title": "Ready to optimize your supply chain?",
+    "cta_final_desc": "Join the growing network of merchants digitizing their collection points and securing high-quality produce directly from the source.",
+    "cta_final_btn": "Register as a Merchant"
+  },
+  "farmer_dash": {
+    "title": "Farm Dashboard",
+    "subtitle": "Real-time monitoring of your agricultural enterprise",
+    "btn_agri_manager": "AgriManager",
+    "filter_all": "All Seasons",
+    "filter_placeholder": "Select Cycle",
+    "card_revenue": "Total Revenue",
+    "card_cost": "Total Cost",
+    "card_profit": "Net Profit",
+    "ledger_title": "Recent Ledger Entries",
+    "ledger_see_full": "See Full Ledger",
+    "table_date": "Date",
+    "table_category": "Category",
+    "table_season": "Season",
+    "table_type": "Type",
+    "table_amount": "Amount",
+    "table_loading": "Loading...",
+    "table_empty": "No records for this selection",
+    "no_notes": "No notes",
+    "market_title": "Market Trends",
+    "market_btn": "Check Live Prices",
+    "sync_status": "Cloud Sync Active",
+    "sync_desc": "All your farm records are securely backed up to your agricultural cloud storage."
+  },
+  "farmer_sidebar": {
+    "dashboard": "Dashboard",
+    "market_prices": "Market Prices",
+    "merchants": "Merchants",
+    "records": "Records",
+    "preorders": "Preorders",
+    "invoices": "Invoices",
+    "disputes": "Disputes",
+    "settings": "Settings"
+  },
+  "farmer_records": {
+    "title": "Farm Ledger",
+    "subtitle": "Detailed history of all agricultural transactions",
+    "total_results": "Total Results",
+    "search_placeholder": "Search by category or notes...",
+    "filter_type": "Type",
+    "filter_season": "Season",
+    "all_types": "All Types",
+    "income": "Income",
+    "expense": "Expenses",
+    "all_seasons": "All Seasons",
+    "clear_filters": "Clear",
+    "table_date": "Date",
+    "table_category": "Category",
+    "table_season": "Season",
+    "table_type": "Type",
+    "table_amount": "Amount",
+    "loading": "Loading farm records...",
+    "no_records": "No records found",
+    "footer_sync": "All data is synced with your farm cloud storage",
+    "seasons": {
+      "Summer": "Summer",
+      "Rainy": "Rainy",
+      "Winter": "Winter"
+    }
+  },
+  "farmer_preorders": {
+    "title": "My Preorder Requests",
+    "loading": "Loading...",
+    "unknown_store": "Unknown Store",
+    "ordered_date": "Ordered",
+    "close_details": "Close Details",
+    "items_requested": "Items Requested",
+    "pickup_location": "Pickup Location",
+    "delivery_timeline": "Delivery Timeline",
+    "expected_within": "Expected within {{count}} {{unit}}",
+    "status": {
+      "pending": "pending",
+      "cancelled": "cancelled",
+      "approved": "approved",
+      "completed": "completed"
+    },
+    "units": {
+      "day": "day",
+      "days": "days",
+      "week": "week",
+      "weeks": "weeks"
+    }
+  },
+  "farmer_invoices": {
+    "title": "Digital Receipts",
+    "subtitle": "View, pay, and download your records.",
+    "history_label": "Billing History",
+    "all_invoices": "All Invoices",
+    "loading": "Loading your receipts...",
+    "no_receipts": "No receipts yet",
+    "amount_due": "Amount Due",
+    "invoice_id": "Invoice #{{id}}",
+    "date_issued": "Date Issued",
+    "billed_from": "Billed From",
+    "status_label": "Status",
+    "table_item": "Item",
+    "table_qty": "Qty",
+    "table_total": "Total",
+    "total_due": "Total Due",
+    "pay_complete": "Pay & Complete",
+    "save_gallery": "Save Receipt to Gallery",
+    "close": "Close",
+    "platform_verified": "Platform Verified Receipt",
+    "toast_generating": "Generating Receipt Image...",
+    "toast_error_gen": "Failed to generate image.",
+    "toast_paid": "Transaction marked as paid!",
+    "toast_auto_save": "Saved to income ledger automatically!",
+    "toast_finalize_fail": "Failed to finalize transaction",
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending"
+    }
+  },
+  "farmer_disputes": {
+    "trust_safety": "Trust & Safety",
+    "title": "Dispute Center",
+    "subtitle": "Monitor and manage your active trade resolutions.",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "resolved": "Resolved"
+    },
+    "labels": {
+      "id": "ID",
+      "description": "Description",
+      "merchant": "Merchant",
+      "merchant_partner": "Merchant Partner",
+      "verified_merchant": "Verified Merchant",
+      "timeline": "Timeline",
+      "location": "Business Location",
+      "no_location": "No physical address on file",
+      "email": "Email",
+      "support": "Support Contact",
+      "case_reason": "Case Reason",
+      "submission_date": "Submission Date",
+      "resolution_time": "Average resolution: 72 hours",
+      "not_provided": "Not provided"
+    },
+    "actions": {
+      "close": "Close"
+    },
+    "empty": {
+      "title": "Everything looks good!",
+      "desc": "You don't have any active disputes. Your business is running smoothly."
+    },
+    "reasons": {
+      "quality_issue": "Quality Issue",
+      "payment_delay": "Payment Delay",
+      "wrong_quantity": "Wrong Quantity",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "rejected": "Rejected"
+    }
+  },
+  "merchant_list": {
+    "title": "Merchants",
+    "subtitle_region": "Connect with verified merchants in your region.",
+    "subtitle_all": "Connect with all verified merchants.",
+    "toggle_all": "Show All Locations",
+    "loading": "Finding merchants...",
+    "no_merchants": {
+      "title": "No Merchants Found",
+      "desc": "Try switching to \"Show All Locations\" to see merchants from other regions."
+    }
+  },
+  "merchant_profile": {
+    "loading": "Loading merchant details...",
+    "not_found": {
+      "title": "Merchant not found",
+      "desc": "The profile you're looking for doesn't exist or has been moved.",
+      "back": "Go Back"
+    },
+    "nav": {
+      "back_to_list": "Back to List"
+    },
+    "actions": {
+      "report_dispute": "Report Merchant Dispute",
+      "live_updates": "Live Updates"
+    },
+    "sections": {
+      "bio": "Merchant Biography",
+      "contact": "Contact Information",
+      "business_details": "Business Details",
+      "live_rates": "Live Buying Rates",
+      "live_rates_desc": "Current buying prices offered by this merchant."
+    },
+    "labels": {
+      "mobile": "Mobile",
+      "email": "Email",
+      "registered_on": "Registered On",
+      "primary_location": "Primary Location",
+      "store_address": "Store Address",
+      "verified_partner": "Verified Partner",
+      "verified_desc": "This merchant has completed full verification.",
+      "last_updated": "Last Updated",
+      "search_placeholder": "Search crops by name...",
+      "all_categories": "All Categories"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your digital identity and preferences.",
+    "common": {
+      "save": "Save Changes",
+      "discard": "Discard",
+      "discarded": "Changes discarded",
+      "change": "Change",
+      "loading": "Loading..."
+    },
+    "errors": {
+      "generic_fail": "An error occurred. Please try again."
+    },
+    "tabs": {
+      "account": "Account",
+      "verification": "Verification",
+      "security": "Security",
+      "notifications": "Notifications",
+      "appearance": "Appearance"
+    },
+    "account": {
+      "photo_title": "Your Photo",
+      "photo_desc": "This will be displayed on your profile.",
+      "profile_updated": "Profile updated successfully",
+      "photo_updated": "Photo updated",
+      "personal_info": "Personal Information",
+      "full_name": "Full Name",
+      "identifier": "Identifier (Email/Phone)",
+      "bio": "Bio",
+      "bio_placeholder": "Tell us a little about yourself...",
+      "errors": {
+        "image_size": "Image must be less than 2MB",
+        "upload_failed": "Upload failed"
+      }
+    },
+    "verification": {
+      "title": "Merchant Verification",
+      "desc": "Upload your identity documents to verify your merchant account.",
+      "nrc_front": "NRC Front Side",
+      "nrc_back": "NRC Back Side",
+      "file_limit": "PNG, JPG up to 5MB",
+      "attached_front": "FRONT side attached",
+      "attached_back": "BACK side attached",
+      "submit_docs": "Submit Documents",
+      "submitted": "Documents submitted for review",
+      "note_label": "Verification Note:",
+      "note_text": "Process usually takes 24-48 hours. Documents are encrypted and used only for identity validation.",
+      "errors": {
+        "select_doc": "Please select at least one document to update"
+      }
+    },
+    "security": {
+      "change_password": "Change Password",
+      "password_desc": "Ensure your account is using a long, random password to stay secure.",
+      "current_password": "Current Password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "update_btn": "Update Password",
+      "success_password": "Password updated successfully",
+      "errors": {
+        "all_fields": "All fields are required",
+        "mismatch": "Passwords do not match"
+      }
+    },
+    "notifications": {
+      "channels": "Notification Channels",
+      "desc": "Configure how you want to receive alerts.",
+      "email": "Email Notifications",
+      "email_desc": "Receive updates via your email address.",
+      "push": "Push Notifications",
+      "push_desc": "Receive instant alerts on your mobile device."
+    },
+    "appearance": {
+      "theme_pref": "Theme Preference",
+      "theme_desc": "Choose how the interface looks to you.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "danger_zone": "Danger Zone",
+      "danger_desc": "Actions here cannot be undone.",
+      "delete_title": "Delete Account",
+      "delete_desc": "Your data will be wiped from our servers.",
+      "delete_btn": "Delete Account",
+      "account_deleted": "Account deleted successfully"
+    },
+    "modals": {
+      "delete_title": "Delete your account?",
+      "delete_desc": "This action is permanent and cannot be undone. All your profile data, documents, and merchant information will be permanently deleted from AgriBridge.",
+      "delete_confirm": "Yes, Delete Permanently"
+    }
+  }
+}

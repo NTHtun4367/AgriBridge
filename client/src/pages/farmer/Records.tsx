@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Inbox,
@@ -30,16 +31,8 @@ import { useNavigate } from "react-router";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { Card, CardContent } from "@/components/ui/card";
 
-const generateFilterSeasons = () => {
-  const currentYear = new Date().getFullYear();
-  const names = ["Summer", "Rainy", "Winter"];
-  const years = [currentYear - 1, currentYear, currentYear + 1];
-  const options: string[] = [];
-  years.forEach((y) => names.forEach((n) => options.push(`${n} ${y}`)));
-  return options;
-};
-
 function Records() {
+  const { t } = useTranslation();
   const { data: entries, isLoading } = useGetAllEntriesQuery();
   const { data: user } = useCurrentUserQuery();
   const navigate = useNavigate();
@@ -48,7 +41,22 @@ function Records() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedSeason, setSelectedSeason] = useState("all");
 
-  const seasonOptions = useMemo(() => generateFilterSeasons(), []);
+  const seasonOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const seasonKeys = ["Summer", "Rainy", "Winter"];
+    const years = [currentYear - 1, currentYear, currentYear + 1];
+    const options: { label: string; value: string }[] = [];
+
+    years.forEach((y) =>
+      seasonKeys.forEach((key) => {
+        options.push({
+          label: `${t(`farmer_records.seasons.${key}`)} ${y}`,
+          value: `${key} ${y}`,
+        });
+      }),
+    );
+    return options;
+  }, [t]);
 
   const filteredEntries = useMemo(() => {
     if (!entries) return [];
@@ -69,20 +77,20 @@ function Records() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              Farm Ledger
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mm:leading-loose">
+              {t("farmer_records.title")}
             </h2>
-            <p className="text-slate-500 font-medium">
-              Detailed history of all agricultural transactions
+            <p className="text-slate-500 font-medium mt-2 mm:leading-loose">
+              {t("farmer_records.subtitle")}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="text-right hidden md:block">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Total Results
+                {t("farmer_records.total_results")}
               </p>
-              <p className="text-lg font-black text-primary">
+              <p className="text-lg font-black text-primary mm:-mt-6">
                 {filteredEntries.length}
               </p>
             </div>
@@ -94,7 +102,7 @@ function Records() {
           <div className="flex-1 min-w-[300px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by category or notes..."
+              placeholder={t("farmer_records.search_placeholder")}
               className="pl-10 bg-white dark:bg-slate-900"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,25 +110,33 @@ function Records() {
           </div>
 
           <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-[150px] bg-white dark:bg-slate-900">
-              <SelectValue placeholder="Type" />
+            <SelectTrigger className="w-[150px] bg-white dark:bg-slate-900 mm:leading-loose">
+              <SelectValue placeholder={t("farmer_records.filter_type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expenses</SelectItem>
+              <SelectItem value="all">
+                {t("farmer_records.all_types")}
+              </SelectItem>
+              <SelectItem value="income">
+                {t("farmer_records.income")}
+              </SelectItem>
+              <SelectItem value="expense">
+                {t("farmer_records.expense")}
+              </SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-            <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900">
-              <SelectValue placeholder="Season" />
+            <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900 mm:leading-loose">
+              <SelectValue placeholder={t("farmer_records.filter_season")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Seasons</SelectItem>
+              <SelectItem value="all">
+                {t("farmer_records.all_seasons")}
+              </SelectItem>
               {seasonOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -139,31 +155,30 @@ function Records() {
               className="text-slate-500 hover:text-red-500 transition-colors"
             >
               <FilterX className="h-4 w-4 mr-2" />
-              Clear
+              {t("farmer_records.clear_filters")}
             </Button>
           )}
         </div>
 
-        {/* Table Section */}
         <Card>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
                 <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
                   <TableHead className="w-[120px] font-bold text-slate-700 dark:text-slate-300">
-                    Date
+                    {t("farmer_records.table_date")}
                   </TableHead>
                   <TableHead className="font-bold text-slate-700 dark:text-slate-300">
-                    Category
+                    {t("farmer_records.table_category")}
                   </TableHead>
                   <TableHead className="hidden md:table-cell font-bold text-slate-700 dark:text-slate-300">
-                    Season
+                    {t("farmer_records.table_season")}
                   </TableHead>
                   <TableHead className="font-bold text-slate-700 dark:text-slate-300">
-                    Type
+                    {t("farmer_records.table_type")}
                   </TableHead>
                   <TableHead className="text-right font-bold text-slate-700 dark:text-slate-300">
-                    Amount
+                    {t("farmer_records.table_amount")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -174,7 +189,7 @@ function Records() {
                       colSpan={5}
                       className="h-64 text-center text-slate-400 font-medium"
                     >
-                      Loading farm records...
+                      {t("farmer_records.loading")}
                     </TableCell>
                   </TableRow>
                 ) : filteredEntries.length === 0 ? (
@@ -182,7 +197,7 @@ function Records() {
                     <TableCell colSpan={5} className="h-64 text-center">
                       <div className="flex flex-col items-center justify-center text-slate-400">
                         <Inbox className="h-10 w-10 mb-2 opacity-20" />
-                        <p>No records found</p>
+                        <p>{t("farmer_records.no_records")}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -240,7 +255,9 @@ function Records() {
                             ) : (
                               <ArrowDownLeft size={14} className="shrink-0" />
                             )}
-                            {en.type}
+                            {isIncome
+                              ? t("farmer_records.income")
+                              : t("farmer_records.expense")}
                           </div>
                         </TableCell>
 
@@ -269,10 +286,9 @@ function Records() {
           </CardContent>
         </Card>
 
-        {/* Footer Disclaimer */}
         <div className="mt-6 flex items-center justify-center gap-2 text-slate-400 dark:text-slate-600 text-xs font-medium">
           <Calendar size={14} />
-          <span>All data is synced with your farm cloud storage</span>
+          <span>{t("farmer_records.footer_sync")}</span>
         </div>
       </div>
     </div>

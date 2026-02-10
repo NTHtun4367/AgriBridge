@@ -3,11 +3,13 @@ import {
   useGetMerchantsQuery,
 } from "@/store/slices/userApi";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Info } from "lucide-react";
 import { MerchantCard } from "@/components/merchant/MerchantCard";
 
 function MerchantList() {
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const { data: currentUser } = useCurrentUserQuery();
 
@@ -30,16 +32,20 @@ function MerchantList() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 rounded-2xl">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Merchants</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold tracking-tight mm:leading-loose">
+            {t("merchant_list.title")}
+          </h1>
+          <p className="text-muted-foreground mt-1 mm:leading-loose">
             {showAll
-              ? "Connect with all verified merchants."
-              : "Connect with verified merchants in your region."}
+              ? t("merchant_list.subtitle_all")
+              : t("merchant_list.subtitle_region")}
           </p>
         </div>
 
         <div className="flex items-center gap-3 bg-secondary p-2 px-4 rounded-full border-2 border-primary">
-          <span className="text-sm font-semibold">Show All Locations</span>
+          <span className="text-sm font-semibold">
+            {t("merchant_list.toggle_all")}
+          </span>
           <Switch checked={showAll} onCheckedChange={setShowAll} />
         </div>
       </div>
@@ -49,26 +55,27 @@ function MerchantList() {
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
           <p className="text-muted-foreground font-medium">
-            Finding merchants...
+            {t("merchant_list.loading")}
           </p>
         </div>
       ) : merchants && merchants.length > 0 ? (
         <div className="space-y-3">
           {merchants.map((merchant: any) => (
-            <>
+            <div key={merchant._id}>
               {currentUser?._id !== merchant._id && (
-                <MerchantCard key={merchant._id} user={merchant} />
+                <MerchantCard user={merchant} />
               )}
-            </>
+            </div>
           ))}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-secondary">
           <Info className="w-12 h-12 text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold">No Merchants Found</h3>
+          <h3 className="text-lg font-semibold">
+            {t("merchant_list.no_merchants.title")}
+          </h3>
           <p className="text-muted-foreground max-w-xs text-center">
-            Try switching to "Show All Locations" to see merchants from other
-            regions.
+            {t("merchant_list.no_merchants.desc")}
           </p>
         </div>
       )}

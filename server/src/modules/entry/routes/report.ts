@@ -12,7 +12,7 @@ const router = express.Router();
 const groq = new Groq({ apiKey: ENV.GROQ_API_KEY! });
 
 /**
- * AI-powered Farm Analysis with Filtered Market Context
+ * AI-powered Farm Analysis: Categorical ROI & Regional Market Intelligence
  */
 (router.post("/ai-analyze", async (req: Request, res: Response) => {
   const { userId, season } = req.body;
@@ -21,7 +21,7 @@ const groq = new Groq({ apiKey: ENV.GROQ_API_KEY! });
     return res.status(400).json({ message: "UserId and Season are required" });
   }
 
-  // 1️⃣ Fetch Financials, Crop Allocations, and Market Prices
+  // 1️⃣ Parallel Data Fetching for performance
   const [entries, farmerCrops, allMarketData] = await Promise.all([
     Entry.find({ userId: new Types.ObjectId(userId), season }),
     FarmerCrop.find({ userId: new Types.ObjectId(userId) }),
@@ -35,80 +35,105 @@ const groq = new Groq({ apiKey: ENV.GROQ_API_KEY! });
     });
   }
 
-  // 2️⃣ Financial Processing
-  const totalExpense = entries
-    .filter((e) => e.type === "expense")
-    .reduce((s, e) => s + e.value, 0);
-  const totalIncome = entries
-    .filter((e) => e.type === "income")
-    .reduce((s, e) => s + e.value, 0);
+  // 2️⃣ Categorical Financial Processing
+  // Groups income/expense by category (e.g., Grains, Pulses, Oilseeds)
+  const categoryStats: Record<
+    string,
+    { income: number; expense: number; acres: number; crops: string[] }
+  > = {};
 
-  // 3️⃣ Crop Allocation Processing
-  const totalAcres = farmerCrops.reduce((s, c) => s + (c.areaSize || 0), 0);
+  farmerCrops.forEach((crop) => {
+    const cat = crop.variety || "General";
+    if (!categoryStats[cat]) {
+      categoryStats[cat] = { income: 0, expense: 0, acres: 0, crops: [] };
+    }
+    categoryStats[cat].acres += crop.areaSize || 0;
+    if (!categoryStats[cat].crops.includes(crop.cropName)) {
+      categoryStats[cat].crops.push(crop.cropName);
+    }
+  });
+
+  entries.forEach((entry) => {
+    const cat = entry.category || "General";
+    if (!categoryStats[cat]) {
+      categoryStats[cat] = { income: 0, expense: 0, acres: 0, crops: [] };
+    }
+    if (entry.type === "income") categoryStats[cat].income += entry.value;
+    else categoryStats[cat].expense += entry.value;
+  });
+
+  // 3️⃣ Regional Hub Comparison (Filtering and grouping market data)
   const userCropNames = farmerCrops.map((c) => c.cropName.toLowerCase());
+  const hubComparison: Record<string, string[]> = {};
 
-  const cropSummary = farmerCrops
-    .map((c) => `- ${c.cropName} (${c.variety}): ${c.areaSize || 0} ဧက`)
-    .join("\n");
+  (allMarketData || []).forEach((m: any) => {
+    const hubName = m.marketName || "အထွေထွေဈေးကွက်";
+    if (userCropNames.includes(m.cropName.toLowerCase())) {
+      if (!hubComparison[hubName]) hubComparison[hubName] = [];
+      hubComparison[hubName].push(
+        `- ${m.cropName}: ${m.currentPrice.toLocaleString()} MMK (${m.priceChangePercent}% ${m.priceChangePercent > 0 ? "📈" : "📉"})`,
+      );
+    }
+  });
 
-  // 4️⃣ Filter Market Prices to match User's Crops
-  // We filter market analytics to only show prices for what the farmer is currently growing
-  const relevantMarket = (allMarketData || []).filter((m: any) =>
-    userCropNames.includes(m.cropName.toLowerCase()),
-  );
-
-  // Fallback: If no direct matches, show top 5 general market trends
-  const marketDisplayList =
-    relevantMarket.length > 0
-      ? relevantMarket
-      : (allMarketData || []).slice(0, 5);
-
-  const marketText = marketDisplayList
+  // Format strings for the AI prompt
+  const financialText = Object.entries(categoryStats)
     .map(
-      (m: any) =>
-        `- ${m.cropName}: ${m.currentPrice.toLocaleString()} MMK (${m.priceChangePercent > 0 ? "📈 တက်" : "📉 ကျ"} ${m.priceChangePercent}%)`,
+      ([cat, s]) =>
+        `* ${cat} (${s.crops.join(", ")}): ဝင်ငွေ ${s.income.toLocaleString()} / အသုံးစရိတ် ${s.expense.toLocaleString()} (${s.acres} ဧက)`,
     )
     .join("\n");
 
-  // 5️⃣ Prompts
+  const marketText =
+    Object.keys(hubComparison).length > 0
+      ? Object.entries(hubComparison)
+          .map(([hub, prices]) => `📍 ${hub}:\n${prices.join("\n")}`)
+          .join("\n\n")
+      : "သက်ဆိုင်ရာ ဈေးကွက်ဒေတာ မရှိသေးပါ။";
+
+  const totalAcres = farmerCrops.reduce((s, c) => s + (c.areaSize || 0), 0);
+  const totalIncome = entries
+    .filter((e) => e.type === "income")
+    .reduce((s, e) => s + e.value, 0);
+  const totalExpense = entries
+    .filter((e) => e.type === "expense")
+    .reduce((s, e) => s + e.value, 0);
+
+  // 4️⃣ The Unified Prompt
   const systemPrompt = `
-You are an "Advanced Agricultural and Financial Advisor" for Myanmar farmers. 
-Analyze farm data and provide actionable advice in Burmese (Unicode). 
-Be concise, professional, and encouraging. Use Markdown for structure.
+You are an "Advanced Agricultural Advisor" for Myanmar farmers.
+Analyze farm finances, crop allocations, and market trends.
+Provide responses in **Markdown format** with clear sections and bullet points.
+Use Burmese for explanations, but keep numbers in standard digits (MMK for currency, acres for land area).
+Focus on actionable advice for the current and next season.
 `;
 
   const userPrompt = `
 ရာသီ: ${season}
-စိုက်ပျိုးထားသော သီးနှံများ:
-${cropSummary}
-စုစုပေါင်းဧက: ${totalAcres} ဧက
+စုစုပေါင်းစိုက်ဧက: ${totalAcres} ဧက
+စုစုပေါင်းဝင်ငွေ: ${totalIncome.toLocaleString()} MMK
+စုစုပေါင်းအသုံးစရိတ်: ${totalExpense.toLocaleString()} MMK
 
-ဘဏ္ဍာရေးအခြေအနေ:
-- စုစုပေါင်းဝင်ငွေ: ${totalIncome.toLocaleString()} MMK
-- စုစုပေါင်းအသုံးစရိတ်: ${totalExpense.toLocaleString()} MMK
-- တစ်ဧက ပျှမ်းမျှကုန်ကျစရိတ်: ${totalAcres > 0 ? Math.round(totalExpense / totalAcres).toLocaleString() : 0} MMK
+## ၁။ အမျိုးအစားအလိုက် ဘဏ္ဍာရေး (Categorical Financials)
+${financialText}
 
-သက်ဆိုင်ရာ ဈေးကွက်ပေါက်ဈေးများ:
+## ၂။ သီးနှံအခြေအနေ (Crop Performance)
+- ${farmerCrops.map((c) => `${c.cropName} (${c.variety}): ${c.areaSize || 0} ဧက`).join("\n- ")}
+
+## ၃။ ဈေးကွက်ဗျူဟာ (Market Overview by Region)
 ${marketText}
 
-အောက်ပါခေါင်းစဉ်များဖြင့် Markdown format သုံးပြီး အကြံပြုပေးပါ:
-
-## 1. Financial Health (စီးပွားရေးအခြေအနေ)
-- လက်ရှိအသုံးစရိတ်နှင့် ဝင်ငွေအပေါ်မူတည်၍ အမြတ်အစွန်းတွက်ချက်မှု။
-- ကုန်ကျစရိတ်လျှော့ချနိုင်မည့် နည်းလမ်းများ။
-
-## 2. Market Strategy (ဈေးကွက်ဗျူဟာ)
-- စိုက်ပျိုးထားသော သီးနှံများ၏ လက်ရှိဈေးကွက်လားရာအပေါ် သုံးသပ်ချက်။
-- ရောင်းချသင့်သည့် အချိန် သို့မဟုတ် သိုလှောင်သင့်သည့် အကြံပြုချက်။
-
-## 3. Strategic Recommendations (နောင်ရာသီအတွက် ပြင်ဆင်ချက်)
-- သီးနှံအလှည့်ကျစိုက်ပျိုးခြင်း သို့မဟုတ် ဧကတိုးချဲ့သင့်သည့် သီးနှံများ။
+## ၄။ အကြံပြုချက်များ (Recommendations)
+- Financial: အမြတ်အစွန်းတိုးဖို့ လုပ်နိုင်သော အချက်များ
+- Crop Strategy: တိုးချဲ့ရန် သို့မဟုတ် လျော့ချရန် အမျိုးအစားများ
+- Market Strategy: ဈေးနှုန်းအပေါ် မူတည်၍ ရောင်းချမှု/သိုလှောင်မှု
+- Risk Assessment: အန္တရာယ်နှုန်း (1–10)
 `;
 
-  // 6️⃣ AI Request
+  // 5️⃣ AI Request
   const completion = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
-    temperature: 0.2,
+    temperature: 0.3,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -118,12 +143,13 @@ ${marketText}
   res.json({
     advice:
       completion.choices[0]?.message?.content ||
-      "AI advice currently unavailable.",
-    isTailored: relevantMarket.length > 0,
+      "ခွဲခြမ်းစိတ်ဖြာမှု မပြုလုပ်နိုင်ပါ။",
+    isTailored: Object.keys(hubComparison).length > 0,
+    stats: { totalIncome, totalExpense, totalAcres, categoryStats },
   });
 }),
   /**
-   * Seasonal Dashboard Summary
+   * Seasonal Dashboard Summary API
    */
   router.get(
     "/seasonal-summary/:userId",
@@ -135,20 +161,20 @@ ${marketText}
         {
           $group: {
             _id: "$season",
-            income: {
+            totalIncome: {
               $sum: { $cond: [{ $eq: ["$type", "income"] }, "$value", 0] },
             },
-            expense: {
+            totalExpense: {
               $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$value", 0] },
             },
           },
         },
         {
           $project: {
-            season: { $ifNull: ["$_id", "အမည်မသိရာသီ"] },
-            totalIncome: "$income",
-            totalExpense: "$expense",
-            netProfit: { $subtract: ["$income", "$expense"] },
+            season: { $ifNull: ["$_id", "Unknown Season"] },
+            totalIncome: 1,
+            totalExpense: 1,
+            netProfit: { $subtract: ["$totalIncome", "$totalExpense"] },
             _id: 0,
           },
         },

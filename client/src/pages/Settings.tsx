@@ -11,6 +11,7 @@ import {
   useDeleteAccountMutation,
 } from "@/store/slices/userApi";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next"; // Added for i18n
 
 import {
   User,
@@ -47,12 +48,12 @@ import { useNavigate } from "react-router";
 import ConfirmModal from "@/common/ConfirmModel";
 
 const Settings: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const currentTheme = useSelector((state: RootState) => state.theme.mode);
 
   // Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
   const navigate = useNavigate();
 
   // RTK Query Hooks
@@ -68,31 +69,31 @@ const Settings: React.FC = () => {
 
   const handlePasswordUpdate = async () => {
     if (!passwords.current || !passwords.next || !passwords.confirm) {
-      return toast.error("All fields are required");
+      return toast.error(t("settings.security.errors.all_fields"));
     }
     if (passwords.next !== passwords.confirm) {
-      return toast.error("Passwords do not match");
+      return toast.error(t("settings.security.errors.mismatch"));
     }
     try {
       await changePassword({
         currentPassword: passwords.current,
         newPassword: passwords.next,
       }).unwrap();
-      toast.success("Password updated successfully");
+      toast.success(t("settings.security.success_password"));
       setPasswords({ current: "", next: "", confirm: "" });
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to update password");
+      toast.error(err?.data?.message || t("settings.errors.generic_fail"));
     }
   };
 
   const handleDeleteAccount = async () => {
     try {
       await deleteAccount().unwrap();
-      toast.success("Account deleted");
+      toast.success(t("settings.appearance.account_deleted"));
       setShowDeleteModal(false);
       navigate("/login");
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to delete account");
+      toast.error(err?.data?.message || t("settings.errors.generic_fail"));
     }
   };
 
@@ -108,16 +109,12 @@ const Settings: React.FC = () => {
     push: false,
     marketing: false,
   });
-
   const [nrcFiles, setNrcFiles] = useState<{
     front: File | null;
     back: File | null;
     frontPreview?: string;
     backPreview?: string;
-  }>({
-    front: null,
-    back: null,
-  });
+  }>({ front: null, back: null });
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,9 +160,9 @@ const Settings: React.FC = () => {
   const handleSave = async () => {
     try {
       await updateProfile({ name: formData.name, bio: formData.bio }).unwrap();
-      toast.success("Profile updated successfully");
+      toast.success(t("settings.account.profile_updated"));
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to update profile");
+      toast.error(err?.data?.message || t("settings.errors.generic_fail"));
     }
   };
 
@@ -176,7 +173,7 @@ const Settings: React.FC = () => {
         bio: user.bio || "",
         email: user.email || user.phone || "",
       });
-      toast.info("Changes discarded");
+      toast.info(t("settings.common.discarded"));
     }
   };
 
@@ -184,15 +181,15 @@ const Settings: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024)
-      return toast.error("Image must be less than 2MB");
+      return toast.error(t("settings.account.errors.image_size"));
 
     const body = new FormData();
     body.append("avatar", file);
     try {
       await updateAvatar(body).unwrap();
-      toast.success("Photo updated");
+      toast.success(t("settings.account.photo_updated"));
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("settings.account.errors.upload_failed"));
     }
   };
 
@@ -208,13 +205,13 @@ const Settings: React.FC = () => {
         [side]: file,
         [`${side}Preview`]: previewUrl,
       }));
-      toast.success(`${side.toUpperCase()} side attached`);
+      toast.success(t(`settings.verification.attached_${side}`));
     }
   };
 
   const handleSubmitDocs = async () => {
     if (!nrcFiles.front && !nrcFiles.back) {
-      return toast.error("Please select at least one document to update");
+      return toast.error(t("settings.verification.errors.select_doc"));
     }
 
     const formData = new FormData();
@@ -223,10 +220,10 @@ const Settings: React.FC = () => {
 
     try {
       await updateMerchantDocs(formData).unwrap();
-      toast.success("Documents submitted for review");
+      toast.success(t("settings.verification.submitted"));
       setNrcFiles((prev) => ({ ...prev, front: null, back: null }));
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to upload documents");
+      toast.error(err?.data?.message || t("settings.errors.generic_fail"));
     }
   };
 
@@ -243,11 +240,11 @@ const Settings: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
-            <h2 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Settings
+            <h2 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent mm:leading-loose">
+              {t("settings.title")}
             </h2>
             <p className="text-muted-foreground mt-1 text-lg">
-              Manage your digital identity and preferences.
+              {t("settings.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -257,7 +254,7 @@ const Settings: React.FC = () => {
               onClick={handleDiscard}
               disabled={!isDirty}
             >
-              Discard
+              {t("settings.common.discard")}
             </Button>
             <Button
               onClick={handleSave}
@@ -265,7 +262,7 @@ const Settings: React.FC = () => {
               className="shadow-md shadow-primary/20"
             >
               {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
+              {t("settings.common.save")}
             </Button>
           </div>
         </div>
@@ -280,29 +277,29 @@ const Settings: React.FC = () => {
               <NavTrigger
                 value="account"
                 icon={<User size={18} />}
-                label="Account"
+                label={t("settings.tabs.account")}
               />
               {user?.role === "merchant" && (
                 <NavTrigger
                   value="verification"
                   icon={<ShieldCheck size={18} />}
-                  label="Verification"
+                  label={t("settings.tabs.verification")}
                 />
               )}
               <NavTrigger
                 value="security"
                 icon={<Lock size={18} />}
-                label="Security"
+                label={t("settings.tabs.security")}
               />
               <NavTrigger
                 value="notifications"
                 icon={<Bell size={18} />}
-                label="Notifications"
+                label={t("settings.tabs.notifications")}
               />
               <NavTrigger
                 value="appearance"
                 icon={<Paintbrush size={18} />}
-                label="Appearance"
+                label={t("settings.tabs.appearance")}
               />
             </TabsList>
           </aside>
@@ -338,9 +335,11 @@ const Settings: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-xl">Your Photo</h3>
-                    <p className="text-sm text-muted-foreground">
-                      This will be displayed on your profile.
+                    <h3 className="font-semibold text-xl">
+                      {t("settings.account.photo_title")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mm:leading-loose">
+                      {t("settings.account.photo_desc")}
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -349,7 +348,7 @@ const Settings: React.FC = () => {
                         className="h-8"
                         onClick={() => avatarInputRef.current?.click()}
                       >
-                        Change
+                        {t("settings.common.change")}
                       </Button>
                       {isUploadingAvatar && (
                         <Loader2 className="h-4 w-4 animate-spin mt-2" />
@@ -360,11 +359,11 @@ const Settings: React.FC = () => {
 
                 <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                   <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
+                    <CardTitle>{t("settings.account.personal_info")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Field
-                      label="Full Name"
+                      label={t("settings.account.full_name")}
                       id="name"
                       value={formData.name}
                       onChange={(val: string) =>
@@ -372,16 +371,16 @@ const Settings: React.FC = () => {
                       }
                     />
                     <Field
-                      label="Identifier (Email/Phone)"
+                      label={t("settings.account.identifier")}
                       id="email"
                       value={formData.email}
                       disabled
                     />
                     <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
+                      <Label htmlFor="bio">{t("settings.account.bio")}</Label>
                       <Textarea
                         id="bio"
-                        placeholder="Tell us a little about yourself..."
+                        placeholder={t("settings.account.bio_placeholder")}
                         className="resize-none h-32 focus-visible:ring-primary"
                         value={formData.bio}
                         onChange={(e) =>
@@ -403,18 +402,17 @@ const Settings: React.FC = () => {
                 <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <ShieldCheck className="text-primary" /> Merchant
-                      Verification
+                      <ShieldCheck className="text-primary" />{" "}
+                      {t("settings.verification.title")}
                     </CardTitle>
                     <CardDescription>
-                      Upload your identity documents to verify your merchant
-                      account.
+                      {t("settings.verification.desc")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <Label>NRC Front Side</Label>
+                        <Label>{t("settings.verification.nrc_front")}</Label>
                         <div
                           className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.front ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
                         >
@@ -433,7 +431,7 @@ const Settings: React.FC = () => {
                             <>
                               <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                               <p className="text-xs font-medium">
-                                PNG, JPG up to 5MB
+                                {t("settings.verification.file_limit")}
                               </p>
                             </>
                           )}
@@ -446,7 +444,7 @@ const Settings: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label>NRC Back Side</Label>
+                        <Label>{t("settings.verification.nrc_back")}</Label>
                         <div
                           className={`group relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${nrcFiles.back ? "border-primary bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}
                         >
@@ -465,7 +463,7 @@ const Settings: React.FC = () => {
                             <>
                               <FileUp className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                               <p className="text-xs font-medium">
-                                PNG, JPG up to 5MB
+                                {t("settings.verification.file_limit")}
                               </p>
                             </>
                           )}
@@ -491,15 +489,14 @@ const Settings: React.FC = () => {
                         {isUpdatingDocs && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        Submit Documents
+                        {t("settings.verification.submit_docs")}
                       </Button>
                     )}
                     <div className="p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 flex gap-3">
                       <Info className="h-5 w-5 text-blue-600 shrink-0" />
                       <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
-                        <strong>Verification Note:</strong> Process usually
-                        takes 24-48 hours. Documents are encrypted and used only
-                        for identity validation.
+                        <strong>{t("settings.verification.note_label")}</strong>{" "}
+                        {t("settings.verification.note_text")}
                       </p>
                     </div>
                   </CardContent>
@@ -514,15 +511,16 @@ const Settings: React.FC = () => {
             >
               <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
-                  <CardTitle>Change Password</CardTitle>
-                  <CardDescription>
-                    Ensure your account is using a long, random password to stay
-                    secure.
+                  <CardTitle>
+                    {t("settings.security.change_password")}
+                  </CardTitle>
+                  <CardDescription className="mm:leading-loose">
+                    {t("settings.security.password_desc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Field
-                    label="Current Password"
+                    label={t("settings.security.current_password")}
                     id="curr_pass"
                     type="password"
                     value={passwords.current}
@@ -531,7 +529,7 @@ const Settings: React.FC = () => {
                     }
                   />
                   <Field
-                    label="New Password"
+                    label={t("settings.security.new_password")}
                     id="new_pass"
                     type="password"
                     value={passwords.next}
@@ -540,7 +538,7 @@ const Settings: React.FC = () => {
                     }
                   />
                   <Field
-                    label="Confirm New Password"
+                    label={t("settings.security.confirm_password")}
                     id="confirm_pass"
                     type="password"
                     value={passwords.confirm}
@@ -556,7 +554,7 @@ const Settings: React.FC = () => {
                     {isUpdatingPassword && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Update Password
+                    {t("settings.security.update_btn")}
                   </Button>
                 </CardContent>
               </Card>
@@ -569,9 +567,9 @@ const Settings: React.FC = () => {
             >
               <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
-                  <CardTitle>Notification Channels</CardTitle>
-                  <CardDescription>
-                    Configure how you want to receive alerts.
+                  <CardTitle>{t("settings.notifications.channels")}</CardTitle>
+                  <CardDescription className="mm:leading-loose">
+                    {t("settings.notifications.desc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -579,11 +577,11 @@ const Settings: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <Mail className="text-muted-foreground" size={20} />
                       <div>
-                        <p className="text-sm font-medium">
-                          Email Notifications
+                        <p className="text-sm font-medium mm:mb-2">
+                          {t("settings.notifications.email")}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Receive updates via your email address.
+                        <p className="text-xs text-muted-foreground mm:mb-1">
+                          {t("settings.notifications.email_desc")}
                         </p>
                       </div>
                     </div>
@@ -598,11 +596,11 @@ const Settings: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <Smartphone className="text-muted-foreground" size={20} />
                       <div>
-                        <p className="text-sm font-medium">
-                          Push Notifications
+                        <p className="text-sm font-medium mm:mb-2">
+                          {t("settings.notifications.push")}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Receive instant alerts on your mobile device.
+                        <p className="text-xs text-muted-foreground mm:mb-1s">
+                          {t("settings.notifications.push_desc")}
                         </p>
                       </div>
                     </div>
@@ -624,9 +622,9 @@ const Settings: React.FC = () => {
             >
               <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
-                  <CardTitle>Theme Preference</CardTitle>
-                  <CardDescription>
-                    Choose how the interface looks to you.
+                  <CardTitle>{t("settings.appearance.theme_pref")}</CardTitle>
+                  <CardDescription className="mm:leading-loose">
+                    {t("settings.appearance.theme_desc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -635,44 +633,49 @@ const Settings: React.FC = () => {
                       theme="light"
                       active={currentTheme === "light"}
                       onClick={() => dispatch(setTheme("light"))}
+                      label={t("settings.appearance.light")}
                     />
                     <ThemeOption
                       theme="dark"
                       active={currentTheme === "dark"}
                       onClick={() => dispatch(setTheme("dark"))}
+                      label={t("settings.appearance.dark")}
                     />
                     <ThemeOption
                       theme="system"
                       active={currentTheme === "system"}
                       onClick={() => dispatch(setTheme("system"))}
+                      label={t("settings.appearance.system")}
                     />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* DANGER ZONE - Using Custom Modal */}
+              {/* DANGER ZONE */}
               <Card className="border-red-100 dark:border-red-950 bg-red-50/30 dark:bg-red-950/10">
                 <CardHeader>
                   <CardTitle className="text-red-600 flex items-center gap-2">
-                    <Trash2 size={20} /> Danger Zone
+                    <Trash2 size={20} /> {t("settings.appearance.danger_zone")}
                   </CardTitle>
-                  <CardDescription>
-                    Actions here cannot be undone.
+                  <CardDescription className="mm:leading-loose">
+                    {t("settings.appearance.danger_desc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">Delete Account</p>
-                    <p className="text-xs text-muted-foreground">
-                      Your data will be wiped from our servers.
+                    <p className="text-sm font-medium">
+                      {t("settings.appearance.delete_title")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mm:leading-loose">
+                      {t("settings.appearance.delete_desc")}
                     </p>
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={() => setShowDeleteModal(true)} // Open Custom Modal
+                    onClick={() => setShowDeleteModal(true)}
                     disabled={isDeleting}
                   >
-                    Delete Account
+                    {t("settings.appearance.delete_btn")}
                   </Button>
                 </CardContent>
               </Card>
@@ -681,15 +684,14 @@ const Settings: React.FC = () => {
         </Tabs>
       </div>
 
-      {/* --- CUSTOM CONFIRM MODAL --- */}
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteAccount}
         isLoading={isDeleting}
-        title="Delete your account?"
-        description="This action is permanent and cannot be undone. All your profile data, documents, and merchant information will be permanently deleted from AgriBridge."
-        confirmText="Yes, Delete Permanently"
+        title={t("settings.modals.delete_title")}
+        description={t("settings.modals.delete_desc")}
+        confirmText={t("settings.modals.delete_confirm")}
         icon={<AlertTriangle className="text-red-500" size={24} />}
       />
     </div>
@@ -752,10 +754,12 @@ const ThemeOption = ({
   theme,
   active,
   onClick,
+  label,
 }: {
   theme: ThemeMode;
   active: boolean;
   onClick: () => void;
+  label: string;
 }) => (
   <div className="space-y-3 cursor-pointer group" onClick={onClick}>
     <div
@@ -780,7 +784,7 @@ const ThemeOption = ({
     <p
       className={`text-center text-xs capitalize ${active ? "font-bold" : "font-medium"}`}
     >
-      {theme}
+      {label}
     </p>
   </div>
 );

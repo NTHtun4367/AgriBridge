@@ -135,20 +135,6 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                   </span>
                 </div>
                 <div className="space-y-1 bg-secondary p-4 rounded-xl">
-                  {/* <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-white p-2 rounded border">
-                      <p className="text-[10px] text-slate-400">Division</p>
-                      <p className="text-xs font-bold">{user.division}</p>
-                    </div>
-                    <div className="bg-white p-2 rounded border">
-                      <p className="text-[10px] text-slate-400">District</p>
-                      <p className="text-xs font-bold">{user.district}</p>
-                    </div>
-                    <div className="bg-white p-2 rounded border">
-                      <p className="text-[10px] text-slate-400">Township</p>
-                      <p className="text-xs font-bold">{user.township}</p>
-                    </div>
-                  </div> */}
                   <div className="p-2">
                     <p className="text-[10px] text-slate-400 uppercase font-bold">
                       Division

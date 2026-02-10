@@ -1,19 +1,20 @@
 import { ModeToggle } from "@/components/ModeToggle";
 import { Button } from "@/components/ui/button";
 import { Link, NavLink } from "react-router";
-import heroBg from "@/assets/logo.png";
+import { useTranslation } from "react-i18next"; // 1. Import hook
+import { LanguageToggle } from "@/components/LanguageToggle"; // 2. Import Toggle
+import logo from "@/assets/logo.png";
 
 function Navigation() {
+  const { t } = useTranslation();
+
   return (
     <nav className="fixed top-0 w-full z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      {/* Added mm:h-20 to give Burmese text more vertical room */}
+      <div className="max-w-7xl mx-auto px-6 h-16 mm:h-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center">
-            <img
-              src={heroBg}
-              alt="Logo"
-              className="h-12 w-auto object-contain"
-            />
+            <img src={logo} alt="Logo" className="h-12 w-auto object-contain" />
             <span className="text-3xl italic font-bold text-primary">
               AgriBridge
             </span>
@@ -21,50 +22,40 @@ function Navigation() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <NavLink
-            to={"/markets"}
-            className={({ isActive }) =>
-              isActive
-                ? "text-base font-bold text-primary"
-                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            }
-          >
-            Market Prices
-          </NavLink>
-          <NavLink
-            to={"/farmers-landing"}
-            className={({ isActive }) =>
-              isActive
-                ? "text-base font-bold text-primary"
-                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            }
-          >
-            Farmers
-          </NavLink>
-          <NavLink
-            to={"/merchants-landing"}
-            className={({ isActive }) =>
-              isActive
-                ? "text-base font-bold text-primary"
-                : "text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-            }
-          >
-            Merchants
-          </NavLink>
+          {[
+            { to: "/markets", label: "nav.market_prices" },
+            { to: "/farmers-landing", label: "nav.farmers" },
+            { to: "/merchants-landing", label: "nav.merchants" },
+          ].map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `transition-colors mm:text-lg mm:tracking-wide ${
+                  isActive
+                    ? "text-base font-bold text-primary"
+                    : "text-sm font-medium text-slate-600 hover:text-primary"
+                }`
+              }
+            >
+              {t(link.label)}
+            </NavLink>
+          ))}
         </div>
 
         <div className="flex items-center gap-3">
           <ModeToggle />
           <Button
-            variant={"outline"}
-            className="hidden sm:inline-flex cursor-pointer"
+            variant="outline"
+            className="hidden sm:inline-flex mm:text-base"
             asChild
           >
-            <Link to={"/login"}>Login</Link>
+            <Link to="/login">{t("nav.login")}</Link>
           </Button>
-          <Button className="bg-primary cursor-pointer">
-            <Link to={"/register"}>Register</Link>
+          <Button className="bg-primary mm:text-base" asChild>
+            <Link to="/register">{t("nav.register")}</Link>
           </Button>
+          <LanguageToggle />
         </div>
       </div>
     </nav>

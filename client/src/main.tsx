@@ -55,6 +55,9 @@ import Report from "./pages/farmer/Report.tsx";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard.tsx";
 import MerchantList from "./common/MerchantList.tsx";
 import { AgricultureManager } from "./pages/farmer/AgriManager.tsx";
+import "./i18n";
+import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 
 const router = createBrowserRouter([
   {
@@ -181,12 +184,25 @@ function ThemeWatcher() {
   return null;
 }
 
+function LanguageWatcher() {
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    // This ensures your CSS spacing (line-height 1.8) triggers correctly
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+  return null;
+}
+
+// Then add it to your render block:
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeWatcher />
-        <RouterProvider router={router} />
+        <LanguageWatcher /> {/* Add this here */}
+        <Suspense fallback={<div>Loading...</div>}>
+          <RouterProvider router={router} />
+        </Suspense>
       </PersistGate>
     </Provider>
   </StrictMode>,

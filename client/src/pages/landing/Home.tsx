@@ -20,17 +20,16 @@ import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next"; // 1. Import hook
 
-// --- IMAGE IMPORTS ---
-// Importing from the same directory as Home.tsx
 import heroBg from "@/assets/farm.jpg";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(); // 2. Initialize translation
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
-      {/* --- NAVIGATION --- */}
       <Navigation />
 
       {/* --- HERO SECTION --- */}
@@ -45,21 +44,19 @@ const HomePage = () => {
         <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
           <div className="animate-in slide-in-from-top-85 duration-800">
             <p className="mb-6 px-4 py-2 text-white text-sm font-bold">
-              Digitalizing the Agriculture Supply Chain
+              {t("home.hero.tag")}
             </p>
           </div>
 
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-8xl text-white animate-in zoom-in slide-in-from-bottom-8 duration-1500 ease-out">
-            Bridging the gap from <br />
+          <h1 className="text-5xl mm:text-[80px] mm:mb-12 font-extrabold tracking-tight sm:text-6xl lg:text-8xl text-white animate-in zoom-in slide-in-from-bottom-8 duration-1500 ease-out">
+            <span className="block mm:mb-16">{t("home.hero.title_start")}</span>
             <span className="text-primary-foreground drop-shadow-lg">
-              Farm to Market.
+              {t("home.hero.title_span")}
             </span>
           </h1>
 
           <p className="mx-auto mt-8 max-w-2xl text-lg leading-8 text-slate-100 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-            A specialized digital ecosystem empowering farmers with financial
-            clarity and connecting merchants directly to the source. Transparent
-            pricing, better profits.
+            {t("home.hero.desc")}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 mt-12">
@@ -68,15 +65,16 @@ const HomePage = () => {
               className="rounded-full px-10 bg-primary hover:bg-primary/90 text-md h-14 shadow-xl hover:scale-110 transition-transform animate-in slide-in-from-left-35 duration-1000"
               onClick={() => navigate("/farmers-landing")}
             >
-              I am Farmer <ArrowRight className="ml-2 h-5 w-5" />
+              {t("home.hero.btn_farmer")}{" "}
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="rounded-full px-10 text-md h-14 bg-white/10 text-white border-white/40 hover:bg-white/20 backdrop-blur-md hover:scale-110 transition-transform  animate-in slide-in-from-right-35 duration-1000"
+              className="rounded-full px-10 text-md h-14 bg-white/10 text-white border-white/40 hover:bg-white/20 backdrop-blur-md hover:scale-110 transition-transform animate-in slide-in-from-right-35 duration-1000"
               onClick={() => navigate("/merchants-landing")}
             >
-              I am Merchant
+              {t("home.hero.btn_merchant")}
             </Button>
           </div>
         </div>
@@ -86,8 +84,8 @@ const HomePage = () => {
       <ScrollReveal>
         <section className="w-full bg-secondary">
           <div className="max-w-7xl mx-auto px-6 pb-24 pt-20">
-            <h2 className="text-3xl font-bold text-center mb-12">
-              Tailored Experiences for Every Role
+            <h2 className="text-3xl font-bold text-center mb-12 mm:leading-loose">
+              {t("home.dual_pathway.title")}
             </h2>
             <div className="grid md:grid-cols-2 gap-12">
               {/* Farmer Path */}
@@ -96,18 +94,15 @@ const HomePage = () => {
                   id="farmer"
                   className="shadow-xl shadow-emerald-900/5 relative overflow-hidden group transition-transform duration-300 hover:-translate-y-1"
                 >
-                  {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Sprout size={120} />
-            </div> */}
                   <CardHeader>
                     <div className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center text-primary mb-4">
                       <TrendingUp size={24} />
                     </div>
-                    <CardTitle className="text-2xl">
-                      Empowering Farmers
+                    <CardTitle className="text-2xl mm:leading-loose">
+                      {t("home.dual_pathway.farmer.title")}
                     </CardTitle>
                     <CardDescription>
-                      Comprehensive tools to manage your farm as a business.
+                      {t("home.dual_pathway.farmer.desc")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -116,12 +111,11 @@ const HomePage = () => {
                         <Wallet size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">
-                          Income & Outcome Tracking
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat1_title")}
                         </h4>
-                        <p className="text-sm text-slate-500">
-                          Log every expense and sale with our simplified ledger
-                          system.
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat1_desc")}
                         </p>
                       </div>
                     </div>
@@ -130,11 +124,11 @@ const HomePage = () => {
                         <BarChart3 size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">
-                          Market Price Analytics
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat2_title")}
                         </h4>
-                        <p className="text-sm text-slate-500">
-                          See standard prices updated by regional merchants.
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat2_desc")}
                         </p>
                       </div>
                     </div>
@@ -143,12 +137,11 @@ const HomePage = () => {
                         <LineChart size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">
-                          Profitability Reports
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat3_title")}
                         </h4>
-                        <p className="text-sm text-slate-500">
-                          Automated harvest reports to help you plan for the
-                          next season.
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.farmer.feat3_desc")}
                         </p>
                       </div>
                     </div>
@@ -162,18 +155,15 @@ const HomePage = () => {
                   id="merchant"
                   className="shadow-xl shadow-blue-900/5 relative overflow-hidden group transition-transform duration-300 hover:-translate-y-1"
                 >
-                  {/* <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Store size={120} />
-            </div> */}
                   <CardHeader>
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4">
                       <Store size={24} />
                     </div>
-                    <CardTitle className="text-2xl">
-                      Merchant Solutions
+                    <CardTitle className="text-2xl mm:leading-loose">
+                      {t("home.dual_pathway.merchant.title")}
                     </CardTitle>
                     <CardDescription>
-                      Source directly and manage your competitive buying rates.
+                      {t("home.dual_pathway.merchant.desc")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -182,12 +172,11 @@ const HomePage = () => {
                         <ShieldCheck size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">
-                          Custom Buying Prices
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat1_title")}
                         </h4>
-                        <p className="text-sm text-slate-500">
-                          Update your own prices to attract farmers in your
-                          vicinity.
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat1_desc")}
                         </p>
                       </div>
                     </div>
@@ -196,10 +185,11 @@ const HomePage = () => {
                         <LineChart size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">Standard Prices</h4>
-                        <p className="text-sm text-slate-500">
-                          Compare your offers against admin-verified market
-                          rates.
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat2_title")}
+                        </h4>
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat2_desc")}
                         </p>
                       </div>
                     </div>
@@ -208,12 +198,11 @@ const HomePage = () => {
                         <ChevronRight size={20} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm">
-                          Digital Buying/Collection
+                        <h4 className="font-bold text-sm mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat3_title")}
                         </h4>
-                        <p className="text-sm text-slate-500">
-                          Streamline how you receive and verify produce from
-                          your farmers.
+                        <p className="text-sm text-slate-500 mm:leading-loose">
+                          {t("home.dual_pathway.merchant.feat3_desc")}
                         </p>
                       </div>
                     </div>

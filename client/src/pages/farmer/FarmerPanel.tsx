@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Outlet } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   BookOpenText,
   LayoutDashboard,
@@ -7,7 +8,6 @@ import {
   Settings,
   ShieldAlert,
   ShoppingBag,
-  // Sprout,
   Store,
   TrendingUp,
 } from "lucide-react";
@@ -15,61 +15,61 @@ import SideBar from "@/common/SideBar";
 import NavBar from "@/common/NavBar";
 import type { Page } from "@/types/sidebar";
 
-const pages: Page[] = [
-  {
-    name: "Dashboard",
-    path: "/farmer/dashboard",
-    icon: <LayoutDashboard className="w-5 h-5" />,
-  },
-  {
-    name: "Market Prices",
-    path: "/farmer/markets",
-    icon: <TrendingUp className="w-5 h-5" />,
-  },
-  {
-    name: "Merchants",
-    path: "/farmer/merchants",
-    icon: <Store className="w-5 h-5" />,
-  },
-  // {
-  //   name: "Profit Calculator",
-  //   path: "/farmer/profit-calculator",
-  //   icon: <Sprout className="w-5 h-5" />,
-  // },
-  {
-    name: "Records",
-    path: "/farmer/records",
-    icon: <BookOpenText className="w-5 h-5" />,
-  },
-  {
-    name: "Preorders",
-    path: "/farmer/preorders",
-    icon: <ShoppingBag className="w-5 h-5" />,
-  },
-  {
-    name: "Invoices",
-    path: "/farmer/invoices",
-    icon: <Receipt className="w-5 h-5" />,
-  },
-  {
-    name: "Disputes",
-    path: "/farmer/disputes",
-    icon: <ShieldAlert className="w-5 h-5" />,
-  },
-  {
-    name: "Settings",
-    path: "/farmer/settings",
-    icon: <Settings className="w-5 h-5" />,
-  },
-];
-
 function FarmerPanel() {
+  const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Map pages using the updated 'farmer_sidebar' namespace
+  const pages: Page[] = useMemo(
+    () => [
+      {
+        name: t("farmer_sidebar.dashboard"),
+        path: "/farmer/dashboard",
+        icon: <LayoutDashboard className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.market_prices"),
+        path: "/farmer/markets",
+        icon: <TrendingUp className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.merchants"),
+        path: "/farmer/merchants",
+        icon: <Store className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.records"),
+        path: "/farmer/records",
+        icon: <BookOpenText className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.preorders"),
+        path: "/farmer/preorders",
+        icon: <ShoppingBag className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.invoices"),
+        path: "/farmer/invoices",
+        icon: <Receipt className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.disputes"),
+        path: "/farmer/disputes",
+        icon: <ShieldAlert className="w-5 h-5" />,
+      },
+      {
+        name: t("farmer_sidebar.settings"),
+        path: "/farmer/settings",
+        icon: <Settings className="w-5 h-5" />,
+      },
+    ],
+    [t],
+  );
+
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Mobile Overlay (Backdrop) */}
+      {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -77,7 +77,7 @@ function FarmerPanel() {
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Navigation */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 bg-background transition-all duration-300 ease-in-out
@@ -94,7 +94,6 @@ function FarmerPanel() {
         />
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <NavBar
           toggleDesktop={() => setIsCollapsed(!isCollapsed)}

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   MapPin,
   Phone,
@@ -25,7 +26,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-// Updated import: Changed MerchantMarketPriceTable to MarketPriceTable
 import { MarketPriceTable } from "@/components/market/MarketPriceTable";
 import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 import { useMemo, useState } from "react";
@@ -52,21 +52,13 @@ import {
 import { format } from "date-fns";
 
 function MerchantProfile() {
+  const { t, i18n } = useTranslation();
   const { userId } = useParams();
   const navigate = useNavigate();
   const { data: currentUser } = useCurrentUserQuery();
 
-  // Dialog states
   const [isPreorderOpen, setIsPreorderOpen] = useState(false);
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
-
-  const { data: response } = useGetMarketPricesQuery({ userId });
-  const {
-    data: merchant,
-    isLoading,
-    isError,
-  } = useGetMerchantInfoQuery(userId as string);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortConfig, setSortConfig] = useState<{
@@ -77,9 +69,16 @@ function MerchantProfile() {
     direction: "asc",
   });
 
+  const { data: response } = useGetMarketPricesQuery({ userId });
+  const {
+    data: merchant,
+    isLoading,
+    isError,
+  } = useGetMerchantInfoQuery(userId as string);
+
   const rawData = response?.data || [];
 
-  // --- Date Logic ---
+  // Logic for dates and data processing remains the same
   const lastUpdatedDate = useMemo(() => {
     if (rawData.length === 0) return null;
     const dates = rawData.map((item: any) =>
@@ -117,21 +116,13 @@ function MerchantProfile() {
     return filtered;
   }, [rawData, searchTerm, selectedCategory, sortConfig]);
 
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="text-muted-foreground animate-pulse font-medium">
-            Loading merchant details...
+            {t("merchant_profile.loading")}
           </p>
         </div>
       </div>
@@ -144,16 +135,19 @@ function MerchantProfile() {
         <div className="bg-red-50 p-4 rounded-full mb-4">
           <Store className="h-12 w-12 text-red-500" />
         </div>
-        <h2 className="text-2xl font-bold">Merchant not found</h2>
+        <h2 className="text-2xl font-bold">
+          {t("merchant_profile.not_found.title")}
+        </h2>
         <p className="text-slate-500 mt-2 mb-6">
-          The profile you're looking for doesn't exist or has been moved.
+          {t("merchant_profile.not_found.desc")}
         </p>
         <Button
           onClick={() => navigate(-1)}
           variant="outline"
           className="gap-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Go
+          <ArrowLeft className="w-4 h-4" />{" "}
+          {t("merchant_profile.not_found.back")}
         </Button>
       </div>
     );
@@ -161,14 +155,14 @@ function MerchantProfile() {
 
   return (
     <div className="p-4 md:p-10 space-y-8 animate-in fade-in duration-500">
-      {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
           onClick={() => navigate(-1)}
           className="hover:bg-slate-100 -ml-4 text-slate-600"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to List
+          <ArrowLeft className="w-4 h-4" />{" "}
+          {t("merchant_profile.nav.back_to_list")}
         </Button>
         <Badge
           variant="secondary"
@@ -178,7 +172,6 @@ function MerchantProfile() {
         </Badge>
       </div>
 
-      {/* Hero Section */}
       <Card className="relative group">
         <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="shrink-0">
@@ -239,7 +232,7 @@ function MerchantProfile() {
                     onClick={() => setIsDisputeOpen(true)}
                   >
                     <AlertTriangle className="mr-2 h-4 w-4" />
-                    <span>Report Merchant Dispute</span>
+                    <span>{t("merchant_profile.actions.report_dispute")}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -257,7 +250,7 @@ function MerchantProfile() {
         <Card className="shadow-sm rounded-2xl">
           <CardContent className="p-8">
             <div className="flex items-center gap-2 mb-4 text-primary font-bold uppercase text-xs tracking-widest">
-              <UserIcon size={16} /> Merchant Biography
+              <UserIcon size={16} /> {t("merchant_profile.sections.bio")}
             </div>
             <p className="text-lg text-slate-600 leading-relaxed italic">
               "{merchant.bio}"
@@ -267,12 +260,11 @@ function MerchantProfile() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sidebar Info */}
         <div className="lg:col-span-1 space-y-6">
           <Card className="overflow-hidden shadow-sm rounded-2xl">
             <CardHeader>
               <CardTitle className="text-sm font-bold uppercase text-slate-500 tracking-widest">
-                Contact Information
+                {t("merchant_profile.sections.contact")}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
@@ -282,42 +274,38 @@ function MerchantProfile() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase">
-                    Mobile
+                    {t("merchant_profile.labels.mobile")}
                   </p>
-                  <p className="font-bold text-slate-700">
+                  <p className="font-bold text-slate-700 mm:-mt-7">
                     {merchant.merchantId.businessPhone}
                   </p>
                 </div>
               </div>
-
               <div className="flex items-start gap-4">
                 <div className="bg-orange-50 p-2.5 rounded-xl">
                   <Mail className="w-5 h-5 text-orange-600" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-slate-400 uppercase">
-                    Email
+                    {t("merchant_profile.labels.email")}
                   </p>
-                  <p className="font-bold text-slate-700 truncate">
+                  <p className="font-bold text-slate-700 truncate mm:-mt-7">
                     {merchant.email}
                   </p>
                 </div>
               </div>
-
               <Separator className="bg-slate-100" />
-
               <div className="flex items-center gap-4">
                 <div className="bg-purple-50 p-2.5 rounded-xl">
                   <Calendar className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase">
-                    Registered On
+                  <p className="text-xs font-semibold text-slate-400 uppercase mm:mb-0">
+                    {t("merchant_profile.labels.registered_on")}
                   </p>
-                  <p className="font-bold text-slate-700">
-                    {new Date(merchant.createdAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
+                  <p className="font-bold text-slate-700 mm:mb-0">
+                    {format(new Date(merchant.createdAt), "MMMM yyyy", {
+                      locale: i18n.language === "mm" ? undefined : undefined,
                     })}
                   </p>
                 </div>
@@ -326,12 +314,11 @@ function MerchantProfile() {
           </Card>
         </div>
 
-        {/* Main Details */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-sm rounded-2xl">
             <CardHeader>
               <CardTitle className="text-xl font-bold flex items-center gap-2">
-                Business Details
+                {t("merchant_profile.sections.business_details")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -343,7 +330,7 @@ function MerchantProfile() {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-800">
-                        Primary Location
+                        {t("merchant_profile.labels.primary_location")}
                       </h4>
                       <p className="text-slate-600 leading-relaxed">
                         {merchant.township}, {merchant.district}
@@ -355,7 +342,6 @@ function MerchantProfile() {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="bg-slate-50 p-2.5 rounded-xl mt-1">
@@ -363,7 +349,7 @@ function MerchantProfile() {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-800">
-                        Store Address
+                        {t("merchant_profile.labels.store_address")}
                       </h4>
                       <p className="text-slate-600 leading-relaxed">
                         {merchant.homeAddress}
@@ -372,7 +358,6 @@ function MerchantProfile() {
                   </div>
                 </div>
               </div>
-
               <div className="bg-slate-50 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border border-dashed border-slate-200">
                 <div className="flex items-center gap-4 text-center sm:text-left">
                   <div className="bg-white p-3 rounded-full shadow-sm">
@@ -380,10 +365,10 @@ function MerchantProfile() {
                   </div>
                   <div>
                     <h5 className="font-bold text-slate-800">
-                      Verified Partner
+                      {t("merchant_profile.labels.verified_partner")}
                     </h5>
-                    <p className="text-sm text-slate-500">
-                      This merchant has completed full verification.
+                    <p className="text-sm text-slate-500 mm:leading-loose">
+                      {t("merchant_profile.labels.verified_desc")}
                     </p>
                   </div>
                 </div>
@@ -396,16 +381,15 @@ function MerchantProfile() {
         </div>
       </div>
 
-      {/* Buying Price Section */}
       <Card className="shadow-sm rounded-2xl overflow-hidden">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <CardTitle className="text-xl font-bold">
-                Live Buying Rates
+              <CardTitle className="text-xl font-bold mm:leading-loose">
+                {t("merchant_profile.sections.live_rates")}
               </CardTitle>
-              <CardDescription className="text-slate-500 mt-1">
-                Current buying prices offered by this merchant.
+              <CardDescription className="text-slate-500 mt-1 mm:leading-loose">
+                {t("merchant_profile.sections.live_rates_desc")}
               </CardDescription>
             </div>
             <div className="flex items-center gap-3">
@@ -413,50 +397,56 @@ function MerchantProfile() {
                 <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-destructive">
                   <Clock className="w-3.5 h-3.5" />
                   <span className="text-xs font-semibold">
-                    Last Updated: {format(lastUpdatedDate, "MMM dd, yyyy")}
+                    {t("merchant_profile.labels.last_updated")}:{" "}
+                    {format(lastUpdatedDate, "MMM dd, yyyy")}
                   </span>
                 </div>
               )}
               <Badge className="bg-primary/15 text-primary animate-pulse">
-                ● Live Updates
+                ● {t("merchant_profile.actions.live_updates")}
               </Badge>
             </div>
           </div>
         </CardHeader>
-
         <CardContent>
           <div className="relative flex flex-col md:flex-row gap-6 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search crops by name..."
+                placeholder={t("merchant_profile.labels.search_placeholder")}
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-full md:w-[220px]">
-                <SelectValue placeholder="All Categories" />
+              <SelectTrigger className="w-full md:w-[220px] mm:leading-loose">
+                <SelectValue
+                  placeholder={t("merchant_profile.labels.all_categories")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {categoryOptions.map((cat) => (
                   <SelectItem key={cat} value={cat}>
-                    {cat === "all" ? "All Categories" : cat}
+                    {cat === "all"
+                      ? t("merchant_profile.labels.all_categories")
+                      : cat}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Updated Component Call: Changed MerchantMarketPriceTable to MarketPriceTable */}
           <MarketPriceTable
             data={processedData}
-            onSort={handleSort}
+            onSort={(key) => {
+              let direction: "asc" | "desc" = "asc";
+              if (sortConfig.key === key && sortConfig.direction === "asc")
+                direction = "desc";
+              setSortConfig({ key, direction });
+            }}
             sortConfig={sortConfig}
             onRowClick={(cropId, marketId) =>
               navigate(

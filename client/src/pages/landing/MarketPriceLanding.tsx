@@ -19,8 +19,10 @@ import {
 } from "@/store/slices/marketApi";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next"; // Added i18n hook
 
 function MarketPriceLanding() {
+  const { t } = useTranslation(); // Initialize translation
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedMarket, setSelectedMarket] = useState("all");
@@ -32,7 +34,6 @@ function MarketPriceLanding() {
     direction: "asc",
   });
 
-  // Current Date formatting
   const todayDate = format(new Date(), "dd-MM-yyyy");
 
   const { data: response } = useGetMarketPricesQuery({
@@ -107,23 +108,22 @@ function MarketPriceLanding() {
               {todayDate}
             </div>
             <div>
-              <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-primary">
-                Today's <br />
-                <span className="text-primary">Market Prices</span>
+              <h1 className="text-5xl mm:text-[55px] font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-primary mm:mb-12">
+                <span className="block mm:mb-12">{t("market.hero.today")}</span>
+                <span className="text-primary">{t("market.hero.title")}</span>
               </h1>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-                Real-time updates of the latest market prices from major trading
-                centers across the country, all in one place.
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600 mm:leading-loose">
+                {t("market.hero.subtitle")}
               </p>
             </div>
           </div>
-          {/* Search & Filters */}
+
           <div className="relative mt-16 max-w-4xl mx-auto px-6 flex flex-col gap-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search crops..."
+                  placeholder={t("market.filters.search_placeholder")}
                   className="pl-9 bg-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -134,13 +134,15 @@ function MarketPriceLanding() {
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-full md:w-[180px] bg-white">
-                  <SelectValue placeholder="All Categories" />
+                <SelectTrigger className="w-full md:w-[180px] bg-white mm:leading-loose">
+                  <SelectValue
+                    placeholder={t("market.filters.all_categories")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat === "all" ? "All Categories" : cat}
+                      {cat === "all" ? t("market.filters.all_categories") : cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -149,7 +151,7 @@ function MarketPriceLanding() {
 
             <div className="flex flex-col items-center gap-3">
               <span className="text-sm font-medium text-slate-500">
-                FILTER BY MARKET
+                {t("market.filters.filter_by_market")}
               </span>
               <div className="flex flex-wrap justify-center items-center gap-2 pb-2">
                 <button
@@ -161,7 +163,7 @@ function MarketPriceLanding() {
                       : "bg-white text-slate-600 border-slate-200 hover:border-primary/50 hover:bg-slate-50",
                   )}
                 >
-                  All Markets
+                  {t("market.filters.all_markets")}
                 </button>
                 {markets.map((m: any) => (
                   <button
@@ -188,7 +190,7 @@ function MarketPriceLanding() {
           <div className="space-y-20">
             {groupedData.map((group) => (
               <div key={group.marketId} className="space-y-6">
-                <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-4 gap-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-2">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <MapPin className="h-5 w-5 text-primary" />
@@ -197,13 +199,18 @@ function MarketPriceLanding() {
                       <h2 className="text-xl text-primary font-semibold uppercase tracking-tight">
                         {group.marketName}
                       </h2>
-                      <p className="text-xs text-slate-500 font-medium">
-                        Prices for {group.marketName} as of {todayDate}
+                      <p className="text-xs text-slate-500 font-medium mm:mb-1 mm:leading-loose">
+                        {t("market.table.market_as_of", {
+                          marketName: group.marketName,
+                          date: todayDate,
+                        })}
                       </p>
                     </div>
                   </div>
                   <div className="text-xs text-slate-400 font-medium italic">
-                    {group.items.length} crops found
+                    {t("market.table.crops_found", {
+                      count: group.items.length,
+                    })}
                   </div>
                 </div>
 
@@ -236,7 +243,10 @@ function MarketPriceLanding() {
                     {processedData[0]?.marketName}
                   </h2>
                   <p className="text-[12px] text-slate-500 font-light">
-                    Prices for {processedData[0]?.marketName} as of {todayDate}
+                    {t("market.table.market_as_of", {
+                      marketName: processedData[0]?.marketName || "",
+                      date: todayDate,
+                    })}
                   </p>
                 </div>
               </div>

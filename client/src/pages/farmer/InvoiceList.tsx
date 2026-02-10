@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import * as htmlToImage from "html-to-image";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,6 @@ import { useAddEntryMutation } from "@/store/slices/entryApi";
 import { useGetMerchantInfoQuery } from "@/store/slices/userApi";
 import { useGetActiveSeasonQuery } from "@/store/slices/farmerApi";
 
-// Utility to convert base64/dataUrl to a File object for FormData
 const dataURLtoFile = (dataurl: string, filename: string) => {
   const arr = dataurl.split(",");
   const mime = arr[0].match(/:(.*?);/)![1];
@@ -36,14 +36,13 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
 };
 
 export default function InvoiceList() {
-  // Queries & Mutations
+  const { t } = useTranslation();
   const { data: invoices, isLoading: invoicesLoading } =
     useGetFarmerInvoicesQuery();
   const [finalize, { isLoading: isFinalizing }] = useFinalizeInvoiceMutation();
   const [addEntry] = useAddEntryMutation();
   const { data: activeSeason } = useGetActiveSeasonQuery();
 
-  // Local State
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const actionButtonsRef = useRef<HTMLDivElement>(null);
@@ -54,12 +53,9 @@ export default function InvoiceList() {
       { skip: !selectedInvoice },
     );
 
-  // --- LOGIC HANDLERS ---
-
   const generateAndDownloadImage = async (auto = false) => {
     if (!invoiceRef.current) return null;
-
-    const loadingToast = toast.loading("Generating Receipt Image...");
+    const loadingToast = toast.loading(t("farmer_invoices.toast_generating"));
 
     if (auto && actionButtonsRef.current) {
       actionButtonsRef.current.classList.add("print-hidden");
@@ -70,12 +66,11 @@ export default function InvoiceList() {
         quality: 1,
         pixelRatio: 3,
         backgroundColor: "#ffffff",
-        filter: (node) => {
-          return !(
+        filter: (node) =>
+          !(
             node instanceof HTMLElement &&
             node.classList.contains("print-hidden")
-          );
-        },
+          ),
       });
 
       const link = document.createElement("a");
@@ -87,7 +82,7 @@ export default function InvoiceList() {
       return dataUrl;
     } catch (err) {
       toast.dismiss(loadingToast);
-      toast.error("Failed to generate image.");
+      toast.error(t("farmer_invoices.toast_error_gen"));
       return null;
     } finally {
       if (auto && actionButtonsRef.current) {
@@ -99,37 +94,32 @@ export default function InvoiceList() {
   const handleCompleteWorkflow = async (id: string) => {
     try {
       await finalize(id).unwrap();
-      toast.success("Transaction marked as paid!");
+      toast.success(t("farmer_invoices.toast_paid"));
 
       if (selectedInvoice) {
         setSelectedInvoice({ ...selectedInvoice, status: "paid" });
       }
 
-      // Generate receipt image (hidden buttons)
       const dataUrl = await generateAndDownloadImage(true);
-
       if (dataUrl && selectedInvoice && invoiceRef.current) {
         await autoSaveToIncome(dataUrl);
-        toast.success("Saved to income ledger automatically!");
+        toast.success(t("farmer_invoices.toast_auto_save"));
       }
     } catch (err) {
-      toast.error("Failed to finalize transaction");
+      toast.error(t("farmer_invoices.toast_finalize_fail"));
     }
   };
 
   const autoSaveToIncome = async (dataUrl: string) => {
     if (!selectedInvoice || !activeSeason?._id) return;
-
     const items = selectedInvoice.items || [];
 
     for (const item of items) {
       const quantity = Number(item.quantity) || 0;
       const price = Number(item.price) || 0;
-
       if (!item.cropName || quantity === 0) continue;
 
       const totalValue = quantity * price;
-
       const imageFile = dataURLtoFile(
         dataUrl,
         `receipt_${selectedInvoice.invoiceId}.png`,
@@ -158,44 +148,44 @@ export default function InvoiceList() {
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <p className="mt-4 text-slate-500 animate-pulse">
-          Loading your receipts...
+          {t("farmer_invoices.loading")}
         </p>
       </div>
     );
 
-  console.log(merchant);
-
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div>
-          <div className="flex items-center gap-2 text-primary mb-1">
+          <div className="flex items-center gap-2 text-primary mb-1 mm:leading-loose">
             <Receipt size={20} />
             <span className="text-xs font-bold uppercase tracking-widest">
-              Billing History
+              {t("farmer_invoices.history_label")}
             </span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight">
-            Digital Receipts
+          <h1 className="text-3xl font-black tracking-tight mm:leading-loose">
+            {t("farmer_invoices.title")}
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            View, pay, and download your records.
+          <p className="text-slate-500 text-sm mt-1 mm:leading-loose">
+            {t("farmer_invoices.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
-          <div className="px-3 py-1.5 bg-white shadow-sm rounded-md text-xs font-bold text-slate-700">
-            All Invoices ({invoices?.length || 0})
+          <div className="px-3 py-1.5 bg-white shadow-sm rounded-md text-xs font-bold text-slate-700 mm:leading-loose">
+            {t("farmer_invoices.all_invoices")} ({invoices?.length || 0})
           </div>
         </div>
       </div>
 
-      {/* INVOICE LIST */}
+      {/* LIST */}
       <div className="grid gap-4">
         {invoices?.length === 0 ? (
           <div className="text-center py-20 bg-secondary rounded-3xl border-2 border-dashed border-slate-200">
             <Search className="text-slate-300 mx-auto mb-4" size={32} />
-            <h3 className="text-lg font-bold">No receipts yet</h3>
+            <h3 className="text-lg font-bold">
+              {t("farmer_invoices.no_receipts")}
+            </h3>
           </div>
         ) : (
           invoices?.map((inv: any) => (
@@ -233,9 +223,9 @@ export default function InvoiceList() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-6 border-t md:border-none pt-4 md:pt-0">
-                  <div className="text-left md:text-right">
+                  <div className="text-left md:text-right mm:-space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">
-                      Amount Due
+                      {t("farmer_invoices.amount_due")}
                     </p>
                     <span className="text-xl font-black">
                       {inv.totalAmount.toLocaleString()}{" "}
@@ -250,7 +240,6 @@ export default function InvoiceList() {
         )}
       </div>
 
-      {/* INVOICE VIEW MODAL */}
       <Dialog
         open={!!selectedInvoice}
         onOpenChange={() => setSelectedInvoice(null)}
@@ -262,39 +251,41 @@ export default function InvoiceList() {
                 onClick={() => setSelectedInvoice(null)}
                 className="absolute -top-12 right-0 text-white flex items-center gap-2 font-bold print-hidden"
               >
-                <X size={20} /> Close
+                <X size={20} /> {t("farmer_invoices.close")}
               </button>
 
               <div ref={invoiceRef}>
                 <Card className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col">
                   <div className="h-2 bg-primary w-full" />
                   <CardContent className="p-8 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-12">
+                    <div className="flex justify-between items-start mb-12 mm:mb-4 mm:-mt-12">
                       <div>
-                        <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4">
+                        <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4 mm:mt-8 mm:mb-2">
                           <Receipt size={24} />
                         </div>
                         <h2 className="text-2xl font-black tracking-tighter">
                           INVOICE
                         </h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                          #{selectedInvoice.invoiceId}
+                          {t("farmer_invoices.invoice_id", {
+                            id: selectedInvoice.invoiceId,
+                          })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-xl text-primary italic">
+                        <p className="font-bold text-xl text-primary italic mm:mt-8">
                           AgriBridge
                         </p>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold">
-                          Platform Verified Receipt
+                        <p className="text-[10px] text-slate-400 uppercase font-bold mm:-mt-6">
+                          {t("farmer_invoices.platform_verified")}
                         </p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-8 mb-12 text-sm">
+                    <div className="grid grid-cols-2 gap-8 mb-12 text-sm mm:mb-4">
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                          Billed From
+                          {t("farmer_invoices.billed_from")}
                         </p>
                         {merchantLoading ? (
                           <div className="h-4 w-32 bg-slate-100 animate-pulse rounded" />
@@ -317,15 +308,17 @@ export default function InvoiceList() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                          Status
+                          {t("farmer_invoices.status_label")}
                         </p>
                         <span
                           className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${selectedInvoice.status === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
                         >
-                          {selectedInvoice.status}
+                          {t(
+                            `farmer_invoices.status.${selectedInvoice.status}`,
+                          )}
                         </span>
                         <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase">
-                          Date Issued
+                          {t("farmer_invoices.date_issued")}
                         </p>
                         <p className="font-bold text-xs">
                           {new Date(
@@ -339,22 +332,28 @@ export default function InvoiceList() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b-2 border-slate-100 text-[10px] uppercase text-slate-400 font-bold">
-                            <th className="text-left pb-3">Item</th>
-                            <th className="text-center pb-3">Qty</th>
-                            <th className="text-right pb-3">Total</th>
+                            <th className="text-left pb-3">
+                              {t("farmer_invoices.table_item")}
+                            </th>
+                            <th className="text-center pb-3">
+                              {t("farmer_invoices.table_qty")}
+                            </th>
+                            <th className="text-right pb-3">
+                              {t("farmer_invoices.table_total")}
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {selectedInvoice.items?.map(
                             (item: any, i: number) => (
                               <tr key={i} className="border-b border-slate-50">
-                                <td className="py-4 font-medium">
+                                <td className="py-4 mm:py-2 font-medium">
                                   {item.cropName}
                                 </td>
-                                <td className="py-4 text-center">
+                                <td className="py-4 mm:py-2 text-center">
                                   {item.quantity} {item.unit}
                                 </td>
-                                <td className="py-4 text-right font-bold">
+                                <td className="py-4 mm:py-2 text-right font-bold">
                                   {(
                                     item.quantity * item.price
                                   ).toLocaleString()}{" "}
@@ -367,8 +366,8 @@ export default function InvoiceList() {
                       </table>
                     </div>
 
-                    <div className="mt-8 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
-                      <span>Total Due</span>
+                    <div className="mt-8 mm:mb-0 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
+                      <span>{t("farmer_invoices.total_due")}</span>
                       <span className="text-primary">
                         {selectedInvoice.totalAmount.toLocaleString()} MMK
                       </span>
@@ -386,7 +385,8 @@ export default function InvoiceList() {
                           }
                           disabled={isFinalizing}
                         >
-                          <CreditCard size={18} /> Pay & Complete
+                          <CreditCard size={18} />{" "}
+                          {t("farmer_invoices.pay_complete")}
                         </Button>
                       ) : (
                         <Button
@@ -394,7 +394,8 @@ export default function InvoiceList() {
                           className="flex-1 py-6 gap-2 text-green-700 bg-green-50"
                           onClick={() => generateAndDownloadImage(false)}
                         >
-                          <ImageIcon size={18} /> Save Receipt to Gallery
+                          <ImageIcon size={18} />{" "}
+                          {t("farmer_invoices.save_gallery")}
                         </Button>
                       )}
                     </div>
