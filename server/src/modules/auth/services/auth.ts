@@ -6,22 +6,27 @@ import {
 } from "../../../shared/utils/cloudinary";
 import generateToken from "../../../shared/utils/generateToken";
 import { sendOtp } from "../../../shared/utils/message";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 // --- HELPERS ---
 
-/**
- * Generates a 6-digit numeric OTP string
- */
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-/**
- * Simple regex helper for email validation
- */
 const isEmailFormat = (identifier: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
 export class AuthService {
+  // --- PRIVATE UTILS ---
+
+  /**
+   * Internal helper to handle the Buffer to Base64 conversion for Cloudinary
+   */
+  private async uploadHelper(file: Express.Multer.File, folder: string) {
+    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    return await uploadSingleImage(dataUri, folder);
+  }
+
   // --- REGISTRATION (FARMER) ---
 
   async registerFarmer(body: any) {
@@ -39,23 +44,22 @@ export class AuthService {
       ...rest,
       role: "farmer",
       [isEmail ? "email" : "phone"]: cleanId,
-      // If Email: unverified + needs OTP. If Phone: verified immediately.
-      // verificationStatus: isEmail ? "unverified" : "verified",
-      verificationStatus: "verified",
+      verificationStatus: isEmail ? "unverified" : "verified",
       otp: isEmail ? otpCode : undefined,
       otpExpires: isEmail ? new Date(Date.now() + 5 * 60 * 1000) : undefined,
     };
 
     const user: any = await User.create(userData);
 
-    // if (isEmail) {
-    //   await sendOtp(cleanId, otpCode);
-    //   return {
-    //     message: "OTP sent to your email.",
-    //     requiresOtp: true,
-    //     identifier: cleanId,
-    //   };
-    // }
+    // Reactivated OTP sending for email registration
+    if (isEmail) {
+      await sendOtp(cleanId, otpCode);
+      return {
+        message: "OTP sent to your email.",
+        requiresOtp: true,
+        identifier: cleanId,
+      };
+    }
 
     return {
       message: "Registration successful!",
@@ -89,17 +93,12 @@ export class AuthService {
     if (!files?.nrcFront?.[0] || !files?.nrcBack?.[0])
       throw new Error("NRC images required.");
 
-    // Upload NRC images to Cloudinary
-    const uploadedFront = await uploadSingleImage(
-      `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`,
-      "/agribridge/nrc",
-    );
-    const uploadedBack = await uploadSingleImage(
-      `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`,
-      "/agribridge/nrc",
-    );
+    // Upload NRC images using helper
+    const [uploadedFront, uploadedBack] = await Promise.all([
+      this.uploadHelper(files.nrcFront[0], "/agribridge/nrc"),
+      this.uploadHelper(files.nrcBack[0], "/agribridge/nrc"),
+    ]);
 
-    // Create Merchant document first to link to User
     const merchant: any = await Merchant.create({
       ...rest,
       nrcFrontImage: {
@@ -119,23 +118,21 @@ export class AuthService {
       role: "merchant",
       merchantId: merchant._id,
       [isEmail ? "email" : "phone"]: cleanId,
-      // Email must verify OTP. Phone goes straight to 'pending' for Admin review.
-      // verificationStatus: isEmail ? "unverified" : "pending",
-      verificationStatus: "pending",
+      verificationStatus: isEmail ? "unverified" : "pending",
       otp: isEmail ? otpCode : undefined,
       otpExpires: isEmail ? new Date(Date.now() + 5 * 60 * 1000) : undefined,
     };
 
     const user = await User.create(userData);
 
-    // if (isEmail) {
-    //   await sendOtp(cleanId, otpCode);
-    //   return {
-    //     message: "OTP sent to email.",
-    //     requiresOtp: true,
-    //     identifier: cleanId,
-    //   };
-    // }
+    if (isEmail) {
+      await sendOtp(cleanId, otpCode);
+      return {
+        message: "OTP sent to email.",
+        requiresOtp: true,
+        identifier: cleanId,
+      };
+    }
 
     return {
       message: "Merchant registered. Pending admin approval.",
@@ -155,8 +152,9 @@ export class AuthService {
     if (!(await user.matchPassword(password)))
       throw new Error("Invalid credentials");
 
-    if(user.status === "ban") throw new Error("Your account has banned. Please try again later!")
-    // Block unverified email users
+    if (user.status === "ban")
+      throw new Error("Your account has been banned. Please contact support.");
+
     if (user.verificationStatus === "unverified" && user.email) {
       throw new Error("Please verify your email via OTP before logging in.");
     }
@@ -184,7 +182,6 @@ export class AuthService {
 
     user.otp = undefined;
     user.otpExpires = undefined;
-    // Farmer becomes verified, Merchant stays pending for NRC review
     user.verificationStatus = user.role === "farmer" ? "verified" : "pending";
     await user.save();
 
@@ -248,13 +245,16 @@ export class AuthService {
     return { message: "Email updated successfully." };
   }
 
-  // --- PROFILE & USER QUERIES ---
+  // --- PROFILE & USER QUERIES (With AI Translation Support) ---
 
   async getUserProfile(userId: string) {
     const user = await User.findById(userId)
       .select("-password")
-      .populate("merchantId");
+      .populate("merchantId")
+      .lean();
+
     if (!user) throw new Error("User not found");
+
     return user;
   }
 
@@ -272,8 +272,7 @@ export class AuthService {
     if (!user) throw new Error("User not found");
     if (user.avatarPublicId) await deleteImage(user.avatarPublicId);
 
-    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-    const uploaded = await uploadSingleImage(dataUri, "/agribridge/avatars");
+    const uploaded = await this.uploadHelper(file, "/agribridge/avatars");
 
     user.avatar = uploaded.image_url;
     user.avatarPublicId = uploaded.public_alt;
@@ -303,15 +302,19 @@ export class AuthService {
     const updateData: any = {};
 
     if (files?.nrcFront?.[0]) {
-      const uri = `data:${files.nrcFront[0].mimetype};base64,${files.nrcFront[0].buffer.toString("base64")}`;
-      const uploaded = await uploadSingleImage(uri, "/agribridge/nrc");
+      const uploaded = await this.uploadHelper(
+        files.nrcFront[0],
+        "/agribridge/nrc",
+      );
       updateData["nrcFrontImage.url"] = uploaded.image_url;
       updateData["nrcFrontImage.public_alt"] = uploaded.public_alt;
     }
 
     if (files?.nrcBack?.[0]) {
-      const uri = `data:${files.nrcBack[0].mimetype};base64,${files.nrcBack[0].buffer.toString("base64")}`;
-      const uploaded = await uploadSingleImage(uri, "/agribridge/nrc");
+      const uploaded = await this.uploadHelper(
+        files.nrcBack[0],
+        "/agribridge/nrc",
+      );
       updateData["nrcBackImage.url"] = uploaded.image_url;
       updateData["nrcBackImage.public_alt"] = uploaded.public_alt;
     }
@@ -330,24 +333,29 @@ export class AuthService {
   }
 
   async getMerchantById(userId: string) {
-    return await User.findById(userId)
+    const merchant = await User.findById(userId)
       .populate({
         path: "merchantId",
-        select:
-          "-nrcBackImage -nrcFrontImage",
+        select: "-nrcBackImage -nrcFrontImage",
       })
-      .select("-password");
+      .select("-password")
+      .lean();
+
+    return merchant;
   }
 
   async getVerifiedMerchants() {
-    return await User.find({
+    const merchants = await User.find({
       role: "merchant",
       verificationStatus: "verified",
       status: "active",
     })
       .populate("merchantId")
       .select("-password")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return merchants;
   }
 
   async getAllMerchants() {
@@ -355,14 +363,17 @@ export class AuthService {
   }
 
   async getMerchants(filter: any) {
-    return await User.find(filter)
+    const merchants = await User.find(filter)
       .populate({
         path: "merchantId",
         select:
           "-nrcRegion -nrcTownship -nrcType -nrcNumber -nrcBackImage -nrcFrontImage",
       })
       .select("-password")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return merchants;
   }
 
   // --- GENERAL USER QUERIES ---
@@ -388,27 +399,22 @@ export class AuthService {
   // --- DASHBOARD ANALYTICS ---
 
   async getUserDashboardStats() {
-    const activeFarmers = await User.countDocuments({
-      role: "farmer",
-      status: "active",
-    });
-    const totalMerchants = await User.countDocuments({
-      role: "merchant",
-      status: "active",
-    });
-
-    const growthData = await User.aggregate([
-      { $match: { createdAt: { $exists: true, $ne: null } } },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-            role: "$role",
+    const [activeFarmers, totalMerchants, growthData] = await Promise.all([
+      User.countDocuments({ role: "farmer", status: "active" }),
+      User.countDocuments({ role: "merchant", status: "active" }),
+      User.aggregate([
+        { $match: { createdAt: { $exists: true, $ne: null } } },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+              role: "$role",
+            },
+            count: { $sum: 1 },
           },
-          count: { $sum: 1 },
         },
-      },
+      ]),
     ]);
 
     const monthNames = [
@@ -455,18 +461,13 @@ export class AuthService {
     newPassword: string,
   ) {
     const user = await User.findById(userId).select("+password");
-    if (!user || !user.password) {
-      throw new Error("User not found");
-    }
+    if (!user || !user.password) throw new Error("User not found");
 
     const isMatch = await user.matchPassword(currentPassword);
-    if (!isMatch) {
-      throw new Error("Current password is incorrect");
-    }
+    if (!isMatch) throw new Error("Current password is incorrect");
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 6)
       throw new Error("Password must be at least 6 characters");
-    }
 
     user.password = newPassword;
     await user.save();
@@ -476,32 +477,21 @@ export class AuthService {
 
   async deleteAccount(userId: string) {
     const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
 
-    // Remove avatar
-    if (user.avatarPublicId) {
-      await deleteImage(user.avatarPublicId);
-    }
+    // Cleanup images
+    if (user.avatarPublicId) await deleteImage(user.avatarPublicId);
 
-    // Merchant cleanup
     if (user.role === "merchant" && user.merchantId) {
       const merchant = await Merchant.findById(user.merchantId);
-
-      if (merchant?.nrcFrontImage?.public_alt) {
+      if (merchant?.nrcFrontImage?.public_alt)
         await deleteImage(merchant.nrcFrontImage.public_alt);
-      }
-
-      if (merchant?.nrcBackImage?.public_alt) {
+      if (merchant?.nrcBackImage?.public_alt)
         await deleteImage(merchant.nrcBackImage.public_alt);
-      }
-
       await Merchant.findByIdAndDelete(user.merchantId);
     }
 
     await User.findByIdAndDelete(userId);
-
     return { message: "Account deleted successfully" };
   }
 }

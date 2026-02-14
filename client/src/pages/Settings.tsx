@@ -401,7 +401,7 @@ const Settings: React.FC = () => {
               >
                 <Card className="border-none shadow-lg ring-1 ring-slate-200 dark:ring-slate-800">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 mm:leading-loose">
                       <ShieldCheck className="text-primary" />{" "}
                       {t("settings.verification.title")}
                     </CardTitle>
@@ -494,7 +494,7 @@ const Settings: React.FC = () => {
                     )}
                     <div className="p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 flex gap-3">
                       <Info className="h-5 w-5 text-blue-600 shrink-0" />
-                      <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+                      <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed mm:leading-loose">
                         <strong>{t("settings.verification.note_label")}</strong>{" "}
                         {t("settings.verification.note_text")}
                       </p>

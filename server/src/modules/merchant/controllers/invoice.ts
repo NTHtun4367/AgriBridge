@@ -8,10 +8,10 @@ export const createInvoice = asyncHandler(
     const merchantId = req.user?._id;
     const invoice = await invoiceService.createInvoice(
       merchantId as string,
-      req.body
+      req.body,
     );
     res.status(201).json(invoice);
-  }
+  },
 );
 
 export const getInvoices = asyncHandler(
@@ -19,18 +19,19 @@ export const getInvoices = asyncHandler(
     const merchantId = req.user?._id;
     const invoices = await invoiceService.getAllInvoices(merchantId as string);
     res.status(200).json(invoices);
-  }
+  },
 );
 
-// NEW: For Farmers to see invoices sent to them
+// Farmer ဘက်မှ ကြည့်ရှုခြင်း (AI translation ပါဝင်သည်)
 export const getFarmerInvoices = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const farmerId = req.user?._id;
+
     const invoices = await invoiceService.getInvoicesForFarmer(
-      farmerId as string
+      farmerId as string,
     );
     res.status(200).json(invoices);
-  }
+  },
 );
 
 export const updateStatus = asyncHandler(
@@ -39,7 +40,7 @@ export const updateStatus = asyncHandler(
     const { status } = req.body;
     const invoice = await invoiceService.updateInvoiceStatus(id, status);
     res.status(200).json(invoice);
-  }
+  },
 );
 
 export const finalizeInvoice = asyncHandler(
@@ -47,7 +48,7 @@ export const finalizeInvoice = asyncHandler(
     const { id } = req.params;
     const result = await invoiceService.completeTransaction(id);
     res.status(200).json(result);
-  }
+  },
 );
 
 export const deleteInvoice = asyncHandler(
@@ -55,5 +56,5 @@ export const deleteInvoice = asyncHandler(
     const { id } = req.params;
     await invoiceService.deleteInvoice(id);
     res.status(200).json({ message: "Invoice deleted successfully" });
-  }
+  },
 );

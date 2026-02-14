@@ -6,7 +6,8 @@ import { PipelineStage, Types } from "mongoose";
 export class MarketService {
   // --- CROP CRUD ---
   async getCrops() {
-    return await Crop.find().sort({ category: 1, name: 1 });
+    const crops = await Crop.find().sort({ category: 1, name: 1 }).lean();
+    return crops;
   }
 
   async createCrop(data: { name: string; category: "rice" | "beans" }) {
@@ -30,7 +31,8 @@ export class MarketService {
 
   // --- MARKET CRUD ---
   async getMarkets() {
-    return await Market.find().sort({ name: 1 });
+    const markets = await Market.find().sort({ name: 1 }).lean();
+    return markets;
   }
 
   async createMarket(data: {
@@ -57,25 +59,21 @@ export class MarketService {
     userId: string,
   ) {
     let marketInfo = null;
-
     if (marketId) {
       marketInfo = await Market.findById(marketId);
-      if (!marketInfo) {
-        throw new Error("Market not found");
-      }
+      if (!marketInfo) throw new Error("Market not found");
     }
 
     const priceEntries = updates.map((item: any) => ({
       marketId: marketId || undefined,
       cropId: item.cropId,
       price: item.price,
-      amount: item.amount, // Added amount
+      amount: item.amount,
       unit: item.unit,
       userId,
     }));
 
     const savedRecords = await MarketPrice.insertMany(priceEntries);
-
     return { savedRecords, marketInfo };
   }
 
@@ -92,7 +90,6 @@ export class MarketService {
     marketId?: string;
   }) {
     const matchStage: any = {};
-
     if (filters.official) {
       matchStage.marketId = { $exists: true, $ne: null };
     } else if (filters.userId) {
@@ -108,11 +105,7 @@ export class MarketService {
       { $sort: { marketId: 1, userId: 1, cropId: 1, createdAt: -1 } },
       {
         $group: {
-          _id: {
-            marketId: "$marketId",
-            userId: "$userId",
-            cropId: "$cropId",
-          },
+          _id: { marketId: "$marketId", userId: "$userId", cropId: "$cropId" },
           records: {
             $push: {
               price: "$price",
@@ -199,7 +192,9 @@ export class MarketService {
       { $sort: { updatedAt: -1 } },
     ];
 
-    return await MarketPrice.aggregate(pipeline);
+    const data = await MarketPrice.aggregate(pipeline);
+
+    return data;
   }
 
   async getCropPriceHistory(cropId: string, marketId: string) {

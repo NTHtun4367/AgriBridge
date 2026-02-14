@@ -51,8 +51,12 @@ import {
 } from "@/store/slices/userApi";
 import { format } from "date-fns";
 
+// Import the functions from your translator file
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+
 function MerchantProfile() {
   const { t, i18n } = useTranslation();
+  const lang = i18n.language as "en" | "mm";
   const { userId } = useParams();
   const navigate = useNavigate();
   const { data: currentUser } = useCurrentUserQuery();
@@ -71,28 +75,39 @@ function MerchantProfile() {
 
   const { data: response } = useGetMarketPricesQuery({ userId });
   const {
-    data: merchant,
+    data: merchantRaw,
     isLoading,
     isError,
   } = useGetMerchantInfoQuery(userId as string);
 
-  const rawData = response?.data || [];
+  // 1. Localize Merchant Profile Data
+  const merchant = useMemo(
+    () => localizeData(merchantRaw, lang),
+    [merchantRaw, lang],
+  );
 
-  // Logic for dates and data processing remains the same
+  // 2. Localize Market Table Data
+  const rawData = useMemo(
+    () => localizeData(response?.data || [], lang),
+    [response, lang],
+  );
+
+  console.log(merchant, rawData);
+
   const lastUpdatedDate = useMemo(() => {
-    if (rawData.length === 0) return null;
-    const dates = rawData.map((item: any) =>
+    if (!response?.data || response.data.length === 0) return null;
+    const dates = response.data.map((item: any) =>
       new Date(item.updatedAt || item.date).getTime(),
     );
     return new Date(Math.max(...dates));
-  }, [rawData]);
+  }, [response]);
 
   const categoryOptions = useMemo(() => {
     const unique = Array.from(
-      new Set(rawData.map((item: any) => item.category)),
+      new Set((response?.data || []).map((item: any) => item.category)),
     );
     return ["all", ...unique];
-  }, [rawData]);
+  }, [response]);
 
   const processedData = useMemo(() => {
     let filtered = [...rawData];
@@ -206,7 +221,7 @@ function MerchantProfile() {
               {currentUser?.role !== "merchant" && (
                 <PreorderDialog
                   merchant={merchant}
-                  rawData={rawData}
+                  rawData={response?.data || []}
                   isOpen={isPreorderOpen}
                   setIsOpen={setIsPreorderOpen}
                 />
@@ -232,6 +247,7 @@ function MerchantProfile() {
                     onClick={() => setIsDisputeOpen(true)}
                   >
                     <AlertTriangle className="mr-2 h-4 w-4" />
+                    {/* Using custom merchant_disputes label */}
                     <span>{t("merchant_profile.actions.report_dispute")}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -304,9 +320,12 @@ function MerchantProfile() {
                     {t("merchant_profile.labels.registered_on")}
                   </p>
                   <p className="font-bold text-slate-700 mm:mb-0">
-                    {format(new Date(merchant.createdAt), "MMMM yyyy", {
-                      locale: i18n.language === "mm" ? undefined : undefined,
-                    })}
+                    {/* Manual call to toMyanmarNumerals for the formatted date string */}
+                    {lang === "mm"
+                      ? toMyanmarNumerals(
+                          format(new Date(merchantRaw.createdAt), "MMMM yyyy"),
+                        )
+                      : format(new Date(merchantRaw.createdAt), "MMMM yyyy")}
                   </p>
                 </div>
               </div>
@@ -398,7 +417,11 @@ function MerchantProfile() {
                   <Clock className="w-3.5 h-3.5" />
                   <span className="text-xs font-semibold">
                     {t("merchant_profile.labels.last_updated")}:{" "}
-                    {format(lastUpdatedDate, "MMM dd, yyyy")}
+                    {lang === "mm"
+                      ? toMyanmarNumerals(
+                          format(lastUpdatedDate, "MMM dd, yyyy"),
+                        )
+                      : format(lastUpdatedDate, "MMM dd, yyyy")}
                   </span>
                 </div>
               )}
@@ -433,7 +456,9 @@ function MerchantProfile() {
                   <SelectItem key={cat} value={cat}>
                     {cat === "all"
                       ? t("merchant_profile.labels.all_categories")
-                      : cat}
+                      : lang === "mm"
+                        ? toMyanmarNumerals(cat)
+                        : cat}
                   </SelectItem>
                 ))}
               </SelectContent>

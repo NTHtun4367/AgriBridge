@@ -41,7 +41,6 @@ import MerchantInvoiceCreate from "./pages/merchant/MerchantInvoiceCreate.tsx";
 import CropManagement from "./pages/admin/CropManagement.tsx";
 import MarketPlaceManagement from "./pages/admin/MarketLocationManagement.tsx";
 import Settings from "./pages/Settings.tsx";
-import Dispute from "./pages/admin/Dispute.tsx";
 import FarmerDisputes from "./pages/farmer/Disputes.tsx";
 import Profile from "./pages/Profile.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
@@ -58,6 +57,7 @@ import { AgricultureManager } from "./pages/farmer/AgriManager.tsx";
 import "./i18n";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
+import DisputeManagement from "./pages/admin/Dispute.tsx";
 
 const router = createBrowserRouter([
   {
@@ -161,7 +161,7 @@ const router = createBrowserRouter([
             element: <MarketManagement />,
           },
           { path: "/admin/announcements", element: <Announcement /> },
-          { path: "/admin/disputes", element: <Dispute /> },
+          { path: "/admin/disputes", element: <DisputeManagement /> },
           { path: "/admin/settings", element: <Settings /> },
           { path: "/admin/notifications", element: <Notification /> },
           { path: "/admin/profile", element: <Profile /> },

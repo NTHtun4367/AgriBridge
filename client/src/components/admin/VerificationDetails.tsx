@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   useGetMerchantInfoForAdminQuery,
   useUpdateUserVerificationStatusMutation,
@@ -6,13 +7,11 @@ import type { User } from "@/types/user";
 import {
   Dialog,
   DialogContent,
-  //   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-// import { Separator } from "@/components/ui/separator";
 import {
   UserCheck,
   UserX,
@@ -30,15 +29,16 @@ interface VerificationDetailsProps {
 }
 
 function VerificationDetails({ user }: VerificationDetailsProps) {
+  const { t } = useTranslation();
   const [updateUserVerificationStatus, { isLoading: vLoading }] =
     useUpdateUserVerificationStatusMutation();
   const { data: merchant, isLoading } = useGetMerchantInfoForAdminQuery(
-    user.merchantId!
+    user.merchantId!,
   );
 
   const handleVerificationStatus = async (
     userId: string,
-    status: "unverified" | "verified"
+    status: "unverified" | "verified",
   ) => {
     await updateUserVerificationStatus({ userId, status });
   };
@@ -51,7 +51,7 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
           size="sm"
           className="hover:bg-primary hover:text-white transition-all cursor-pointer"
         >
-          View Details
+          {t("verification_details.view_button")}
         </Button>
       </DialogTrigger>
 
@@ -62,22 +62,26 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
               {user.name.charAt(0)}
             </div>
-            <div>
+            <div className="mm:-mb-4">
               <DialogTitle className="text-xl font-bold">
                 {user.name}
               </DialogTitle>
-              <p className="text-xs text-muted-foreground">ID: {user._id}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("verification_details.id_label")}: {user._id}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 pr-8">
-            <Badge variant="outline" className="bg-white text-black">
-              Merchant Account
+            <Badge variant="outline" className="bg-white text-black mm:leading-loose">
+              {t("verification_details.account_type")}
             </Badge>
-            <Badge className="bg-amber-500">Pending Review</Badge>
+            <Badge className="bg-amber-500 mm:leading-loose">
+              {t("verification_details.status_pending")}
+            </Badge>
           </div>
         </div>
 
-        <div className="flex overflow-hidden">
+        <div className="flex flex-1 overflow-hidden">
           {/* LEFT SIDE: Information Scroll Area */}
           <div className="w-full lg:w-2/5 overflow-y-auto p-6 border-r">
             <div className="space-y-8">
@@ -86,17 +90,23 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                 <div className="flex items-center gap-2 mb-4 text-primary font-bold">
                   <Mail className="w-4 h-4" />
                   <span className="text-sm tracking-widest uppercase">
-                    Contact & Account
+                    {t("verification_details.sections.contact")}
                   </span>
                 </div>
-                <div className="grid gap-4 text-sm">
+                <div className="grid gap-2 text-sm">
                   <div className="flex justify-between py-2 border-b border-dashed">
-                    <span className="text-slate-500">Email</span>
+                    <span className="text-slate-500">
+                      {t("verification_details.labels.email")}
+                    </span>
                     <span className="font-medium">{user.email}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-dashed">
-                    <span className="text-slate-500">Phone</span>
-                    <span className="font-medium">{merchant?.businessPhone}</span>
+                    <span className="text-slate-500">
+                      {t("verification_details.labels.phone")}
+                    </span>
+                    <span className="font-medium">
+                      {merchant?.businessPhone || "—"}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -106,22 +116,23 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                 <div className="flex items-center gap-2 mb-4 text-primary font-bold">
                   <Store className="w-4 h-4" />
                   <span className="text-sm tracking-widest uppercase">
-                    Business Info
+                    {t("verification_details.sections.business")}
                   </span>
                 </div>
                 <div className="space-y-1 mb-4">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">
-                    Legal Business Name
+                    {t("verification_details.labels.legal_name")}
                   </p>
                   <p className="text-lg font-bold">{merchant?.businessName}</p>
                 </div>
                 <div className="bg-white p-3 rounded border border-slate-300">
                   <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">
-                    NRC Identification
+                    {t("verification_details.labels.nrc")}
                   </p>
                   <p className="text-md font-mono font-bold tracking-tighter text-black">
-                    {merchant &&
-                      `${merchant.nrcRegion}/${merchant.nrcTownship}(${merchant.nrcType})${merchant.nrcNumber}`}
+                    {merchant
+                      ? `${merchant.nrcRegion}/${merchant.nrcTownship}${merchant.nrcType}${merchant.nrcNumber}`
+                      : "—"}
                   </p>
                 </div>
               </section>
@@ -131,38 +142,39 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                 <div className="flex items-center gap-2 mb-4 text-primary font-bold">
                   <MapPin className="w-4 h-4" />
                   <span className="text-sm tracking-widest uppercase">
-                    Registered Address
+                    {t("verification_details.sections.address")}
                   </span>
                 </div>
-                <div className="space-y-1 bg-secondary p-4 rounded-xl">
-                  <div className="p-2">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">
-                      Division
-                    </p>
-                    <p className="text-sm italic">"{user.division}"</p>
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">
-                      District
-                    </p>
-                    <p className="text-sm italic">"{user.district}"</p>
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">
-                      Township
-                    </p>
-                    <p className="text-sm italic">"{user.township}"</p>
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">
-                      Full Home Address
-                    </p>
-                    <p className="text-sm italic">"{user.homeAddress}"</p>
-                  </div>
+                <div className="space-y-1 bg-secondary p-4 rounded-xl mm:space-y-0">
+                  {[
+                    {
+                      label: t("verification_details.labels.division"),
+                      val: user.division,
+                    },
+                    {
+                      label: t("verification_details.labels.district"),
+                      val: user.district,
+                    },
+                    {
+                      label: t("verification_details.labels.township"),
+                      val: user.township,
+                    },
+                    {
+                      label: t("verification_details.labels.home_address"),
+                      val: user.homeAddress,
+                    },
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-2">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mm:mb-0 mm:mt-0">
+                        {item.label}
+                      </p>
+                      <p className="text-sm italic mm:mb-0">"{item.val}"</p>
+                    </div>
+                  ))}
                 </div>
               </section>
 
-              {/* Action Buttons inside scroll area for mobile, or fixed bottom */}
+              {/* Action Buttons */}
               <div className="flex items-center gap-2 pt-4">
                 <Button
                   variant="outline"
@@ -172,27 +184,30 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
                   }
                   disabled={vLoading}
                 >
-                  <UserX className="h-5 w-5" /> Reject & Ban
+                  <UserX className="h-5 w-5" />{" "}
+                  {t("verification_details.actions.reject")}
                 </Button>
                 <Button
-                  className="flex-1 bg-primary text-md font-bold shadow-md cursor-pointer"
+                  className="flex-1 bg-primary text-md font-bold shadow-md cursor-pointer mm:text-sm"
                   onClick={() => handleVerificationStatus(user._id, "verified")}
                   disabled={vLoading}
                 >
-                  <UserCheck className="h-5 w-5" /> Approve Merchant
+                  <UserCheck className="h-5 w-5" />{" "}
+                  {t("verification_details.actions.approve")}
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE: Document Viewer (The "Evidence" Wall) */}
+          {/* RIGHT SIDE: Document Viewer */}
           <div className="hidden lg:flex flex-1 p-8 flex-col items-center justify-start overflow-y-auto space-y-6">
             <div className="w-full flex justify-between items-center mb-2">
               <h3 className="text-sm font-bold flex items-center gap-2 text-slate-600 uppercase tracking-widest">
-                <IdCard className="w-4 h-4" /> Identity Verification
+                <IdCard className="w-4 h-4" />{" "}
+                {t("verification_details.sections.identity")}
               </h3>
               <span className="text-[10px] text-slate-400">
-                Tip: Scroll to see back side
+                {t("verification_details.labels.tip_scroll")}
               </span>
             </div>
 
@@ -200,57 +215,46 @@ function VerificationDetails({ user }: VerificationDetailsProps) {
               <Loader2 className="w-10 h-10 animate-spin text-slate-300 mt-20" />
             ) : (
               <>
-                {/* Image Container 1 */}
-                <div className="w-full max-w-lg space-y-2">
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs font-bold text-slate-500">
-                      NRC FRONT PHOTO
-                    </span>
-                    <a
-                      href={merchant?.nrcFrontImage?.url}
-                      target="_blank"
-                      className="text-[10px] text-blue-500 hover:underline flex items-center"
-                    >
-                      Open Full <ExternalLink className="w-2 h-2 ml-1" />
-                    </a>
+                {/* NRC Images */}
+                {[
+                  {
+                    label: t("verification_details.labels.nrc_front"),
+                    img: merchant?.nrcFrontImage,
+                  },
+                  {
+                    label: t("verification_details.labels.nrc_back"),
+                    img: merchant?.nrcBackImage,
+                  },
+                ].map((item, idx) => (
+                  <div key={idx} className="w-full max-w-lg space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold text-slate-500">
+                        {item.label}
+                      </span>
+                      <a
+                        href={item.img?.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-blue-500 hover:underline flex items-center"
+                      >
+                        {t("verification_details.labels.open_full")}{" "}
+                        <ExternalLink className="w-2 h-2 ml-1" />
+                      </a>
+                    </div>
+                    <div className="rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-slate-200 aspect-[1.58/1]">
+                      <img
+                        src={item.img?.url}
+                        className="w-full h-full object-cover"
+                        alt={item.label}
+                      />
+                    </div>
                   </div>
-                  <div className="rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-slate-200 aspect-[1.58/1]">
-                    <img
-                      src={merchant?.nrcFrontImage?.url}
-                      className="w-full h-full object-cover"
-                      alt="Front"
-                    />
-                  </div>
-                </div>
-
-                {/* Image Container 2 */}
-                <div className="w-full max-w-lg space-y-2">
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs font-bold text-slate-500">
-                      NRC BACK PHOTO
-                    </span>
-                    <a
-                      href={merchant?.nrcBackImage?.url}
-                      target="_blank"
-                      className="text-[10px] text-blue-500 hover:underline flex items-center"
-                    >
-                      Open Full <ExternalLink className="w-2 h-2 ml-1" />
-                    </a>
-                  </div>
-                  <div className="rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-slate-200 aspect-[1.58/1]">
-                    <img
-                      src={merchant?.nrcBackImage?.url}
-                      className="w-full h-full object-cover"
-                      alt="Back"
-                    />
-                  </div>
-                </div>
+                ))}
 
                 <div className="flex items-start gap-2 bg-blue-50 p-4 rounded-lg border border-blue-100 max-w-lg">
                   <Info className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
-                  <p className="text-[11px] text-blue-700 leading-tight">
-                    Check if the person's photo on the NRC matches the account
-                    name and ensure the document is not expired or blurred.
+                  <p className="text-[11px] text-blue-700 leading-tight mm:leading-loose mm:mb-0">
+                    {t("verification_details.labels.instruction")}
                   </p>
                 </div>
               </>

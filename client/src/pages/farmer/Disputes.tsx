@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetMyDisputesQuery } from "@/store/slices/disputeApi";
-import { format } from "date-fns";
 import {
   Clock,
   CheckCircle2,
@@ -14,23 +13,54 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+
+/**
+ * Native Date Formatter to avoid date-fns dependency
+ */
+const formatDateNative = (dateString: string, lang: "en" | "mm"): string => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
+  const formatted = new Intl.DateTimeFormat("en-US", options).format(date);
+  return lang === "mm" ? toMyanmarNumerals(formatted) : formatted;
+};
 
 export default function FarmerDisputes() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as "en" | "mm";
   const { data: disputesRes, isLoading } = useGetMyDisputesQuery(undefined);
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
 
-  const disputes = disputesRes?.data || [];
+  // 1. Apply localization to the main data array
+  const localizedDisputes = useMemo(() => {
+    const rawData = disputesRes?.data || [];
+    return localizeData(rawData, lang);
+  }, [disputesRes, lang]);
 
-  const stats = {
-    total: disputes.length,
-    pending: disputes.filter((d: any) => d.status === "pending").length,
-    resolved: disputes.filter((d: any) => d.status !== "pending").length,
-  };
+  // 2. Localize Statistics numbers
+  const stats = useMemo(() => {
+    const total = localizedDisputes.length;
+    const pending = localizedDisputes.filter(
+      (d: any) => d.status === "pending",
+    ).length;
+    const resolved = localizedDisputes.filter(
+      (d: any) => d.status !== "pending",
+    ).length;
+
+    return {
+      total: lang === "mm" ? toMyanmarNumerals(total) : total,
+      pending: lang === "mm" ? toMyanmarNumerals(pending) : pending,
+      resolved: lang === "mm" ? toMyanmarNumerals(resolved) : resolved,
+    };
+  }, [localizedDisputes, lang]);
 
   return (
     <div className="min-h-screen p-4 md:p-8 lg:p-12 font-sans">
@@ -73,11 +103,11 @@ export default function FarmerDisputes() {
         <main>
           {isLoading ? (
             <LoadingSkeleton />
-          ) : disputes.length === 0 ? (
+          ) : localizedDisputes.length === 0 ? (
             <EmptyState />
           ) : (
             <div className="grid gap-4">
-              {disputes.map((dispute: any) => (
+              {localizedDisputes.map((dispute: any) => (
                 <DisputeRow
                   key={dispute._id}
                   dispute={dispute}
@@ -96,23 +126,20 @@ export default function FarmerDisputes() {
             {selectedDispute && (
               <div>
                 <div
-                  className={`px-8 py-4 border-b ${selectedDispute.status === "pending" ? "bg-amber-50/50" : "bg-emerald-50/50"}`}
+                  className={`px-8 py-4 border-b ${
+                    selectedDispute.status === "pending"
+                      ? "bg-amber-50/50"
+                      : "bg-emerald-50/50"
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-4 mm:mb-0">
-                    <Badge
-                      variant="outline"
-                      className="font-mono text-[10px] uppercase tracking-widest"
-                    >
-                      {t("farmer_disputes.labels.id")}:{" "}
-                      {selectedDispute._id.slice(-8)}
-                    </Badge>
+                    <h2 className="text-2xl font-bold capitalize">
+                      {t(`farmer_disputes.reasons.${selectedDispute.reason}`, {
+                        defaultValue: selectedDispute.reason.replace("_", " "),
+                      })}
+                    </h2>
                     <StatusBadge status={selectedDispute.status} />
                   </div>
-                  <h2 className="text-2xl font-bold capitalize">
-                    {t(`farmer_disputes.reasons.${selectedDispute.reason}`, {
-                      defaultValue: selectedDispute.reason.replace("_", " "),
-                    })}
-                  </h2>
                 </div>
 
                 <div className="p-8 space-y-8 mm:space-y-4">
@@ -152,10 +179,7 @@ export default function FarmerDisputes() {
                       </h4>
                       <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
                         <Calendar className="h-4 w-4 text-slate-400" />
-                        {format(
-                          new Date(selectedDispute.createdAt),
-                          "MMMM dd, yyyy",
-                        )}
+                        {formatDateNative(selectedDispute.createdAt, lang)}
                       </div>
                     </div>
                   </div>
@@ -216,19 +240,27 @@ export default function FarmerDisputes() {
 }
 
 function DisputeRow({ dispute, onClick }: any) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as "en" | "mm";
   const isPending = dispute.status === "pending";
+
   return (
     <Card
       onClick={onClick}
       className="relative p-0 group overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
     >
       <div
-        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${isPending ? "bg-amber-400" : "bg-emerald-400"}`}
+        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${
+          isPending ? "bg-amber-400" : "bg-emerald-400"
+        }`}
       />
       <div className="flex items-center p-5 md:p-7 gap-6">
         <div
-          className={`hidden md:flex h-14 w-14 rounded-2xl items-center justify-center ${isPending ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}
+          className={`hidden md:flex h-14 w-14 rounded-2xl items-center justify-center ${
+            isPending
+              ? "bg-amber-50 text-amber-600"
+              : "bg-emerald-50 text-emerald-600"
+          }`}
         >
           {isPending ? (
             <Clock className="h-7 w-7" />
@@ -269,9 +301,9 @@ function DisputeRow({ dispute, onClick }: any) {
               {t("farmer_disputes.labels.submission_date")}
             </p>
             <div className="flex items-center md:justify-center gap-2 text-slate-600">
-              <Calendar className="h-3.5 w-3.5 text-slate-300 mm:mb-6" />
-              <p className="text-sm font-medium">
-                {format(new Date(dispute.createdAt), "MMM dd, yyyy")}
+              <Calendar className="h-3.5 w-3.5 text-slate-300" />
+              <p className="text-sm font-medium mm:text-xs mm:mb-0">
+                {formatDateNative(dispute.createdAt, lang)}
               </p>
             </div>
           </div>
@@ -293,9 +325,13 @@ function StatusBadge({ status }: { status: string }) {
   const isPending = status === "pending";
   return (
     <div
-      className={`text-[10px] font-black px-4 py-1.5 rounded-lg border-2 shadow-sm ${isPending ? "bg-amber-50 text-amber-700 border-amber-100/50" : "bg-green-600/15 text-emerald-700 border-emerald-100/50"}`}
+      className={`text-[10px] font-black px-4 py-1.5 rounded-lg border-2 shadow-sm ${
+        isPending
+          ? "bg-amber-50 text-amber-700 border-amber-100/50"
+          : "bg-green-600/15 text-emerald-700 border-emerald-100/50"
+      }`}
     >
-      {t(`farmer_disputes.status.${status}`).toUpperCase()}
+      {t(`${status}`).toUpperCase()}
     </div>
   );
 }
@@ -333,13 +369,22 @@ function StatBox({ label, value, bgColor, highlight = "text-slate-900" }: any) {
 }
 
 function ContactItem({ icon, label, value }: any) {
+  const { i18n } = useTranslation();
+  const lang = i18n.language as "en" | "mm";
+
+  // Use toMyanmarNumerals for phone/support numbers if lang is MM
+  const displayValue =
+    lang === "mm" && label.toLowerCase().includes("support")
+      ? toMyanmarNumerals(value)
+      : value;
+
   return (
     <div className="space-y-1.5">
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
         {React.cloneElement(icon, { className: "h-3 w-3" })} {label}
       </p>
-      <p className="text-sm font-semibold text-slate-700 truncate">
-        {value || "Not provided"}
+      <p className="text-sm font-semibold text-slate-700 truncate mm:leading-loose">
+        {displayValue || "Not provided"}
       </p>
     </div>
   );

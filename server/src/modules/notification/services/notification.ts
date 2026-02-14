@@ -3,18 +3,15 @@ import { UserNotification } from "../models/userNotification";
 import { Types } from "mongoose";
 import { Announcement } from "../models/announcement";
 import { authService } from "../../auth/services/auth";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 export class NotificationService {
-  /**
-   * ADMIN: Create announcement and notify users
-   */
   async createAnnouncement(data: {
     title: string;
     content: string;
     target: string;
     adminId?: string;
   }) {
-    // 1. Save announcement log
     const announcement = await Announcement.create({
       title: data.title,
       content: data.content,
@@ -22,7 +19,6 @@ export class NotificationService {
       adminId: data.adminId ? new Types.ObjectId(data.adminId) : undefined,
     });
 
-    // 2. Map frontend target → DB role
     const roleMapping: Record<string, "all" | "farmer" | "merchant"> = {
       All: "all",
       Farmers: "farmer",
@@ -30,22 +26,23 @@ export class NotificationService {
     };
 
     const targetRole = roleMapping[data.target] || "all";
-
-    // 3. Fetch users CORRECTLY
-    let users;
-    if (targetRole === "all") {
-      users = await authService.getAllUsers(); // ✅ NO ROLE FILTER
-    } else {
-      users = await authService.getAllUsersByRole(targetRole); // ✅ STRING
-    }
-
+    let users =
+      targetRole === "all"
+        ? await authService.getAllUsers()
+        : await authService.getAllUsersByRole(targetRole);
     const userIds = users.map((u) => u._id.toString());
 
-    // 4. Create notifications
     if (userIds.length > 0) {
+      // Input object literal error ကို ကျော်လွှားရန် casting နှင့် _id ထည့်သွင်းခြင်း
+      const translated: any = await autoTranslate(
+        { _id: announcement._id, title: data.title, content: data.content },
+        // ["title", "content"],
+        true,
+      );
+
       await this.createNotification(
-        data.title,
-        data.content,
+        translated.title,
+        translated.content,
         userIds,
         targetRole,
       );
@@ -54,16 +51,9 @@ export class NotificationService {
     return announcement;
   }
 
-  /**
-   * Admin: Announcement history
-   */
   async getAnnouncementHistory() {
     return await Announcement.find().sort({ createdAt: -1 });
   }
-
-  // ============================================================
-  // ORIGINAL METHODS
-  // ============================================================
 
   async createNotification(
     title: string,

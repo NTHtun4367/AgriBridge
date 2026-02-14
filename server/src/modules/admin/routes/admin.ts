@@ -8,7 +8,7 @@ import {
   getAllMerchants,
   getAllVerificationPendingUsers,
   getMerchantInfoWithMerchantId,
-  getVerifiedMerchants,
+  getAdminVerifiedMerchants,
   updateUserVerificationStatus,
 } from "../controllers/admin";
 import { userIdValidator, userStatusValidator } from "../validators/admin";
@@ -21,7 +21,7 @@ router.get(
   "/merchants/all",
   protect,
   allowRoles("admin"),
-  getVerifiedMerchants,
+  getAdminVerifiedMerchants,
 );
 router.get("/merchants", protect, allowRoles("admin"), getAllMerchants);
 router.patch(

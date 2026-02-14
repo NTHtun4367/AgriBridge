@@ -3,20 +3,14 @@ import asyncHandler from "../../../shared/utils/asyncHandler";
 import { AuthRequest } from "../../../shared/middleware/authMiddleware";
 import { notificationService } from "../services/notification";
 
-// --- ADMIN ACTIONS ---
-
 export const createAnnouncement = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { title, content, target } = req.body;
-    const adminId = req.user?._id.toString();
-
     const result = await notificationService.createAnnouncement({
-      title,
-      content,
-      target,
-      adminId,
+      title: req.body.title,
+      content: req.body.content,
+      target: req.body.target,
+      adminId: req.user?._id.toString(),
     });
-
     res.status(201).json({ success: true, data: result });
   },
 );
@@ -28,38 +22,38 @@ export const getAnnouncementHistory = asyncHandler(
   },
 );
 
-// --- USER ACTIONS ---
-
 export const getMyNotifications = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const userId = req.user?._id.toString()!;
-    const notifications = await notificationService.getMyNotifications(userId);
+    const notifications = await notificationService.getMyNotifications(
+      req.user?._id.toString()!,
+    );
     res.status(200).json(notifications);
   },
 );
 
 export const markAsRead = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const userId = req.user?._id.toString()!;
-    const { id } = req.params;
-    const updated = await notificationService.markAsRead(userId, id);
+    const updated = await notificationService.markAsRead(
+      req.user?._id.toString()!,
+      req.params.id,
+    );
     res.status(200).json({ success: true, data: updated });
   },
 );
 
 export const markAllAsRead = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const userId = req.user?._id.toString()!;
-    await notificationService.markAllAsRead(userId);
+    await notificationService.markAllAsRead(req.user?._id.toString()!);
     res.status(200).json({ success: true, message: "All marked as read" });
   },
 );
 
 export const deleteNotification = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const userId = req.user?._id.toString()!;
-    const { id } = req.params;
-    await notificationService.deleteNotification(userId, id);
+    await notificationService.deleteNotification(
+      req.user?._id.toString()!,
+      req.params.id,
+    );
     res.status(200).json({ success: true, message: "Notification deleted" });
   },
 );

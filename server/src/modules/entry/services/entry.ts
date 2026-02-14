@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { uploadSingleImage } from "../../../shared/utils/cloudinary";
 import { Entry } from "../models/entry";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 export class EntryService {
   async createEntry(userId: string, body: any, file?: Express.Multer.File) {
@@ -92,6 +93,8 @@ export class EntryService {
     });
   }
 
+  // --- AI Translation ထည့်သွင်းထားသော Function များ ---
+
   async getFinancialOverview(userId: string, season?: string) {
     const matchQuery: any = { userId: new Types.ObjectId(userId) };
     if (season && season !== "all") matchQuery.season = season;
@@ -131,16 +134,21 @@ export class EntryService {
       { income: 0, expense: 0, profit: 0 },
     );
 
-    return { overall, categories: categoryStats };
+    let translatedCategories = categoryStats;
+
+    return { overall, categories: translatedCategories };
   }
 
   async getAllEntries(userId: string) {
-    return await Entry.find({ userId }).sort({ date: -1 });
+    const entries = await Entry.find({ userId }).sort({ date: -1 }).lean();
+
+    return entries;
   }
 
   async getEntryById(id: string, userId: string) {
-    const entry = await Entry.findOne({ _id: id, userId });
+    const entry = await Entry.findOne({ _id: id, userId }).lean();
     if (!entry) throw new Error("Entry not found.");
+
     return entry;
   }
 

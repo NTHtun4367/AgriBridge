@@ -22,6 +22,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAddEntryMutation } from "@/store/slices/entryApi";
 import { useGetMerchantInfoQuery } from "@/store/slices/userApi";
 import { useGetActiveSeasonQuery } from "@/store/slices/farmerApi";
+import { toMyanmarNumerals } from "@/utils/translator";
 
 const dataURLtoFile = (dataurl: string, filename: string) => {
   const arr = dataurl.split(",");
@@ -36,7 +37,13 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
 };
 
 export default function InvoiceList() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isMM = i18n.language === "mm";
+
+  // Helper to conditionally format
+  const l = (val: string | number) =>
+    isMM ? toMyanmarNumerals(val) : val?.toLocaleString();
+
   const { data: invoices, isLoading: invoicesLoading } =
     useGetFarmerInvoicesQuery();
   const [finalize, { isLoading: isFinalizing }] = useFinalizeInvoiceMutation();
@@ -173,7 +180,7 @@ export default function InvoiceList() {
         </div>
         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
           <div className="px-3 py-1.5 bg-white shadow-sm rounded-md text-xs font-bold text-slate-700 mm:leading-loose">
-            {t("farmer_invoices.all_invoices")} ({invoices?.length || 0})
+            {t("farmer_invoices.all_invoices")} ({l(invoices?.length || 0)})
           </div>
         </div>
       </div>
@@ -210,14 +217,22 @@ export default function InvoiceList() {
                   </div>
                   <div>
                     <h3 className="font-black text-lg leading-tight group-hover:text-primary transition-colors">
-                      {inv.merchantId?.businessName || "Agri Merchant"}
+                      {isMM
+                        ? toMyanmarNumerals(
+                            inv.merchantId?.businessName || "Agri Merchant",
+                          )
+                        : inv.merchantId?.businessName || "Agri Merchant"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">
-                        #{inv.invoiceId}
+                        #{l(inv.invoiceId)}
                       </span>
                       <span className="text-xs text-slate-500">
-                        {new Date(inv.createdAt).toLocaleDateString()}
+                        {isMM
+                          ? toMyanmarNumerals(
+                              new Date(inv.createdAt).toLocaleDateString(),
+                            )
+                          : new Date(inv.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -228,8 +243,10 @@ export default function InvoiceList() {
                       {t("farmer_invoices.amount_due")}
                     </p>
                     <span className="text-xl font-black">
-                      {inv.totalAmount.toLocaleString()}{" "}
-                      <span className="text-xs">MMK</span>
+                      {l(inv.totalAmount)}{" "}
+                      <span className="text-xs">
+                        {t("farmer_invoices.mmk")}
+                      </span>
                     </span>
                   </div>
                   <ChevronRight className="text-slate-300 group-hover:text-primary transition-all" />
@@ -268,7 +285,7 @@ export default function InvoiceList() {
                         </h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
                           {t("farmer_invoices.invoice_id", {
-                            id: selectedInvoice.invoiceId,
+                            id: l(selectedInvoice.invoiceId),
                           })}
                         </p>
                       </div>
@@ -291,17 +308,27 @@ export default function InvoiceList() {
                           <div className="h-4 w-32 bg-slate-100 animate-pulse rounded" />
                         ) : (
                           <>
-                            <p className="font-bold">
-                              {merchant?.merchantId?.businessName}
+                            <p className="font-bold mm:mb-1">
+                              {isMM
+                                ? toMyanmarNumerals(
+                                    merchant?.merchantId?.businessName,
+                                  )
+                                : merchant?.merchantId?.businessName}
                             </p>
-                            <p className="font-bold text-xs text-slate-500">
-                              {merchant?.merchantId?.nrcRegion}/
-                              {merchant?.merchantId?.nrcTownship}(
-                              {merchant?.merchantId?.nrcType})
-                              {merchant?.merchantId?.nrcNumber}
+                            <p className="font-bold text-xs text-slate-500 mm:mb-1">
+                              {l(merchant?.merchantId?.nrcRegion)}/
+                              {l(merchant?.merchantId?.nrcTownship)}(
+                              {l(merchant?.merchantId?.nrcType)})
+                              {l(merchant?.merchantId?.nrcNumber)}
                             </p>
                             <p className="text-slate-500 text-xs">
-                              {merchant?.township}, {merchant?.division}
+                              {isMM
+                                ? toMyanmarNumerals(merchant?.township)
+                                : merchant?.township}
+                              ,{" "}
+                              {isMM
+                                ? toMyanmarNumerals(merchant?.division)
+                                : merchant?.division}
                             </p>
                           </>
                         )}
@@ -321,9 +348,15 @@ export default function InvoiceList() {
                           {t("farmer_invoices.date_issued")}
                         </p>
                         <p className="font-bold text-xs">
-                          {new Date(
-                            selectedInvoice.createdAt,
-                          ).toLocaleDateString()}
+                          {isMM
+                            ? toMyanmarNumerals(
+                                new Date(
+                                  selectedInvoice.createdAt,
+                                ).toLocaleDateString(),
+                              )
+                            : new Date(
+                                selectedInvoice.createdAt,
+                              ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -348,16 +381,19 @@ export default function InvoiceList() {
                             (item: any, i: number) => (
                               <tr key={i} className="border-b border-slate-50">
                                 <td className="py-4 mm:py-2 font-medium">
-                                  {item.cropName}
+                                  {isMM
+                                    ? toMyanmarNumerals(item.cropName)
+                                    : item.cropName}
                                 </td>
                                 <td className="py-4 mm:py-2 text-center">
-                                  {item.quantity} {item.unit}
+                                  {l(item.quantity)}{" "}
+                                  {isMM
+                                    ? toMyanmarNumerals(item.unit)
+                                    : item.unit}
                                 </td>
                                 <td className="py-4 mm:py-2 text-right font-bold">
-                                  {(
-                                    item.quantity * item.price
-                                  ).toLocaleString()}{" "}
-                                  MMK
+                                  {l(item.quantity * item.price)}{" "}
+                                  {t("farmer_invoices.mmk")}
                                 </td>
                               </tr>
                             ),
@@ -369,7 +405,8 @@ export default function InvoiceList() {
                     <div className="mt-8 mm:mb-0 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
                       <span>{t("farmer_invoices.total_due")}</span>
                       <span className="text-primary">
-                        {selectedInvoice.totalAmount.toLocaleString()} MMK
+                        {l(selectedInvoice.totalAmount)}{" "}
+                        {t("farmer_invoices.mmk")}
                       </span>
                     </div>
 

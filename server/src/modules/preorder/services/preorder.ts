@@ -1,18 +1,19 @@
 import { Preorder, IPreorder } from "../models/preorder";
 import { authService } from "../../auth/services/auth";
 import { notificationService } from "../../notification/services/notification";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 export class PreorderService {
+  /**
+   * တောင်သူမှ အော်ဒါအသစ်တင်ခြင်းနှင့် ကုန်သည်ထံသို့ Notification ပို့ဆောင်ခြင်း
+   */
   async createPreorder(payload: Partial<IPreorder>) {
-    // 1. Save the preorder to the database
     const preorder = await Preorder.create(payload);
 
-    // 2. Destructure data from your specific payload structure
-    const { merchantId, farmerId, fullName, items } = payload;
+    const { merchantId, fullName, items } = payload;
 
     if (merchantId) {
       try {
-        // Calculate total amount from the items array in your payload
         const totalAmount =
           items?.reduce(
             (acc: number, item: any) =>
@@ -20,18 +21,18 @@ export class PreorderService {
             0,
           ) || 0;
 
-        // In this flow, the Farmer is the sender, so we notify the Merchant
-        // We use fullName from your payload to tell the merchant who sent it
-        const senderName = fullName || "A Farmer";
+        const senderName = fullName || "တောင်သူတစ်ဦး";
+
+        const title = "အော်ဒါအသစ် ရရှိပါသည်";
+        const message = `${senderName} မှ ကျသင့်ငွေ ${totalAmount.toLocaleString()} MMK ရှိသော အော်ဒါအသစ်တစ်ခု တင်သွင်းထားပါသည်။`;
 
         await notificationService.createNotification(
-          "New Preorder Received",
-          `${senderName} submitted a new preorder for ${totalAmount.toLocaleString()} MMK.`,
-          [merchantId.toString()], // Array of recipients
-          "merchant", // Targeted role
+          title,
+          message,
+          [merchantId.toString()],
+          "merchant",
         );
       } catch (error) {
-        // Log error but don't block the successful preorder creation response
         console.error("Preorder Notification failed:", error);
       }
     }
@@ -39,14 +40,20 @@ export class PreorderService {
     return preorder;
   }
 
+  /**
+   * ✅ တောင်သူကိုယ်တိုင် ၎င်း၏ အော်ဒါမှတ်တမ်းများ ပြန်ကြည့်ခြင်း (AI Translation ပါဝင်သည်)
+   */
   async getAllPreorders(query: Record<string, any>) {
     const preorders = await Preorder.find(query).sort({ createdAt: -1 }).lean();
+
     return await Promise.all(
-      preorders.map(async (order) => {
+      preorders.map(async (order: any) => {
+        let finalOrder = { ...order };
+
         const merchantInfo = await authService.getMerchantById(
           order.merchantId.toString(),
         );
-        return { ...order, merchantInfo };
+        return { ...finalOrder, merchantInfo };
       }),
     );
   }
@@ -55,16 +62,26 @@ export class PreorderService {
     const preorders = await Preorder.find({ merchantId })
       .sort({ createdAt: -1 })
       .lean();
+
     return await Promise.all(
-      preorders.map(async (order) => {
-        const farmerInfo = await authService.getUserProfile(
-          order.farmerId.toString(),
-        );
-        return { ...order, farmerInfo };
+      preorders.map(async (order: any) => {
+        let finalOrder = { ...order };
+
+        try {
+          const farmerInfo = await authService.getUserProfile(
+            order.farmerId.toString(),
+          );
+          return { ...finalOrder, farmerInfo };
+        } catch (error) {
+          return { ...finalOrder, farmerInfo: { name: "အမည်မသိတောင်သူ" } };
+        }
       }),
     );
   }
 
+  /**
+   * အော်ဒါအခြေအနေကို Update လုပ်ခြင်း
+   */
   async updatePreorderStatus(id: string, status: string) {
     return await Preorder.findByIdAndUpdate(
       id,

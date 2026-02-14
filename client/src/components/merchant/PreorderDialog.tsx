@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useTranslation } from "react-i18next";
 import {
   ShoppingCart,
   Plus,
@@ -50,15 +51,14 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { useNavigate, useParams } from "react-router";
 
-// Import NRC Data
 import nrcDataRaw from "@/utils/nrcData.json";
 import { Checkbox } from "../ui/checkbox";
 const nrcData = nrcDataRaw as Record<string, string[]>;
 
 const formSchema = z.object({
-  name: z.string().min(1, "Full name is required"),
-  phone: z.string().min(1, "Phone number is required"),
-  address: z.string().min(5, "Please provide a complete delivery address"),
+  name: z.string().min(1, "Required"),
+  phone: z.string().min(1, "Required"),
+  address: z.string().min(5, "Address too short"),
   items: z
     .array(
       z.object({
@@ -68,7 +68,7 @@ const formSchema = z.object({
         unit: z.string(),
       }),
     )
-    .min(1, "Add at least one crop"),
+    .min(1),
   nrcRegion: z.string().min(1, "Required"),
   nrcTownship: z.string().min(1, "Required"),
   nrcType: z.string().min(1, "Required"),
@@ -93,12 +93,12 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   isOpen,
   setIsOpen,
 }) => {
+  const { t } = useTranslation();
   const { userId } = useParams();
   const { user } = useSelector((state: RootState) => state.auth);
   const [createPreorder, { isLoading }] = useCreatePreorderMutation();
   const navigate = useNavigate();
 
-  // --- New State for Terms Gate ---
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [tempCheck, setTempCheck] = useState(false);
 
@@ -134,12 +134,9 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   }, [selectedNrcRegion]);
 
   useEffect(() => {
-    if (selectedNrcRegion) {
-      form.setValue("nrcTownship", "");
-    }
+    if (selectedNrcRegion) form.setValue("nrcTownship", "");
   }, [selectedNrcRegion, form]);
 
-  // Reset terms gate when dialog opens/closes
   useEffect(() => {
     if (!isOpen) {
       setHasAcceptedTerms(false);
@@ -174,12 +171,12 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
 
     try {
       await createPreorder(payload).unwrap();
-      toast.success("Preorder successful!");
+      toast.success(t("preorder.success"));
       setIsOpen(false);
       form.reset();
       navigate("/farmer/preorders");
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to place preorder");
+      toast.error(err?.data?.message || t("preorder.error"));
     }
   };
 
@@ -198,22 +195,21 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full px-8 shadow-md gap-2">
-          <ShoppingCart className="w-4 h-4" /> Pre-Selling
+        <Button className="rounded-full px-8 shadow-md gap-2 mm:leading-loose">
+          <ShoppingCart className="w-4 h-4" /> {t("preorder.title")}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         {!hasAcceptedTerms ? (
-          /* SECTION 1: TERMS AND PRIVACY POLICY */
           <div className="space-y-6 py-4 animate-in fade-in zoom-in duration-200">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl">
-                <Info className="w-5 h-5 text-primary" /> Terms & Conditions
+              <DialogTitle className="flex items-center gap-2 text-xl mm:leading-loose">
+                <Info className="w-5 h-5 text-primary" />{" "}
+                {t("preorder.terms_title")}
               </DialogTitle>
-              <DialogDescription>
-                Please review our terms and privacy policy before placing a
-                preorder with{" "}
+              <DialogDescription className="mm:leading-loose">
+                {t("preorder.terms_desc")}{" "}
                 <span className="font-semibold text-foreground">
                   {merchant.merchantId.businessName}
                 </span>
@@ -223,44 +219,35 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
 
             <div className="bg-slate-50 border rounded-lg p-4 text-sm text-slate-600 space-y-4 max-h-[300px] overflow-y-auto">
               <section>
-                <h4 className="font-bold text-slate-900 mb-1">
-                  1. Farmer Commitment
+                <h4 className="font-bold text-slate-900 mb-1 mm:leading-loose">
+                  {t("preorder.terms.commitment")}
                 </h4>
-                <p>
-                  By participating in this preorder, you are required to provide
-                  a valid NRC and active contact information. Please be aware
-                  that your request is contingent upon the merchant's current
-                  capacity and stock availability.
+                <p className="mm:leading-loose">
+                  {t("preorder.terms.commitment_text")}
                 </p>
               </section>
               <section>
-                <h4 className="font-bold text-slate-900 mb-1">
-                  2. Data Usage Notice
+                <h4 className="font-bold text-slate-900 mb-1 mm:leading-loose">
+                  {t("preorder.terms.data")}
                 </h4>
-                <p>
-                  To process your order, your personal details (Name, Phone,
-                  NRC, and Address) will be shared with the designated merchant.
-                  This information is used strictly for logistical fulfillment.
+                <p className="mm:leading-loose">
+                  {t("preorder.terms.data_text")}
                 </p>
               </section>
               <section>
-                <h4 className="font-bold text-slate-900 mb-1">
-                  3. Harvest & Logistics Warning
+                <h4 className="font-bold text-slate-900 mb-1 mm:leading-loose">
+                  {t("preorder.terms.harvest")}
                 </h4>
-                <p>
-                  The delivery schedule is a preliminary estimate only. You must
-                  acknowledge that actual timing depends entirely on crop
-                  maturity, weather-related harvest conditions, and
-                  transportation availability.
+                <p className="mm:leading-loose">
+                  {t("preorder.terms.harvest_text")}
                 </p>
               </section>
               <section>
-                <h4 className="font-bold text-slate-900 mb-1">
-                  4. Price Adjustment Policy
+                <h4 className="font-bold text-slate-900 mb-1 mm:leading-loose">
+                  {t("preorder.terms.price")}
                 </h4>
-                <p>
-                  Note that pricing is subject to change based on the quality
-                  and specifications of the goods for delivery.
+                <p className="mm:leading-loose">
+                  {t("preorder.terms.price_text")}
                 </p>
               </section>
             </div>
@@ -270,34 +257,34 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                 id="terms"
                 checked={tempCheck}
                 onCheckedChange={(checked) => setTempCheck(checked as boolean)}
-                className="mt-1"
+                className="mt-1 mm:mt-2"
               />
               <label
                 htmlFor="terms"
-                className="text-sm leading-tight text-slate-600 cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm leading-tight text-slate-600 cursor-pointer mm:leading-loose"
               >
-                I have read and agree to the <strong>Terms of Service</strong>{" "}
-                and <strong>Privacy Policy</strong>. I understand my information
-                will be processed to complete this transaction.
+                {t("preorder.terms.checkbox")}
               </label>
             </div>
             <DialogFooter>
               <Button
-                className="w-full gap-2"
+                className="w-full gap-2 mm:leading-loose"
                 disabled={!tempCheck}
                 onClick={() => setHasAcceptedTerms(true)}
               >
-                Continue to Preorder <ChevronRight className="w-4 h-4" />
+                {t("preorder.continue_btn")}{" "}
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </DialogFooter>
           </div>
         ) : (
-          /* SECTION 2: EXISTING PREORDER FORM UI */
           <div className="animate-in slide-in-from-right-4 duration-300">
             <DialogHeader>
-              <DialogTitle className="text-xl">Place Preorder</DialogTitle>
+              <DialogTitle className="text-xl mm:leading-loose">
+                {t("preorder.title")}
+              </DialogTitle>
               <DialogDescription>
-                Requesting crops from{" "}
+                {t("preorder.description")}{" "}
                 <span className="font-bold text-primary">
                   {merchant.merchantId.businessName}
                 </span>
@@ -317,11 +304,17 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <User className="w-3.5 h-3.5" /> Full Name
+                          <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                            <User className="w-3.5 h-3.5" />{" "}
+                            {t("preorder.sections.contact")}
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your name" {...field} />
+                            <Input
+                              placeholder={t(
+                                "preorder.fields.name_placeholder",
+                              )}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -333,11 +326,17 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5" /> Phone Number
+                          <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                            <Phone className="w-3.5 h-3.5" />{" "}
+                            {t("preorder.sections.phone")}
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="+95..." {...field} />
+                            <Input
+                              placeholder={t(
+                                "preorder.fields.phone_placeholder",
+                              )}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -345,132 +344,132 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                     />
                   </div>
 
-                  {/* NRC Section */}
                   <div className="space-y-3">
-                    <FormLabel className="flex items-center gap-2">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Identity (NRC)
+                    <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                      <ShieldCheck className="w-3.5 h-3.5" />{" "}
+                      {t("preorder.sections.nrc")}
                     </FormLabel>
                     <div className="grid grid-cols-4 gap-2">
-                      <div className="col-span-1">
-                        <FormField
-                          control={form.control}
-                          name="nrcRegion"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="No." />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Object.keys(nrcData).map((reg) => (
-                                    <SelectItem key={reg} value={reg}>
-                                      {reg}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <FormField
-                          control={form.control}
-                          name="nrcTownship"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                disabled={!selectedNrcRegion}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Township" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {nrcTownshipOptions.map((t) => (
-                                    <SelectItem key={t} value={t}>
-                                      {t}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <FormField
-                          control={form.control}
-                          name="nrcType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {["(N)", "(P)", "(E)"].map((type) => (
-                                    <SelectItem key={type} value={type}>
-                                      {type}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-span-12">
                       <FormField
                         control={form.control}
-                        name="nrcNumber"
+                        name="nrcRegion"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                placeholder="6-digit serial number"
-                                {...field}
-                                maxLength={6}
-                              />
-                            </FormControl>
-                            <FormMessage />
+                          <FormItem className="col-span-1">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full mm:leading-loose">
+                                  <SelectValue
+                                    placeholder={t(
+                                      "preorder.fields.nrc_region",
+                                    )}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.keys(nrcData).map((reg) => (
+                                  <SelectItem key={reg} value={reg}>
+                                    {reg}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="nrcTownship"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={!selectedNrcRegion}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full mm:leading-loose">
+                                  <SelectValue
+                                    placeholder={t(
+                                      "preorder.fields.nrc_township",
+                                    )}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {nrcTownshipOptions.map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {t}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="nrcType"
+                        render={({ field }) => (
+                          <FormItem className="col-span-1">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full mm:leading-loose">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {["(N)", "(P)", "(E)"].map((type) => (
+                                  <SelectItem key={type} value={type}>
+                                    {type}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </FormItem>
                         )}
                       />
                     </div>
+                    <FormField
+                      control={form.control}
+                      name="nrcNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              placeholder={t("preorder.fields.nrc_number")}
+                              {...field}
+                              maxLength={6}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
 
-                {/* Address Section */}
+                {/* Address */}
                 <div className="p-4 border rounded-xl bg-blue-50/30 space-y-4">
                   <FormField
                     control={form.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5" /> Your Address
+                        <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                          <MapPin className="w-3.5 h-3.5" />{" "}
+                          {t("preorder.sections.address")}
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Enter your full street address, village, or landmark"
+                            placeholder={t(
+                              "preorder.fields.address_placeholder",
+                            )}
                             className="resize-none h-20 bg-white"
                             {...field}
                           />
@@ -481,11 +480,11 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                   />
                 </div>
 
-                {/* Crops Section */}
+                {/* Crops */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold uppercase text-slate-500">
-                      Selected Crops
+                    <h3 className="text-sm font-bold uppercase text-slate-500 mm:leading-loose">
+                      {t("preorder.selected_crops")}
                     </h3>
                     <Button
                       type="button"
@@ -499,9 +498,10 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                           unit: "",
                         })
                       }
-                      className="h-8 border-dashed"
+                      className="h-8 border-dashed mm:leading-loose"
                     >
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Crop
+                      <Plus className="w-3.5 h-3.5 mr-1" />{" "}
+                      {t("preorder.add_crop")}
                     </Button>
                   </div>
 
@@ -512,7 +512,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-bold text-slate-400">
-                          Crop #{index + 1}
+                          # {index + 1}
                         </span>
                         {fields.length > 1 && (
                           <Button
@@ -539,8 +539,12 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                               value={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a crop" />
+                                <SelectTrigger className="mm:leading-loose">
+                                  <SelectValue
+                                    placeholder={t(
+                                      "preorder.fields.crop_placeholder",
+                                    )}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -554,7 +558,6 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                 ))}
                               </SelectContent>
                             </Select>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -565,16 +568,19 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                           name={`items.${index}.quantity`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[10px]">Qty</FormLabel>
+                              <FormLabel className="text-[10px] mm:leading-loose">
+                                {t("preorder.fields.qty")}
+                              </FormLabel>
                               <FormControl>
                                 <Input type="number" {...field} />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
                         <FormItem>
-                          <FormLabel className="text-[10px]">Price</FormLabel>
+                          <FormLabel className="text-[10px] mm:leading-loose">
+                            {t("preorder.fields.price")}
+                          </FormLabel>
                           <Input
                             value={form.watch(`items.${index}.price`)}
                             readOnly
@@ -582,7 +588,9 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                           />
                         </FormItem>
                         <FormItem>
-                          <FormLabel className="text-[10px]">Unit</FormLabel>
+                          <FormLabel className="text-[10px] mm:leading-loose">
+                            {t("preorder.fields.unit")}
+                          </FormLabel>
                           <Input
                             value={form.watch(`items.${index}.unit`)}
                             readOnly
@@ -594,11 +602,11 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                   ))}
                 </div>
 
-                {/* Delivery Timeline */}
+                {/* Delivery */}
                 <div className="p-4 border rounded-xl bg-orange-50/30 space-y-3">
-                  <FormLabel className="flex items-center gap-2">
-                    <CalendarClock className="w-3.5 h-3.5" /> Expected Delivery
-                    Timing
+                  <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                    <CalendarClock className="w-3.5 h-3.5" />{" "}
+                    {t("preorder.sections.delivery")}
                   </FormLabel>
                   <div className="flex gap-2">
                     <FormField
@@ -609,7 +617,6 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                           <FormControl>
                             <Input type="number" min="1" {...field} />
                           </FormControl>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -623,13 +630,17 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             value={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="mm:leading-loose">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="days">Day(s)</SelectItem>
-                              <SelectItem value="months">Month(s)</SelectItem>
+                              <SelectItem value="days">
+                                {t("preorder.fields.days")}
+                              </SelectItem>
+                              <SelectItem value="months">
+                                {t("preorder.fields.months")}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -643,14 +654,13 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5" />
-                        Additional Notes (Optional)
+                      <FormLabel className="flex items-center gap-2 mm:leading-loose">
+                        <FileText className="w-3.5 h-3.5" />{" "}
+                        {t("preorder.sections.notes")}
                       </FormLabel>
                       <FormControl>
                         <Textarea {...field} className="resize-none h-20" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -658,13 +668,13 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                 <DialogFooter className="pt-4 border-t">
                   <Button
                     type="submit"
-                    className="w-full h-12"
+                    className="w-full h-12 mm:leading-loose mm:h-10"
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <Loader2 className="animate-spin" />
                     ) : (
-                      "Confirm Preorder"
+                      t("preorder.confirm_btn")
                     )}
                   </Button>
                 </DialogFooter>

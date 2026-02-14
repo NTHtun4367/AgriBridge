@@ -20,6 +20,7 @@ import notificationRoutes from "./modules/notification/routes/notification";
 import disputeRoutes from "./modules/notification/routes/dispute";
 import reportsRoutes from "./modules/entry/routes/report";
 import errorHandler from "./shared/middleware/errorHandler";
+import { setDefaultLang } from "./shared/middleware/langMiddleware";
 
 const app = express();
 const httpServer = createServer(app);
@@ -59,6 +60,8 @@ const io = new Server(httpServer, {
 app.set("io", io);
 
 // --- 6. Routes ---
+app.use(setDefaultLang);
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", adminRoutes);
 app.use("/api/v1/markets", marketRoutes);

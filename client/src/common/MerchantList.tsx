@@ -2,30 +2,40 @@ import {
   useCurrentUserQuery,
   useGetMerchantsQuery,
 } from "@/store/slices/userApi";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Info } from "lucide-react";
 import { MerchantCard } from "@/components/merchant/MerchantCard";
+import { localizeData } from "@/utils/translator";
 
 function MerchantList() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const { data: currentUser } = useCurrentUserQuery();
 
-  const queryParams = showAll
-    ? {}
-    : {
-        division: currentUser?.division,
-        district: currentUser?.district,
-        township: currentUser?.township,
-      };
+  // Define query parameters based on toggle state
+  const queryParams = useMemo(() => {
+    return showAll
+      ? {}
+      : {
+          division: currentUser?.division,
+          district: currentUser?.district,
+          township: currentUser?.township,
+        };
+  }, [showAll, currentUser]);
 
   const {
-    data: merchants,
+    data: merchantsData,
     isLoading,
     isFetching,
   } = useGetMerchantsQuery(queryParams, { skip: !showAll && !currentUser });
+
+  // Apply localization to the merchant list
+  const localizedMerchants = useMemo(() => {
+    const rawData = merchantsData || [];
+    return localizeData(rawData, i18n.language as "en" | "mm");
+  }, [merchantsData, i18n.language]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -58,9 +68,9 @@ function MerchantList() {
             {t("merchant_list.loading")}
           </p>
         </div>
-      ) : merchants && merchants.length > 0 ? (
+      ) : localizedMerchants && localizedMerchants.length > 0 ? (
         <div className="space-y-3">
-          {merchants.map((merchant: any) => (
+          {localizedMerchants.map((merchant: any) => (
             <div key={merchant._id}>
               {currentUser?._id !== merchant._id && (
                 <MerchantCard user={merchant} />

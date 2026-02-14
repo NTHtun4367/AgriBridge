@@ -7,10 +7,12 @@ export const getEntryStats = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
     const { season } = req.query as { season?: string };
+
     const stats = await entryService.getFinancialOverview(
       userId!.toString(),
       season,
     );
+
     res.status(200).json({ success: true, data: stats });
   },
 );
@@ -30,7 +32,9 @@ export const createEntry = asyncHandler(
 export const getAllEntries = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
+
     const entries = await entryService.getAllEntries(userId!.toString());
+
     res.status(200).json(entries);
   },
 );
@@ -38,10 +42,12 @@ export const getAllEntries = asyncHandler(
 export const getEntryById = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id;
+
     const entry = await entryService.getEntryById(
       req.params.id,
       userId!.toString(),
     );
+
     res.status(200).json(entry);
   },
 );

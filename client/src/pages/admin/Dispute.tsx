@@ -1,5 +1,5 @@
-// client/src/pages/admin/DisputeManagement.tsx
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   flexRender,
   getCoreRowModel,
@@ -90,6 +90,7 @@ interface Dispute {
 const columnHelper = createColumnHelper<Dispute>();
 
 export default function DisputeManagement() {
+  const { t } = useTranslation();
   const { data: response, isLoading } = useGetDisputesQuery(undefined);
   const [updateStatus, { isLoading: isUpdating }] =
     useUpdateDisputeStatusMutation();
@@ -105,7 +106,7 @@ export default function DisputeManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("_id", {
-        header: "ID",
+        header: t("admin_disputes.table.columns.id"),
         cell: (info) => (
           <span className="font-mono text-xs uppercase text-muted-foreground">
             {info.getValue().slice(-6)}
@@ -113,7 +114,7 @@ export default function DisputeManagement() {
         ),
       }),
       columnHelper.accessor("createdAt", {
-        header: "Date",
+        header: t("admin_disputes.table.columns.date"),
         cell: (info) => (
           <span className="text-sm">
             {format(new Date(info.getValue()), "dd MMM yyyy")}
@@ -128,7 +129,7 @@ export default function DisputeManagement() {
             className="hover:bg-transparent p-0 font-bold flex items-center gap-1"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Merchant
+            {t("admin_disputes.table.columns.merchant")}
             <ArrowUpDown className="h-4 w-4" />
           </Button>
         ),
@@ -138,11 +139,11 @@ export default function DisputeManagement() {
       }),
       columnHelper.accessor("farmerId.name", {
         id: "farmerName",
-        header: "Farmer",
+        header: t("admin_disputes.table.columns.farmer"),
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor("reason", {
-        header: "Reason",
+        header: t("admin_disputes.table.columns.reason"),
         cell: (info) => (
           <Badge variant="outline" className="capitalize font-normal">
             {info.getValue()}
@@ -150,7 +151,7 @@ export default function DisputeManagement() {
         ),
       }),
       columnHelper.accessor("status", {
-        header: "Status",
+        header: t("admin_disputes.table.columns.status"),
         cell: (info) => {
           const status = info.getValue();
           return (
@@ -161,14 +162,18 @@ export default function DisputeManagement() {
                   : "bg-primary hover:bg-primary/90 capitalize"
               }
             >
-              {status}
+              {t(`admin_disputes.statuses.${status}`)}
             </Badge>
           );
         },
       }),
       columnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Action</div>,
+        header: () => (
+          <div className="text-right">
+            {t("admin_disputes.table.columns.action")}
+          </div>
+        ),
         cell: (info) => (
           <div className="flex justify-end">
             <Button
@@ -181,13 +186,15 @@ export default function DisputeManagement() {
               }}
             >
               <Eye className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-semibold">Details</span>
+              <span className="text-xs font-semibold">
+                {t("admin_disputes.table.details_btn")}
+              </span>
             </Button>
           </div>
         ),
       }),
     ],
-    [],
+    [t],
   );
 
   const table = useReactTable({
@@ -213,11 +220,11 @@ export default function DisputeManagement() {
     <div className="w-full space-y-4 p-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Dispute Control Center
+        <h2 className="text-2xl font-bold tracking-tight mm:leading-loose">
+          {t("admin_disputes.title")}
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Overview and resolution of merchant-farmer trade conflicts.
+        <p className="text-muted-foreground text-sm mm:leading-loose">
+          {t("admin_disputes.description")}
         </p>
       </div>
 
@@ -226,7 +233,7 @@ export default function DisputeManagement() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by merchant..."
+            placeholder={t("admin_disputes.search_placeholder")}
             value={
               (table.getColumn("merchantName")?.getFilterValue() as string) ??
               ""
@@ -243,7 +250,8 @@ export default function DisputeManagement() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="ml-auto border-2">
-              <Settings2 className="mr-2 h-4 w-4" /> View
+              <Settings2 className="mr-2 h-4 w-4" />{" "}
+              {t("admin_disputes.view_toggle")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -291,7 +299,7 @@ export default function DisputeManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Loading records...
+                  {t("admin_disputes.table.loading")}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -317,7 +325,7 @@ export default function DisputeManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No disputes found.
+                  {t("admin_disputes.table.empty")}
                 </TableCell>
               </TableRow>
             )}
@@ -328,11 +336,13 @@ export default function DisputeManagement() {
       {/* Footer / Pagination */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground font-medium">
-          Total {disputes.length} disputes found
+          {t("admin_disputes.total_count", { count: disputes.length })}
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-xs font-medium">Rows per page</p>
+            <p className="text-xs font-medium mm:mb-0">
+              {t("admin_disputes.table.rows_per_page")}
+            </p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(v) => table.setPageSize(Number(v))}
@@ -354,8 +364,10 @@ export default function DisputeManagement() {
 
           <div className="flex items-center gap-4">
             <span className="text-xs font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              {t("admin_disputes.table.page_info", {
+                current: table.getState().pagination.pageIndex + 1,
+                total: table.getPageCount(),
+              })}
             </span>
             <div className="flex items-center space-x-2">
               <Button
@@ -364,7 +376,7 @@ export default function DisputeManagement() {
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                {t("admin_disputes.table.prev")}
               </Button>
               <Button
                 variant="outline"
@@ -372,7 +384,7 @@ export default function DisputeManagement() {
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                Next
+                {t("admin_disputes.table.next")}
               </Button>
             </div>
           </div>
@@ -386,30 +398,30 @@ export default function DisputeManagement() {
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
+            <DialogTitle className="flex items-center gap-2 text-xl mm:leading-loose">
               <AlertCircle className="h-5 w-5 text-red-500" />
-              Dispute Details
+              {t("admin_disputes.modal.title")}
             </DialogTitle>
             <DialogDescription>
-              Record ID:{" "}
+              {t("admin_disputes.modal.record_id")}:{" "}
               <span className="font-mono text-xs">{selectedDispute?._id}</span>
             </DialogDescription>
           </DialogHeader>
 
           {selectedDispute && (
             <div className="grid gap-6 py-4">
-              <div className="flex justify-between items-start bg-muted/30 p-4 rounded-lg border">
+              <div className="flex justify-between items-start bg-muted/30 p-4 rounded-lg border mm:w-[465px]">
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-bold">
-                    Issue Type
+                  <p className="text-xs text-muted-foreground uppercase font-bold mm:leading-loose">
+                    {t("admin_disputes.modal.issue_type")}
                   </p>
                   <Badge variant="outline" className="text-sm px-3">
                     {selectedDispute.reason}
                   </Badge>
                 </div>
                 <div className="text-right space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase font-bold">
-                    Lodged On
+                  <p className="text-xs text-muted-foreground uppercase font-bold mm:leading-loose">
+                    {t("admin_disputes.modal.lodged_on")}
                   </p>
                   <div className="flex items-center justify-end gap-2 text-sm">
                     <Calendar className="h-3.5 w-3.5" />
@@ -418,30 +430,34 @@ export default function DisputeManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border-2 rounded-xl bg-blue-50/20">
+              <div className="grid grid-cols-2 gap-4 mm:w-[465px] mm:gap-2">
+                <div className="p-4 border-2 rounded-xl bg-blue-50/20 mm:w-full">
                   <div className="flex items-center gap-2 mb-2 text-blue-700">
                     <User className="h-4 w-4" />
-                    <h4 className="text-sm font-bold">Farmer (Plaintiff)</h4>
+                    <h4 className="text-sm font-bold">
+                      {t("admin_disputes.modal.plaintiff")}
+                    </h4>
                   </div>
                   <p className="font-semibold text-sm">
                     {selectedDispute.farmerId.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mm:mb-0">
                     {selectedDispute.farmerId.email}
                   </p>
                 </div>
 
-                <div className="p-4 border-2 rounded-xl bg-orange-50/20">
+                <div className="p-4 border-2 rounded-xl bg-orange-50/20 mm:w-full">
                   <div className="flex items-center gap-2 mb-2 text-orange-700">
                     <Store className="h-4 w-4" />
-                    <h4 className="text-sm font-bold">Merchant (Defendant)</h4>
+                    <h4 className="text-sm font-bold">
+                      {t("admin_disputes.modal.defendant")}
+                    </h4>
                   </div>
                   <p className="font-semibold text-sm">
                     {selectedDispute.merchantId.merchantId?.businessName ||
                       selectedDispute.merchantId.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mm:mb-0">
                     {selectedDispute.merchantId.email}
                   </p>
                 </div>
@@ -449,36 +465,43 @@ export default function DisputeManagement() {
 
               <div className="space-y-2">
                 <h4 className="text-sm font-bold text-foreground">
-                  Description
+                  {t("admin_disputes.modal.description_label")}
                 </h4>
-                <div className="p-4 rounded-lg bg-muted text-sm leading-relaxed border italic text-muted-foreground">
+                <div className="p-4 rounded-lg bg-muted text-sm leading-relaxed border italic text-muted-foreground mm:w-[465px]">
                   "{selectedDispute.description}"
                 </div>
               </div>
 
-              <DialogFooter className="mt-4 flex items-center justify-between sm:justify-between">
+              <DialogFooter className="mt-4 flex mm:flex-wrap items-center justify-between sm:justify-between mm:w-[465px]">
                 <Badge
-                  className={
+                  className={`mm:mb-2 ${
                     selectedDispute.status === "pending"
                       ? "bg-red-100 text-red-700"
                       : "bg-green-100 text-green-700"
-                  }
+                  }`}
                 >
-                  Currently {selectedDispute.status}
+                  {t("admin_disputes.modal.status_badge", {
+                    status: t(
+                      `admin_disputes.statuses.${selectedDispute.status}`,
+                    ),
+                  })}
                 </Badge>
-                <div className="flex gap-2">
+                <div className="flex mm:grid mm:grid-cols-2 gap-2">
                   <Button
+                    className="mm:w-full"
                     variant="outline"
                     onClick={() => setSelectedDispute(null)}
                   >
-                    Close
+                    {t("admin_disputes.modal.close")}
                   </Button>
                   {selectedDispute.status === "pending" && (
                     <Button
+                      className="mm:w-full"
                       onClick={() => handleResolve(selectedDispute._id)}
                       disabled={isUpdating}
                     >
-                      <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Resolved
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {t("admin_disputes.modal.resolve_btn")}
                     </Button>
                   )}
                 </div>

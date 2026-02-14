@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import {
   DollarSign,
   TrendingDown,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+import { type RootState } from "@/store";
+import { localizeData } from "@/utils/translator";
 import StatusCard from "@/common/StatusCard";
 import AddEntryDialog from "@/components/farmer/AddEntryDialog";
 import { Button } from "@/components/ui/button";
@@ -56,21 +59,41 @@ function FarmerDashboard() {
   const { data: user } = useCurrentUserQuery();
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
 
+  // Redux state for language
+  const { lang } = useSelector((state: RootState) => state.settings);
+
   const { data: response } = useGetFinancialOverviewQuery({
     season: selectedSeason === "all" ? undefined : selectedSeason,
   });
 
-  const finance = response?.overall;
   const { data: entries, isLoading: entriesLoading } = useGetAllEntriesQuery();
 
+  /**
+   * Localize Financial Overview Data
+   */
+  const localizedFinance = useMemo(() => {
+    if (!response?.overall) return { income: 0, expense: 0, profit: 0 };
+    return localizeData(response.overall, lang as "en" | "mm");
+  }, [response, lang]);
+
+  /**
+   * Localize and Filter Entries
+   */
   const recentEntries = useMemo(() => {
     if (!entries) return [];
-    const baseList =
+
+    // 1. Filter by season first
+    const filtered =
       selectedSeason === "all"
         ? entries
         : entries.filter((en: any) => en.season === selectedSeason);
-    return baseList.slice(0, 8);
-  }, [entries, selectedSeason]);
+
+    // 2. Take top 8
+    const limited = filtered.slice(0, 8);
+
+    // 3. Localize the subset
+    return localizeData(limited, lang as "en" | "mm");
+  }, [entries, selectedSeason, lang]);
 
   return (
     <div className="w-full min-h-screen p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto space-y-8">
@@ -112,7 +135,8 @@ function FarmerDashboard() {
               </SelectItem>
               {SEASONS.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s}
+                  {/* Localize season name in dropdown if needed */}
+                  {lang === "mm" ? localizeData(s, "mm") : s}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -125,19 +149,19 @@ function FarmerDashboard() {
         <StatusCard
           title={t("farmer_dash.card_revenue")}
           bgColor="bg-emerald-500/10"
-          value={finance?.income || 0}
+          value={localizedFinance.income}
           icon={<TrendingUp className="w-6 h-6 text-emerald-600" />}
         />
         <StatusCard
           title={t("farmer_dash.card_cost")}
           bgColor="bg-red-500/10"
-          value={finance?.expense || 0}
+          value={localizedFinance.expense}
           icon={<TrendingDown className="w-6 h-6 text-red-600" />}
         />
         <StatusCard
           title={t("farmer_dash.card_profit")}
           bgColor="bg-primary/10"
-          value={finance?.profit || 0}
+          value={localizedFinance.profit}
           icon={<DollarSign className="w-6 h-6 text-primary" />}
         />
       </div>
@@ -203,7 +227,6 @@ function FarmerDashboard() {
                   </TableRow>
                 ) : (
                   recentEntries.map((en: any) => {
-                    const isIncome = en.type === "income";
                     return (
                       <TableRow
                         key={en._id}
@@ -215,10 +238,21 @@ function FarmerDashboard() {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-900 dark:text-slate-200">
-                              {format(new Date(en.date), "dd MMM")}
+                              {/* Date formatted then localized via manual check or localizeData side-effect */}
+                              {lang === "mm"
+                                ? localizeData(
+                                    format(new Date(en.date), "dd MMM"),
+                                    "mm",
+                                  )
+                                : format(new Date(en.date), "dd MMM")}
                             </span>
                             <span className="text-[10px] text-slate-400 font-medium">
-                              {format(new Date(en.date), "yyyy")}
+                              {lang === "mm"
+                                ? localizeData(
+                                    format(new Date(en.date), "yyyy"),
+                                    "mm",
+                                  )
+                                : format(new Date(en.date), "yyyy")}
                             </span>
                           </div>
                         </TableCell>
@@ -239,24 +273,34 @@ function FarmerDashboard() {
                         </TableCell>
                         <TableCell>
                           <div
-                            className={`flex items-center gap-1 text-[10px] font-black uppercase ${isIncome ? "text-emerald-600" : "text-red-500"}`}
+                            className={`flex items-center gap-1 text-[10px] font-black uppercase ${en.type?.toLowerCase().includes("income") || en.type?.includes("ဝင်ငွေ") ? "text-emerald-600" : "text-red-500"}`}
                           >
-                            {isIncome ? (
+                            {en.type?.toLowerCase().includes("income") ||
+                            en.type?.includes("ဝင်ငွေ") ? (
                               <ArrowUpRight size={14} />
                             ) : (
                               <ArrowDownLeft size={14} />
                             )}
-                            {en.type}
+                            {/* Display localized type */}
+                            {en.type === "income"
+                              ? t("entry.type_income")
+                              : en.type === "expense"
+                                ? t("entry.type_expense")
+                                : en.type}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <span
-                            className={`font-black ${isIncome ? "text-emerald-600" : "text-destructive"}`}
+                            className={`font-black ${en.type?.toLowerCase().includes("income") || en.type?.includes("ဝင်ငွေ") ? "text-emerald-600" : "text-destructive"}`}
                           >
-                            {isIncome ? "+" : "-"} {en.value.toLocaleString()}
+                            {en.type?.toLowerCase().includes("income") ||
+                            en.type?.includes("ဝင်ငွေ")
+                              ? "+"
+                              : "-"}{" "}
+                            {en.value}
                           </span>
                           <span className="block text-[8px] text-slate-400 font-bold">
-                            MMK
+                            {t("details.currency")}
                           </span>
                         </TableCell>
                       </TableRow>

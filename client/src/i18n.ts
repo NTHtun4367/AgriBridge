@@ -1,21 +1,21 @@
-// src/i18n.ts
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
 
 i18n
-  .use(Backend)
+  .use(Backend) // JSON ဖိုင်တွေကို လှမ်းဆွဲမည့် backend
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: "en",
-    debug: true, // Set this to true to see errors in the browser console
+    debug: true,
     ns: ["common"],
     defaultNS: "common",
     backend: {
-      // This path points to the /public folder automatically
-      loadPath: "/locales/{{lng}}/{{ns}}.json",
+      // public/locales/en/common.json လမ်းကြောင်းသို့ ညွှန်ပြခြင်း
+      // Vite မှာ public သည် root ဖြစ်သောကြောင့် /locales ဟု ရေးရုံဖြင့် ရပါသည်
+      loadPath: "/locales/{{lng}}/common.json",
     },
     interpolation: {
       escapeValue: false,

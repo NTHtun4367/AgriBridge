@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Inbox,
@@ -31,6 +32,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router";
 
 function MerchantRecords() {
+  const { t } = useTranslation();
   const { data: entries, isLoading } = useGetAllEntriesQuery();
   const { data: user } = useCurrentUserQuery();
   const navigate = useNavigate();
@@ -42,10 +44,12 @@ function MerchantRecords() {
   const filteredEntries = useMemo(() => {
     if (!entries) return [];
     return entries.filter((en: any) => {
-      const matchesSearch =
-        en.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        en.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+      const categoryMatch = en.category?.toLowerCase() || "";
+      const notesMatch = en.notes?.toLowerCase() || "";
+      const term = searchTerm.toLowerCase();
 
+      const matchesSearch =
+        categoryMatch.includes(term) || notesMatch.includes(term);
       const matchesType = selectedType === "all" || en.type === selectedType;
 
       return matchesSearch && matchesType;
@@ -58,18 +62,18 @@ function MerchantRecords() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              Inventory Records
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mm:leading-loose">
+              {t("merchant_records.title")}
             </h2>
-            <p className="text-slate-500 font-medium">
-              History of all your inventory transactions and logistics
+            <p className="text-slate-500 font-medium mm:leading-loose">
+              {t("merchant_records.subtitle")}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="text-right hidden md:block">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Total Records
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mm:leading-loose mm:-mb-1">
+                {t("merchant_records.total_records")}
               </p>
               <p className="text-lg font-black text-primary">
                 {filteredEntries.length}
@@ -83,21 +87,27 @@ function MerchantRecords() {
           <div className="flex-1 min-w-[300px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by category or notes..."
-              className="pl-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm"
+              placeholder={t("merchant_records.search_placeholder")}
+              className="pl-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm mm:leading-loose"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
           <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900">
-              <SelectValue placeholder="Filter by Type" />
+            <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900 mm:leading-loose">
+              <SelectValue placeholder={t("merchant_records.filter_type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="income">Income Only</SelectItem>
-              <SelectItem value="expense">Expenses Only</SelectItem>
+              <SelectItem value="all">
+                {t("merchant_records.all_types")}
+              </SelectItem>
+              <SelectItem value="income">
+                {t("merchant_records.income_only")}
+              </SelectItem>
+              <SelectItem value="expense">
+                {t("merchant_records.expense_only")}
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -111,7 +121,7 @@ function MerchantRecords() {
               className="text-slate-500 hover:text-red-500 transition-colors"
             >
               <FilterX className="h-4 w-4 mr-2" />
-              Clear Filters
+              {t("merchant_records.clear_filters")}
             </Button>
           )}
         </div>
@@ -123,16 +133,16 @@ function MerchantRecords() {
               <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
                 <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
                   <TableHead className="font-bold text-slate-700 dark:text-slate-300">
-                    Date
+                    {t("merchant_records.table.date")}
                   </TableHead>
                   <TableHead className="font-bold text-slate-700 dark:text-slate-300">
-                    Category
+                    {t("merchant_records.table.category")}
                   </TableHead>
                   <TableHead className="font-bold text-slate-700 dark:text-slate-300">
-                    Transaction Type
+                    {t("merchant_records.table.type")}
                   </TableHead>
                   <TableHead className="text-right font-bold text-slate-700 dark:text-slate-300">
-                    Amount
+                    {t("merchant_records.table.amount")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -145,7 +155,7 @@ function MerchantRecords() {
                     >
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="animate-pulse bg-slate-200 dark:bg-slate-800 h-2 w-32 rounded" />
-                        Loading history...
+                        {t("merchant_records.status.loading")}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -155,10 +165,10 @@ function MerchantRecords() {
                       <div className="flex flex-col items-center justify-center text-slate-400">
                         <Inbox className="h-12 w-12 mb-3 opacity-20" />
                         <p className="text-lg font-semibold">
-                          No records found
+                          {t("merchant_records.status.no_records")}
                         </p>
                         <p className="text-sm">
-                          Try adjusting your search or filters
+                          {t("merchant_records.status.try_adjusting")}
                         </p>
                       </div>
                     </TableCell>
@@ -211,7 +221,10 @@ function MerchantRecords() {
                             ) : (
                               <ArrowDownLeft size={14} className="shrink-0" />
                             )}
-                            {en.type}
+                            {/* Re-using transaction namespace from previous prompt if available */}
+                            {isIncome
+                              ? t("transaction.income")
+                              : t("transaction.expense")}
                           </div>
                         </TableCell>
 
@@ -224,7 +237,8 @@ function MerchantRecords() {
                                   : "text-destructive"
                               }`}
                             >
-                              {isIncome ? "+" : "-"} {en.value.toLocaleString()}
+                              {isIncome ? "+" : "-"}{" "}
+                              {Number(en.value).toLocaleString()}
                             </span>
                             <span className="text-[9px] font-black text-slate-400 tracking-tighter">
                               MMK
@@ -243,7 +257,10 @@ function MerchantRecords() {
         {/* Footer info */}
         <div className="mt-6 flex items-center justify-center gap-2 text-slate-400 dark:text-slate-600 text-xs font-medium">
           <Calendar size={14} />
-          <span>System updated: {format(new Date(), "PPpp")}</span>
+          <span>
+            {t("merchant_records.status.system_updated")}:{" "}
+            {format(new Date(), "PPpp")}
+          </span>
         </div>
       </div>
     </div>

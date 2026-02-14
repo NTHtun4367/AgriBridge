@@ -1,15 +1,15 @@
 import { FarmerCrop } from "../models/crop";
 import { Season } from "../models/season";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 export class FarmerService {
-  // NEW: Fetch the current active season for the user
   async getActiveSeason(userId: string) {
-    return await Season.findOne({ userId, isActive: true });
+    const season = await Season.findOne({ userId, isActive: true }).lean();
+
+    return season;
   }
 
   async startSeason(userId: string, name: string) {
-    // SAFETY FIX: Deactivate any currently active seasons first
-    // so there is only ever one "Active" season per user.
     await Season.updateMany({ userId, isActive: true }, { isActive: false });
 
     let season = await Season.findOne({ userId, name });
@@ -20,7 +20,6 @@ export class FarmerService {
         name,
         isActive: true,
         startDate: new Date(),
-        // Defaulting to a 4-month cycle
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 4)),
       });
     } else {
@@ -50,7 +49,9 @@ export class FarmerService {
   }
 
   async getCropsBySeason(userId: string, seasonId: string) {
-    return await FarmerCrop.find({ userId, seasonId });
+    const crops = await FarmerCrop.find({ userId, seasonId }).lean();
+
+    return crops;
   }
 
   async endSeason(userId: string, seasonId: string) {

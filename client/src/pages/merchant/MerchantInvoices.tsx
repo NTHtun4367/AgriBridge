@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from "react";
 import * as htmlToImage from "html-to-image";
+import { useTranslation } from "react-i18next";
 import {
   Receipt,
   CheckCircle,
@@ -27,6 +28,8 @@ import StatusCard from "@/common/StatusCard";
 import { useGetInvoicesQuery } from "@/store/slices/invoiceApi";
 
 export default function MerchantInvoices() {
+  const { t, i18n } = useTranslation();
+
   // --- API HOOKS ---
   const { data: invoices, isLoading } = useGetInvoicesQuery();
 
@@ -47,7 +50,7 @@ export default function MerchantInvoices() {
         else acc.pending += amount;
         return acc;
       },
-      { total: 0, pending: 0, collected: 0 }
+      { total: 0, pending: 0, collected: 0 },
     );
   }, [invoices]);
 
@@ -57,7 +60,7 @@ export default function MerchantInvoices() {
     return invoices.filter(
       (inv) =>
         inv.farmerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.invoiceId?.toLowerCase().includes(searchTerm.toLowerCase())
+        inv.invoiceId?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [invoices, searchTerm]);
 
@@ -65,7 +68,7 @@ export default function MerchantInvoices() {
   const handleExportImage = async () => {
     if (!invoiceRef.current) return;
 
-    const loadingToast = toast.loading("Generating Receipt Image...");
+    const loadingToast = toast.loading(t("merchant_invoices.modal.generating"));
 
     try {
       const dataUrl = await htmlToImage.toPng(invoiceRef.current, {
@@ -75,7 +78,8 @@ export default function MerchantInvoices() {
         filter: (node) => {
           const exclusionClasses = ["print-hidden"];
           return !exclusionClasses.some(
-            (cls) => node instanceof HTMLElement && node.classList.contains(cls)
+            (cls) =>
+              node instanceof HTMLElement && node.classList.contains(cls),
           );
         },
       });
@@ -86,12 +90,18 @@ export default function MerchantInvoices() {
       link.click();
 
       toast.dismiss(loadingToast);
-      toast.success("Receipt saved to Photos");
+      toast.success(t("merchant_invoices.modal.save_gallery") + " Success");
     } catch (error) {
       console.error("Image Generation Error:", error);
       toast.dismiss(loadingToast);
-      toast.error("Failed to generate image. Please try again.");
+      toast.error("Failed to generate image.");
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(
+      i18n.language === "my" ? "my-MM" : "en-GB",
+    );
   };
 
   if (isLoading)
@@ -99,7 +109,7 @@ export default function MerchantInvoices() {
       <div className="h-screen flex flex-col items-center justify-center bg-white">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
         <p className="mt-4 text-slate-500 font-medium">
-          Syncing Ledger Data...
+          {t("merchant_invoices.modal.syncing")}
         </p>
       </div>
     );
@@ -109,9 +119,9 @@ export default function MerchantInvoices() {
       {/* Overview Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Ledger Overview</h2>
-          <p className="text-sm text-slate-500">
-            Manage and settle farmer transactions
+          <h2 className="text-2xl font-bold mm:leading-loose">{t("merchant_invoices.title")}</h2>
+          <p className="text-sm text-slate-500 mm:leading-loose">
+            {t("merchant_invoices.subtitle")}
           </p>
         </div>
       </div>
@@ -119,19 +129,19 @@ export default function MerchantInvoices() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatusCard
-          title="Total Volume"
+          title={t("merchant_invoices.stats.total_volume")}
           bgColor="bg-blue-500/15"
           value={stats.total}
           icon={<TrendingUp className="w-6 h-6 text-blue-500" />}
         />
         <StatusCard
-          title="Total Collected"
+          title={t("merchant_invoices.stats.total_collected")}
           bgColor="bg-emerald-500/15"
           value={stats.collected}
           icon={<CheckCircle className="w-6 h-6 text-green-600" />}
         />
         <StatusCard
-          title="Pending Receivables"
+          title={t("merchant_invoices.stats.pending_receivables")}
           bgColor="bg-red-500/15"
           value={stats.pending}
           icon={<TrendingDown className="w-6 h-6 text-red-500" />}
@@ -140,16 +150,18 @@ export default function MerchantInvoices() {
 
       {/* Main List Card */}
       <Card>
-        <CardTitle className="px-6">
+        <CardTitle className="px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-lg font-bold">Recent Invoices</h2>
+            <h2 className="text-lg font-bold">
+              {t("merchant_invoices.list.title")}
+            </h2>
             <div className="relative w-full md:w-72">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                 size={16}
               />
               <Input
-                placeholder="Search farmer or ID..."
+                placeholder={t("merchant_invoices.list.search_placeholder")}
                 className="pl-9 bg-slate-50 border-none h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -161,7 +173,7 @@ export default function MerchantInvoices() {
           <div className="grid grid-cols-1 gap-3">
             {filteredInvoices.length === 0 ? (
               <div className="py-10 text-center text-slate-400">
-                No transactions found.
+                {t("merchant_invoices.list.no_data")}
               </div>
             ) : (
               filteredInvoices.map((inv) => (
@@ -183,17 +195,14 @@ export default function MerchantInvoices() {
                     <div>
                       <h4 className="font-bold">{inv.farmerName}</h4>
                       <p className="text-xs text-slate-500 font-medium">
-                        {inv.invoiceId} •{" "}
-                        {new Date(inv.createdAt).toLocaleDateString()}
+                        {inv.invoiceId} • {formatDate(inv.createdAt)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-right">
+                    <div className="text-right mm:-space-y-2">
                       <p
-                        className={`font-bold ${
-                          inv.status === "paid" && "text-primary"
-                        }`}
+                        className={`font-bold ${inv.status === "paid" && "text-primary"}`}
                       >
                         {inv.totalAmount.toLocaleString()} MMK
                       </p>
@@ -223,14 +232,13 @@ export default function MerchantInvoices() {
       {/* Info Footer */}
       <Card className="border-2 border-slate-100 rounded-2xl p-6 shadow">
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-blue-100 text-primary rounded-2xl">
+          <div className="p-3 bg-blue-100 text-primary rounded-2xl mm:mt-2">
             <DollarSign size={20} />
           </div>
           <div>
-            <h4 className="font-bold">Digital Settlement</h4>
-            <p className="text-xs text-slate-500 font-medium">
-              Invoices marked as paid are instantly synced with the central
-              treasury ledger.
+            <h4 className="font-bold mm:-mt-3">{t("merchant_invoices.footer.title")}</h4>
+            <p className="text-xs text-slate-500 font-medium mm:-mb-3">
+              {t("merchant_invoices.footer.description")}
             </p>
           </div>
         </div>
@@ -243,7 +251,7 @@ export default function MerchantInvoices() {
       >
         <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-transparent shadow-none">
           <DialogHeader className="sr-only">
-            <DialogTitle>Invoice Details</DialogTitle>
+            <DialogTitle>{t("merchant_invoices.list.title")}</DialogTitle>
           </DialogHeader>
 
           {selectedInvoice && (
@@ -252,7 +260,7 @@ export default function MerchantInvoices() {
                 onClick={() => setSelectedInvoice(null)}
                 className="absolute -top-12 right-0 text-white flex items-center gap-2 font-bold hover:text-slate-200 transition-colors"
               >
-                <X size={20} /> Close
+                <X size={20} /> {t("merchant_invoices.modal.close")}
               </button>
 
               <div ref={invoiceRef}>
@@ -261,35 +269,35 @@ export default function MerchantInvoices() {
                   <CardContent className="p-8 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-10">
                       <div>
-                        <div className="bg-primary text-white p-2.5 inline-block rounded-xl mb-4">
+                        <div className="bg-primary text-white p-2.5 inline-block rounded-xl mb-4 mm:mb-0">
                           <Receipt size={24} />
                         </div>
                         <h2 className="text-2xl font-black tracking-tighter">
-                          INVOICE
+                          {t("merchant_invoices.modal.invoice_header")}
                         </h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider">
                           #{selectedInvoice.invoiceId}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-xl text-primary italic">
+                        <p className="font-black text-xl text-primary italic mm:mb-0">
                           AgriBridge
                         </p>
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
-                          Platform Verified Receipt
+                          {t("merchant_invoices.modal.verified")}
                         </p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8 mb-10 text-sm">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                          Billed To
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-2 ">
+                          {t("merchant_invoices.modal.billed_to")}
                         </p>
-                        <p className="font-bold">
+                        <p className="font-bold mm:mb-0">
                           {selectedInvoice.farmerName}
                         </p>
-                        <p className="text-slate-500 text-xs leading-relaxed">
+                        <p className="text-slate-500 text-xs leading-relaxed mm:mb-0">
                           {selectedInvoice.farmerNRC}
                         </p>
                         <p className="text-slate-500 text-xs leading-relaxed">
@@ -300,7 +308,7 @@ export default function MerchantInvoices() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                          Status
+                          {t("merchant_invoices.modal.status")}
                         </p>
                         <Badge
                           className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase border-none ${
@@ -311,13 +319,11 @@ export default function MerchantInvoices() {
                         >
                           {selectedInvoice.status}
                         </Badge>
-                        <p className="mt-6 text-[10px] text-slate-400 font-bold uppercase">
-                          Date Issued
+                        <p className="mt-6 text-[10px] text-slate-400 font-bold uppercase mm:mt-2">
+                          {t("merchant_invoices.modal.date_issued")}
                         </p>
-                        <p className="font-bold text-xs">
-                          {new Date(
-                            selectedInvoice.createdAt
-                          ).toLocaleDateString()}
+                        <p className="font-bold text-xs mm:-mt-2">
+                          {formatDate(selectedInvoice.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -326,10 +332,18 @@ export default function MerchantInvoices() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b-2 border-slate-100 text-[10px] uppercase text-slate-400 font-bold">
-                            <th className="text-left pb-3">Item</th>
-                            <th className="text-center pb-3">Qty</th>
-                            <th className="text-right pb-3">Price</th>
-                            <th className="text-right pb-3">Total</th>
+                            <th className="text-left pb-3">
+                              {t("merchant_invoices.modal.table_item")}
+                            </th>
+                            <th className="text-center pb-3">
+                              {t("merchant_invoices.modal.table_qty")}
+                            </th>
+                            <th className="text-right pb-3">
+                              {t("merchant_invoices.modal.table_price")}
+                            </th>
+                            <th className="text-right pb-3">
+                              {t("merchant_invoices.modal.table_total")}
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -352,21 +366,22 @@ export default function MerchantInvoices() {
                                   MMK
                                 </td>
                               </tr>
-                            )
+                            ),
                           )}
                         </tbody>
                       </table>
                     </div>
 
                     <div className="mt-8 pt-6 border-t-2 border-slate-900 flex justify-between items-center text-2xl font-black">
-                      <span className="text-slate-900">Total Due</span>
+                      <span className="text-slate-900 mm:text-xl">
+                        {t("merchant_invoices.modal.total_due")}
+                      </span>
                       <span className="text-primary">
                         {selectedInvoice.totalAmount.toLocaleString()}{" "}
                         <span className="text-sm font-bold">MMK</span>
                       </span>
                     </div>
 
-                    {/* Class 'print-hidden' ensures this block is not in the downloaded image */}
                     <div className="mt-10 flex gap-3 print-hidden">
                       {selectedInvoice.status == "paid" && (
                         <Button
@@ -374,7 +389,8 @@ export default function MerchantInvoices() {
                           className="flex-1 py-6 gap-2 text-green-700 bg-green-50 border-green-200"
                           onClick={handleExportImage}
                         >
-                          <ImageIcon size={18} /> Save Receipt to Gallery
+                          <ImageIcon size={18} />{" "}
+                          {t("merchant_invoices.modal.save_gallery")}
                         </Button>
                       )}
                     </div>

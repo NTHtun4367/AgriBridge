@@ -18,11 +18,17 @@ import {
   useGetMarketPricesQuery,
 } from "@/store/slices/marketApi";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { useTranslation } from "react-i18next"; // Added i18n hook
+import { format, isValid } from "date-fns";
+import { useTranslation } from "react-i18next";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+import type { Market } from "@/types/market";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 
 function MarketPriceLanding() {
-  const { t } = useTranslation(); // Initialize translation
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedMarket, setSelectedMarket] = useState("all");
@@ -34,24 +40,46 @@ function MarketPriceLanding() {
     direction: "asc",
   });
 
-  const todayDate = format(new Date(), "dd-MM-yyyy");
+  const { lang } = useSelector((state: RootState) => state.settings);
 
-  const { data: response } = useGetMarketPricesQuery({
+  // 1. Date Localization with Safety Check
+  const todayDate = useMemo(() => {
+    const now = new Date();
+    if (!isValid(now)) return ""; // Safety fallback
+    const d = format(now, "dd-MM-yyyy");
+    return lang === "mm" ? toMyanmarNumerals(d) : d;
+  }, [lang]);
+
+  // 2. API Queries
+  const { data: tempResponse } = useGetMarketPricesQuery({
     official: true,
     marketId: selectedMarket === "all" ? undefined : selectedMarket,
   });
 
-  const { data: markets = [] } = useGetAllMarketsQuery(undefined);
-  const navigate = useNavigate();
-  const rawData = response?.data || [];
+  const { data: tempMarkets = [] } = useGetAllMarketsQuery(undefined);
 
+  // 3. Data Localization
+  const response = useMemo(() => {
+    return localizeData(tempResponse, lang);
+  }, [tempResponse, lang]);
+
+  const markets = useMemo(() => {
+    return localizeData(tempMarkets, lang);
+  }, [tempMarkets, lang]);
+
+  const rawData = useMemo(() => response?.data || [], [response]);
+
+  console.log(rawData, response, markets);
+
+  // 4. Filter Options
   const categoryOptions = useMemo(() => {
     const unique = Array.from(
       new Set(rawData.map((item: any) => item.category)),
-    );
+    ) as string[];
     return ["all", ...unique];
   }, [rawData]);
 
+  // 5. Search & Sort Logic
   const processedData = useMemo(() => {
     let filtered = [...rawData];
     if (searchTerm) {
@@ -77,10 +105,11 @@ function MarketPriceLanding() {
     return filtered;
   }, [rawData, searchTerm, selectedCategory, selectedMarket, sortConfig]);
 
+  // 6. Grouping Logic
   const groupedData = useMemo(() => {
     if (selectedMarket !== "all") return [];
-    return markets
-      .map((m: any) => ({
+    return (markets as Market[])
+      .map((m) => ({
         marketName: m.name,
         marketId: m._id,
         items: processedData.filter((item) => item.marketId === m._id),
@@ -108,8 +137,8 @@ function MarketPriceLanding() {
               {todayDate}
             </div>
             <div>
-              <h1 className="text-5xl mm:text-[55px] font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-primary mm:mb-12">
-                <span className="block mm:mb-12">{t("market.hero.today")}</span>
+              <h1 className="text-5xl mm:text-[55px] font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-primary mm:pb-2">
+                <span className="block mm:pb-8">{t("market.hero.today")}</span>
                 <span className="text-primary">{t("market.hero.title")}</span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600 mm:leading-loose">
@@ -165,7 +194,7 @@ function MarketPriceLanding() {
                 >
                   {t("market.filters.all_markets")}
                 </button>
-                {markets.map((m: any) => (
+                {(markets as Market[]).map((m) => (
                   <button
                     key={m._id}
                     onClick={() => setSelectedMarket(m._id)}
@@ -192,14 +221,14 @@ function MarketPriceLanding() {
               <div key={group.marketId} className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="p-2 bg-primary/10 rounded-lg mm:mb-3">
                       <MapPin className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl text-primary font-semibold uppercase tracking-tight">
+                      <h2 className="text-xl text-primary font-semibold uppercase tracking-tight mm:leading-loose">
                         {group.marketName}
                       </h2>
-                      <p className="text-xs text-slate-500 font-medium mm:mb-1 mm:leading-loose">
+                      <p className="text-xs text-slate-500 font-medium mm:leading-loose">
                         {t("market.table.market_as_of", {
                           marketName: group.marketName,
                           date: todayDate,
@@ -210,6 +239,10 @@ function MarketPriceLanding() {
                   <div className="text-xs text-slate-400 font-medium italic">
                     {t("market.table.crops_found", {
                       count: group.items.length,
+                      displayCount:
+                        lang === "mm"
+                          ? toMyanmarNumerals(group.items.length)
+                          : group.items.length,
                     })}
                   </div>
                 </div>

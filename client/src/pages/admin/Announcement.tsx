@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   Megaphone,
   Loader2,
@@ -73,7 +74,6 @@ import {
   useGetAnnouncementHistoryQuery,
 } from "@/store/slices/notificationApi";
 
-// 1. Define Data Shape for Table
 interface AnnouncementData {
   _id: string;
   title: string;
@@ -85,6 +85,7 @@ interface AnnouncementData {
 const columnHelper = createColumnHelper<AnnouncementData>();
 
 function Announcement() {
+  const { t } = useTranslation();
   const [selectedAnnouncement, setSelectedAnnouncement] =
     useState<AnnouncementData | null>(null);
 
@@ -107,10 +108,10 @@ function Announcement() {
   const onSubmit = async (values: AnnouncementFormValues) => {
     try {
       await createAnnouncement(values).unwrap();
-      toast.success("Announcement sent successfully!");
+      toast.success(t("announcement.create_card.success"));
       form.reset({ title: "", content: "", target: "All" });
     } catch (error) {
-      toast.error("Failed to send announcement.");
+      toast.error(t("announcement.create_card.error"));
     }
   };
 
@@ -133,22 +134,22 @@ function Announcement() {
             className="hover:bg-transparent p-0 font-bold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Title
+            {t("announcement.history_card.columns.title")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       columnHelper.accessor("target", {
-        header: "Target Group",
+        header: t("announcement.history_card.columns.target"),
         cell: (info) => (
           <span className="capitalize px-2 py-1 rounded-md bg-muted text-xs font-medium">
-            {info.getValue()}
+            {t(`announcement.targets.${info.getValue().toLowerCase()}`)}
           </span>
         ),
       }),
       columnHelper.accessor("createdAt", {
-        header: "Date Sent",
+        header: t("announcement.history_card.columns.date"),
         cell: (info) => (
           <span className="text-sm text-muted-foreground">
             {new Date(info.getValue()).toLocaleDateString()}
@@ -157,10 +158,13 @@ function Announcement() {
       }),
       columnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Action</div>,
+        header: () => (
+          <div className="text-right">
+            {t("announcement.history_card.columns.action")}
+          </div>
+        ),
         cell: (info) => (
           <div className="flex justify-end">
-            {/* FIXED: Removed size="icon" and adjusted width to fit text */}
             <Button
               variant="outline"
               size="sm"
@@ -168,16 +172,15 @@ function Announcement() {
               onClick={() => setSelectedAnnouncement(info.row.original)}
             >
               <Eye className="h-4 w-4" />
-              View Details
+              {t("announcement.history_card.table.details")}
             </Button>
           </div>
         ),
       }),
     ],
-    [],
+    [t],
   );
 
-  // --- INITIALIZE TABLE ---
   const table = useReactTable({
     data: history,
     columns,
@@ -199,14 +202,16 @@ function Announcement() {
 
   return (
     <div className="h-screen p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Megaphone className="w-6 h-6" /> Announcements
+      <h1 className="text-2xl font-bold flex items-center gap-2 mm:leading-loose">
+        <Megaphone className="w-6 h-6" /> {t("announcement.title")}
       </h1>
 
       {/* --- CREATE FORM SECTION --- */}
       <Card>
         <CardHeader>
-          <CardTitle>Create New Announcement</CardTitle>
+          <CardTitle className="mm:leading-loose">
+            {t("announcement.create_card.title")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -217,9 +222,16 @@ function Announcement() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>
+                        {t("announcement.create_card.fields.title")}
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Announcement Title" {...field} />
+                        <Input
+                          placeholder={t(
+                            "announcement.create_card.fields.title_placeholder",
+                          )}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -230,20 +242,32 @@ function Announcement() {
                   name="target"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Users</FormLabel>
+                      <FormLabel>
+                        {t("announcement.create_card.fields.target")}
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select target" />
+                          <SelectTrigger className="mm:leading-loose">
+                            <SelectValue
+                              placeholder={t(
+                                "announcement.create_card.fields.target_placeholder",
+                              )}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="All">All Users</SelectItem>
-                          <SelectItem value="Farmers">Farmers</SelectItem>
-                          <SelectItem value="Merchants">Merchants</SelectItem>
+                          <SelectItem value="All">
+                            {t("announcement.targets.all")}
+                          </SelectItem>
+                          <SelectItem value="Farmers">
+                            {t("announcement.targets.farmers")}
+                          </SelectItem>
+                          <SelectItem value="Merchants">
+                            {t("announcement.targets.merchants")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -257,7 +281,9 @@ function Announcement() {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="pb-2">Message</FormLabel>
+                    <FormLabel className="pb-2">
+                      {t("announcement.create_card.fields.message")}
+                    </FormLabel>
                     <FormControl>
                       <Tiptap value={field.value} onChange={field.onChange} />
                     </FormControl>
@@ -269,10 +295,11 @@ function Announcement() {
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                    {t("announcement.create_card.sending")}
                   </>
                 ) : (
-                  "Send Announcement"
+                  t("announcement.create_card.submit")
                 )}
               </Button>
             </form>
@@ -283,14 +310,14 @@ function Announcement() {
       {/* --- HISTORY TABLE SECTION --- */}
       <Card>
         <CardHeader>
-          <CardTitle>Announcement History</CardTitle>
+          <CardTitle>{t("announcement.history_card.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search announcements by title..."
+                placeholder={t("announcement.history_card.search_placeholder")}
                 value={
                   (table.getColumn("title")?.getFilterValue() as string) ?? ""
                 }
@@ -309,7 +336,7 @@ function Announcement() {
                   className="ml-auto border-2"
                 >
                   <Settings2 className="mr-2 h-4 w-4" />
-                  View
+                  {t("announcement.history_card.view_toggle")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
@@ -362,7 +389,7 @@ function Announcement() {
                     >
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Loader2 className="h-6 w-6 animate-spin" />
-                        Loading history...
+                        {t("announcement.history_card.table.loading")}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -388,7 +415,7 @@ function Announcement() {
                       colSpan={columns.length}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No announcements found.
+                      {t("announcement.history_card.table.empty")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -398,11 +425,15 @@ function Announcement() {
 
           <div className="flex items-center justify-between px-2">
             <div className="flex-1 text-sm text-muted-foreground">
-              Total {history.length} items
+              {t("announcement.history_card.table.total", {
+                count: history.length,
+              })}
             </div>
             <div className="flex items-center space-x-6 lg:space-x-8">
               <div className="flex items-center space-x-2">
-                <p className="text-xs font-medium">Rows per page</p>
+                <p className="text-xs font-medium mm:mb-0">
+                  {t("announcement.history_card.table.rows_per_page")}
+                </p>
                 <Select
                   value={`${table.getState().pagination.pageSize}`}
                   onValueChange={(value) => table.setPageSize(Number(value))}
@@ -423,8 +454,10 @@ function Announcement() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-xs font-medium">
-                  Page {table.getState().pagination.pageIndex + 1} of{" "}
-                  {table.getPageCount()}
+                  {t("announcement.history_card.table.page_info", {
+                    current: table.getState().pagination.pageIndex + 1,
+                    total: table.getPageCount(),
+                  })}
                 </span>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -433,7 +466,7 @@ function Announcement() {
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                   >
-                    Previous
+                    {t("announcement.history_card.table.prev")}
                   </Button>
                   <Button
                     variant="outline"
@@ -441,7 +474,7 @@ function Announcement() {
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                   >
-                    Next
+                    {t("announcement.history_card.table.next")}
                   </Button>
                 </div>
               </div>
@@ -457,9 +490,18 @@ function Announcement() {
       >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedAnnouncement?.title}</DialogTitle>
-            <DialogDescription>
-              Sent to: {selectedAnnouncement?.target} on{" "}
+            <DialogTitle className="mm:leading-loose">
+              {selectedAnnouncement?.title}
+            </DialogTitle>
+            <DialogDescription className="mm:mb-0">
+              {/* Note: I'm leaving the dynamic sent-to text as a template literal for brevity, 
+                  but you could further localize the "Sent to... on..." string if needed */}
+              {t("announcement.history_card.columns.target")}:{" "}
+              {selectedAnnouncement &&
+                t(
+                  `announcement.targets.${selectedAnnouncement.target.toLowerCase()}`,
+                )}{" "}
+              |{" "}
               {selectedAnnouncement &&
                 new Date(selectedAnnouncement.createdAt).toLocaleString()}
             </DialogDescription>

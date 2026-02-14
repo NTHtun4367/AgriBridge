@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next"; // i18n Hook
 import {
   CalendarIcon,
   PlusCircle,
@@ -60,8 +61,8 @@ interface MerchantEntryDialogProps {
 }
 
 const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<"expense" | "income">("expense");
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,20 +86,36 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
     },
   });
 
-  const selectedCategory = useWatch({
-    control: form.control,
-    name: "category",
-  });
+  // Single Source of Truth for Type
+  const currentType = form.watch("type");
+  const selectedCategory = form.watch("category");
+
+  // Cleanup object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const availableUnits = useMemo(() => {
     if (!selectedCategory) return [];
-    if (type === "expense") {
+    if (currentType === "expense") {
       return PURCHASE_OPTIONS[selectedCategory] || [];
     } else {
       const crop = cropsArray.find((c: any) => c.cropName === selectedCategory);
       return crop ? [crop.unit] : ["Unit"];
     }
-  }, [selectedCategory, type, cropsArray]);
+  }, [selectedCategory, currentType, cropsArray]);
+
+  const handleTypeToggle = (newType: "expense" | "income") => {
+    if (newType === currentType) return;
+    // Reset specific fields but preserve Date and Notes
+    form.setValue("type", newType);
+    form.setValue("category", "");
+    form.setValue("unit", "");
+    form.setValue("value", "");
+    form.clearErrors();
+  };
 
   const handleIncomeCropSelect = (cropName: string) => {
     const selectedCrop = cropsArray.find(
@@ -142,7 +159,6 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, val]) => {
         if (val === null || val === undefined) return;
-
         if (key === "date") {
           formData.append(key, (val as Date).toISOString());
         } else if (key === "billImage" && val instanceof File) {
@@ -151,14 +167,12 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
           formData.append(key, val.toString());
         }
       });
-      // Ensure current type state is synced
-      formData.set("type", type);
 
       await addEntry(formData).unwrap();
-      toast.success("Transaction saved!");
+      toast.success(t("transaction.success"));
       handleClose();
     } catch (err) {
-      toast.error("Failed to save transaction.");
+      toast.error(t("transaction.error"));
     }
   };
 
@@ -169,18 +183,18 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
         onOpenChange={(val) => (!val ? handleClose() : setOpen(true))}
       >
         <DialogTrigger asChild>
-          <Button className="shadow-lg bg-indigo-600 hover:bg-indigo-700 transition-all">
-            <PlusCircle className="h-5 w-5 mr-2" /> New Transaction
+          <Button className="shadow-lg bg-indigo-600 hover:bg-indigo-700 transition-all mm:leading-loose">
+            <PlusCircle className="h-5 w-5" /> {t("transaction.new")}
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] lg:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b pb-4">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800 mm:leading-loose">
               <Store className="h-5 w-5 text-indigo-600" />
-              {type === "expense"
-                ? "Record Purchase/Expense"
-                : "Record Sales/Income"}
+              {currentType === "expense"
+                ? t("transaction.record_expense")
+                : t("transaction.record_income")}
             </DialogTitle>
           </DialogHeader>
 
@@ -188,43 +202,27 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
           <div className="flex w-full bg-slate-100 p-1 rounded-xl border border-slate-200 mt-4">
             <button
               type="button"
-              onClick={() => {
-                setType("expense");
-                form.reset({
-                  ...form.getValues(),
-                  category: "",
-                  unit: "",
-                  value: "",
-                });
-              }}
+              onClick={() => handleTypeToggle("expense")}
               className={cn(
-                "flex-1 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm",
-                type === "expense"
+                "flex-1 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm mm:leading-loose",
+                currentType === "expense"
                   ? "bg-white text-red-500 shadow-sm"
                   : "text-slate-500",
               )}
             >
-              Expense
+              {t("transaction.expense")}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setType("income");
-                form.reset({
-                  ...form.getValues(),
-                  category: "",
-                  unit: "",
-                  value: "",
-                });
-              }}
+              onClick={() => handleTypeToggle("income")}
               className={cn(
                 "flex-1 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm",
-                type === "income"
+                currentType === "income"
                   ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500",
               )}
             >
-              Income
+              {t("transaction.income")}
             </button>
           </div>
 
@@ -233,15 +231,14 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-5 py-4"
             >
-              <div className="grid grid-cols-2 gap-4">
-                {" "}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Date
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {t("transaction.date")}
                       </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -255,7 +252,7 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                             >
                               {field.value
                                 ? format(field.value, "PPP")
-                                : "Select Date"}
+                                : t("transaction.select_date")}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
@@ -277,30 +274,32 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        {type === "expense" ? "Expense Category" : "Crop Name"}
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {currentType === "expense"
+                          ? t("transaction.category")
+                          : t("transaction.crop_name")}
                       </FormLabel>
                       <Select
                         onValueChange={(val) =>
-                          type === "expense"
+                          currentType === "expense"
                             ? field.onChange(val)
                             : handleIncomeCropSelect(val)
                         }
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize">
+                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize mm:leading-loose">
                             <SelectValue
                               placeholder={
-                                type === "expense"
-                                  ? "Select Category"
-                                  : "Select Crop"
+                                currentType === "expense"
+                                  ? t("transaction.select_category")
+                                  : t("transaction.select_crop")
                               }
                             />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {type === "expense"
+                          {currentType === "expense"
                             ? Object.keys(PURCHASE_OPTIONS).map((cat) => (
                                 <SelectItem
                                   key={cat}
@@ -332,15 +331,14 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Quantity
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {t("transaction.quantity")}
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           step="any"
                           placeholder="0.00"
-                          className="col-span-2"
                           {...field}
                         />
                       </FormControl>
@@ -352,8 +350,8 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                   name="unit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Unit
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {t("transaction.unit")}
                       </FormLabel>
                       <Select
                         disabled={!selectedCategory}
@@ -361,8 +359,8 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full border-slate-200">
-                            <SelectValue placeholder="Unit" />
+                          <SelectTrigger className="w-full border-slate-200 mm:leading-loose">
+                            <SelectValue placeholder={t("transaction.unit")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -383,12 +381,12 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                 name="value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Total Amount (MMK)
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {t("transaction.amount")}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        className="text-lg font-bold bg-indigo-50/30 border-indigo-100"
+                        className="text-lg font-bold bg-indigo-50/30 border-indigo-100 mm:leading-loose"
                         type="number"
                         placeholder="0"
                         {...field}
@@ -403,13 +401,13 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Notes
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {t("transaction.notes")}
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Voucher info, names, etc..."
-                        className="resize-none h-20"
+                        placeholder={t("transaction.notes_placeholder")}
+                        className="resize-none h-20 mm:leading-loose"
                         {...field}
                       />
                     </FormControl>
@@ -422,8 +420,8 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                 name="billImage"
                 render={({ field: { onChange } }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Receipt Image
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {t("transaction.receipt")}
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-4">
@@ -448,7 +446,8 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                                 size="sm"
                                 onClick={() => removeImage(onChange)}
                               >
-                                <X className="h-4 w-4 mr-2" /> Remove
+                                <X className="h-4 w-4 mr-2" />{" "}
+                                {t("transaction.remove")}
                               </Button>
                             </div>
                           </div>
@@ -459,7 +458,7 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                           >
                             <UploadCloud className="h-8 w-8 text-indigo-500 mb-2" />
                             <p className="text-sm font-bold text-slate-700">
-                              Upload receipt
+                              {t("transaction.upload")}
                             </p>
                           </div>
                         )}
@@ -476,10 +475,10 @@ const MerchantEntryDialog = ({ rawData }: MerchantEntryDialogProps) => {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    "Saving..."
+                    t("transaction.saving")
                   ) : (
                     <>
-                      <Save className="h-5 w-5 mr-2" /> Save Entry
+                      <Save className="h-5 w-5" /> {t("transaction.save")}
                     </>
                   )}
                 </Button>

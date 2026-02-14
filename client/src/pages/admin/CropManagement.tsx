@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import * as z from "zod";
 import {
   useGetAllCropsQuery,
@@ -42,7 +43,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Loader2, PlusCircle, Leaf } from "lucide-react";
 
-/* ---------------- Schema ---------------- */
 const cropSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   category: z.enum(["rice", "beans"]),
@@ -51,6 +51,7 @@ const cropSchema = z.object({
 type CropFormValues = z.infer<typeof cropSchema>;
 
 export default function CropManagement() {
+  const { t } = useTranslation();
   const {
     data: crops = [],
     isLoading,
@@ -70,19 +71,19 @@ export default function CropManagement() {
   async function handleAdd(values: CropFormValues) {
     try {
       await createCrop(values).unwrap();
-      toast.success("Crop variety added successfully");
+      toast.success(t("crop_mgmt.table.toast_success"));
       form.reset();
     } catch (error) {
-      toast.error("Failed to add crop. Please try again.");
+      toast.error(t("crop_mgmt.table.toast_error"));
     }
   }
 
   async function handleDelete(id: string) {
     try {
       await deleteCrop(id).unwrap();
-      toast.success("Crop deleted successfully");
+      toast.success(t("crop_mgmt.table.toast_delete"));
     } catch (error) {
-      toast.error("Failed to delete crop");
+      toast.error(t("crop_mgmt.table.toast_error"));
     }
   }
 
@@ -90,15 +91,15 @@ export default function CropManagement() {
     <div className="container mx-auto py-8 px-4 max-w-6xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Crop Inventory</h1>
-          <p className="text-muted-foreground">
-            Manage the varieties and categories available in the market.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight mm:leading-loose">
+            {t("crop_mgmt.title")}
+          </h1>
+          <p className="text-muted-foreground mm:leading-loose">{t("crop_mgmt.description")}</p>
         </div>
         {isFetching && (
           <Badge variant="secondary" className="animate-pulse">
             <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-            Syncing...
+            {t("crop_mgmt.syncing")}
           </Badge>
         )}
       </div>
@@ -108,12 +109,12 @@ export default function CropManagement() {
         <div className="lg:col-span-4">
           <Card className="sticky top-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 mm:leading-loose">
                 <PlusCircle className="h-5 w-5 text-primary" />
-                Add New Crop
+                {t("crop_mgmt.add_card.title")}
               </CardTitle>
               <CardDescription>
-                Enter the details for the new crop variety.
+                {t("crop_mgmt.add_card.description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -127,9 +128,16 @@ export default function CropManagement() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Variety Name</FormLabel>
+                        <FormLabel>
+                          {t("crop_mgmt.add_card.label_name")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Matpe" {...field} />
+                          <Input
+                            placeholder={t(
+                              "crop_mgmt.add_card.placeholder_name",
+                            )}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -141,19 +149,29 @@ export default function CropManagement() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>
+                          {t("crop_mgmt.add_card.label_category")}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue
+                                placeholder={t(
+                                  "crop_mgmt.add_card.placeholder_category",
+                                )}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="rice">Rice</SelectItem>
-                            <SelectItem value="beans">Beans</SelectItem>
+                            <SelectItem value="rice">
+                              {t("crop_mgmt.categories.rice")}
+                            </SelectItem>
+                            <SelectItem value="beans">
+                              {t("crop_mgmt.categories.beans")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -171,7 +189,9 @@ export default function CropManagement() {
                     ) : (
                       <Leaf className="mr-2 h-4 w-4" />
                     )}
-                    {isCreating ? "Saving..." : "Create Crop"}
+                    {isCreating
+                      ? t("crop_mgmt.add_card.saving_btn")
+                      : t("crop_mgmt.add_card.submit_btn")}
                   </Button>
                 </form>
               </Form>
@@ -183,9 +203,9 @@ export default function CropManagement() {
         <div className="lg:col-span-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Available Crops</CardTitle>
+              <CardTitle className="mm:leading-loose">{t("crop_mgmt.table.title")}</CardTitle>
               <CardDescription>
-                A list of all registered crops in the system.
+                {t("crop_mgmt.table.description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -193,9 +213,13 @@ export default function CropManagement() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-[60%]">Crop Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead className="text-right px-6">Action</TableHead>
+                      <TableHead className="w-[60%]">
+                        {t("crop_mgmt.table.col_name")}
+                      </TableHead>
+                      <TableHead>{t("crop_mgmt.table.col_category")}</TableHead>
+                      <TableHead className="text-right px-6">
+                        {t("crop_mgmt.table.col_action")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -224,7 +248,7 @@ export default function CropManagement() {
                               }
                               className="capitalize"
                             >
-                              {crop.category}
+                              {t(`${crop.category}`)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right px-6">
@@ -233,15 +257,7 @@ export default function CropManagement() {
                               size="icon"
                               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                               disabled={isDeleting}
-                              onClick={() => {
-                                // if (
-                                //   confirm(
-                                //     "Are you sure you want to delete this crop?"
-                                //   )
-                                // ) {
-                                handleDelete(crop._id);
-                                // }
-                              }}
+                              onClick={() => handleDelete(crop._id)}
                             >
                               <Trash2 size={18} />
                             </Button>
@@ -256,7 +272,7 @@ export default function CropManagement() {
                         >
                           <div className="flex flex-col items-center gap-2">
                             <Leaf className="h-8 w-8 opacity-20" />
-                            <p>No crops found. Add one to get started.</p>
+                            <p>{t("crop_mgmt.table.no_data")}</p>
                           </div>
                         </TableCell>
                       </TableRow>

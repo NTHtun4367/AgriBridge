@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   flexRender,
   getCoreRowModel,
@@ -43,7 +44,6 @@ import { Settings2, Search, ArrowUpDown } from "lucide-react";
 import { useGetAllFarmersQuery } from "@/store/slices/adminApi";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
 
-// 1. Define the Data Shape
 interface Farmer {
   _id: string;
   name: string;
@@ -54,9 +54,9 @@ interface Farmer {
 const columnHelper = createColumnHelper<Farmer>();
 
 function FarmerManagement() {
+  const { t } = useTranslation();
   const { data: farmers = [], isLoading } = useGetAllFarmersQuery(undefined);
 
-  // 2. Table States
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -65,11 +65,11 @@ function FarmerManagement() {
     pageSize: 10,
   });
 
-  // 3. Define Columns
+  // Use useMemo for columns to react to 't' changes
   const columns = useMemo(
     () => [
       columnHelper.accessor("_id", {
-        header: "User ID",
+        header: t("farmer_mgmt.table.user_id"),
         cell: (info) => (
           <span className="font-mono text-xs uppercase text-muted-foreground">
             {info.getValue().slice(-8)}
@@ -80,27 +80,27 @@ function FarmerManagement() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="hover:bg-transparent p-0"
+            className="hover:bg-transparent p-0 font-bold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Name
+            {t("farmer_mgmt.table.name")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
       }),
       columnHelper.accessor("email", {
-        header: "Email",
+        header: t("farmer_mgmt.table.email"),
       }),
       columnHelper.accessor("status", {
-        header: "Status",
+        header: t("farmer_mgmt.table.status"),
         cell: (info) => {
           const status = info.getValue();
           return (
             <Badge
               className={
                 status === "active"
-                  ? "bg-primary hover:bg-primary/90"
-                  : "bg-destructive hover:bg-destructive/90"
+                  ? "bg-primary hover:bg-primary/90 capitalize"
+                  : "bg-destructive hover:bg-destructive/90 capitalize"
               }
             >
               {status}
@@ -110,7 +110,9 @@ function FarmerManagement() {
       }),
       columnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Action</div>,
+        header: () => (
+          <div className="text-right">{t("farmer_mgmt.table.action")}</div>
+        ),
         cell: (info) => (
           <div className="flex justify-end">
             <UserStatusDropDown
@@ -121,10 +123,9 @@ function FarmerManagement() {
         ),
       }),
     ],
-    []
+    [t],
   );
 
-  // 4. Initialize Table
   const table = useReactTable({
     data: farmers,
     columns,
@@ -147,18 +148,19 @@ function FarmerManagement() {
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight">Farmer Management</h2>
-        <p className="text-muted-foreground text-sm">
-          Overview of all farmers registered on AgriBridge.
+        <h2 className="text-2xl font-bold tracking-tight mm:leading-loose">
+          {t("farmer_mgmt.title")}
+        </h2>
+        <p className="text-muted-foreground text-sm mm:leading-loose">
+          {t("farmer_mgmt.description")}
         </p>
       </div>
 
-      {/* Top Bar: Search & Column Toggle */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name..."
+            placeholder={t("farmer_mgmt.search_placeholder")}
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
@@ -171,7 +173,7 @@ function FarmerManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="ml-auto border-2">
               <Settings2 className="mr-2 h-4 w-4" />
-              View
+              {t("farmer_mgmt.view_dropdown")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -185,26 +187,30 @@ function FarmerManagement() {
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {column.id}
+                  {t(
+                    `farmer_mgmt.table.${column.id === "_id" ? "user_id" : column.id}`,
+                  )}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* The Table */}
       <div className="rounded-md border-2 bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="font-bold py-3 text-foreground">
+                  <TableHead
+                    key={header.id}
+                    className="font-bold py-3 text-foreground"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -214,22 +220,24 @@ function FarmerManagement() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Loading data...
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  {t("farmer_mgmt.table.loading")}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
                   className="hover:bg-muted/30 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -241,7 +249,7 @@ function FarmerManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No farmers found.
+                  {t("farmer_mgmt.table.no_data")}
                 </TableCell>
               </TableRow>
             )}
@@ -249,21 +257,23 @@ function FarmerManagement() {
         </Table>
       </div>
 
-      {/* Pagination Footer */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          Total {farmers.length} farmers found
+          {t("farmer_mgmt.table.total_found", { count: farmers.length })}
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
-          {/* Rows per page */}
           <div className="flex items-center space-x-2">
-            <p className="text-xs font-medium">Rows per page</p>
+            <p className="text-xs font-medium mm:mb-0">
+              {t("farmer_mgmt.pagination.rows_per_page")}
+            </p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => table.setPageSize(Number(value))}
             >
               <SelectTrigger className="h-8 w-[70px] border-2">
-                <SelectValue placeholder={table.getState().pagination.pageSize} />
+                <SelectValue
+                  placeholder={table.getState().pagination.pageSize}
+                />
               </SelectTrigger>
               <SelectContent side="top">
                 {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -275,11 +285,12 @@ function FarmerManagement() {
             </Select>
           </div>
 
-          {/* Page info & Navigation */}
           <div className="flex items-center gap-4">
             <span className="text-xs font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              {t("farmer_mgmt.pagination.page_info", {
+                current: table.getState().pagination.pageIndex + 1,
+                total: table.getPageCount(),
+              })}
             </span>
             <div className="flex items-center space-x-2">
               <Button
@@ -288,7 +299,7 @@ function FarmerManagement() {
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                {t("farmer_mgmt.pagination.prev")}
               </Button>
               <Button
                 variant="outline"
@@ -296,7 +307,7 @@ function FarmerManagement() {
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                Next
+                {t("farmer_mgmt.pagination.next")}
               </Button>
             </div>
           </div>

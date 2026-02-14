@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   flexRender,
   getCoreRowModel,
@@ -44,19 +45,19 @@ import { useGetMerchantsAdminQuery } from "@/store/slices/adminApi";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
 import MerchantVerificationDropDown from "@/components/admin/MerchantVerificationDropDown";
 
-// 1. Updated Data Shape
-interface Farmer {
+interface Merchant {
   _id: string;
   name: string;
   email: string;
   status: string;
-  verificationStatus: "pending" | "verified" | "rejected"; // New Field
+  verificationStatus: "pending" | "verified" | "rejected";
 }
 
-const columnHelper = createColumnHelper<Farmer>();
+const columnHelper = createColumnHelper<Merchant>();
 
 function MerchantManagement() {
-  const { data: farmers = [], isLoading } =
+  const { t } = useTranslation();
+  const { data: merchants = [], isLoading } =
     useGetMerchantsAdminQuery(undefined);
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -67,11 +68,10 @@ function MerchantManagement() {
     pageSize: 10,
   });
 
-  // 3. Define Columns
   const columns = useMemo(
     () => [
       columnHelper.accessor("_id", {
-        header: "User ID",
+        header: t("merchant_mgmt.table.user_id"),
         cell: (info) => (
           <span className="font-mono text-xs uppercase text-muted-foreground">
             {info.getValue().slice(-8)}
@@ -82,19 +82,19 @@ function MerchantManagement() {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            className="hover:bg-transparent p-0"
+            className="hover:bg-transparent p-0 font-bold"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Name
+            {t("merchant_mgmt.table.name")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
       }),
       columnHelper.accessor("email", {
-        header: "Email",
+        header: t("merchant_mgmt.table.email"),
       }),
       columnHelper.accessor("status", {
-        header: "Account",
+        header: t("merchant_mgmt.table.status"),
         cell: (info) => {
           const status = info.getValue();
           return (
@@ -111,39 +111,35 @@ function MerchantManagement() {
           );
         },
       }),
-      // --- NEW VERIFICATION STATUS COLUMN ---
       columnHelper.accessor("verificationStatus", {
-        header: "Verification",
+        header: t("merchant_mgmt.table.verification"),
         cell: (info) => {
           const vStatus = info.getValue();
           const styles = {
-            verified:
-              "bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/20",
-            pending:
-              "bg-yellow-500/10 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20",
-            rejected:
-              "bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20",
+            verified: "bg-green-500/10 text-green-600 border-green-200",
+            pending: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
+            rejected: "bg-red-500/10 text-red-600 border-red-200",
           };
           return (
             <Badge
-              className={`${styles[vStatus] || ""} capitalize border shadow-none`}
+              className={`${styles[vStatus] || ""} capitalize border shadow-none hover:bg-transparent`}
             >
-              {vStatus}
+              {t(`merchant_mgmt.status.${vStatus}`)}
             </Badge>
           );
         },
       }),
       columnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => (
+          <div className="text-right">{t("merchant_mgmt.table.actions")}</div>
+        ),
         cell: (info) => (
           <div className="flex justify-end gap-2">
-            {/* New Verification Action */}
             <MerchantVerificationDropDown
               merchantId={info.row.original._id}
               currentStatus={info.row.original.verificationStatus}
             />
-            {/* Existing Status Action */}
             <UserStatusDropDown
               userId={info.row.original._id}
               userStatus={info.row.original.status}
@@ -152,11 +148,11 @@ function MerchantManagement() {
         ),
       }),
     ],
-    [],
+    [t],
   );
 
   const table = useReactTable({
-    data: farmers,
+    data: merchants,
     columns,
     state: {
       sorting,
@@ -177,11 +173,11 @@ function MerchantManagement() {
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Merchant Management
+        <h2 className="text-2xl font-bold tracking-tight mm:leading-loose">
+          {t("merchant_mgmt.title")}
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Overview of all verified merchants registered on AgriBridge.
+        <p className="text-muted-foreground text-sm mm:leading-loose">
+          {t("merchant_mgmt.description")}
         </p>
       </div>
 
@@ -189,7 +185,7 @@ function MerchantManagement() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name..."
+            placeholder={t("merchant_mgmt.search_placeholder")}
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
@@ -202,7 +198,7 @@ function MerchantManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="ml-auto border-2">
               <Settings2 className="mr-2 h-4 w-4" />
-              View
+              {t("merchant_mgmt.view_dropdown")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -216,7 +212,11 @@ function MerchantManagement() {
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {column.id}
+                  {/* Fallback to column ID if specialized translation isn't found */}
+                  {t(
+                    `merchant_mgmt.table.${column.id === "_id" ? "user_id" : column.id}`,
+                    column.id,
+                  )}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
@@ -251,14 +251,13 @@ function MerchantManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Loading data...
+                  {t("merchant_mgmt.table.loading")}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
                   className="hover:bg-muted/30 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -277,7 +276,7 @@ function MerchantManagement() {
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No merchants found.
+                  {t("merchant_mgmt.table.no_data")}
                 </TableCell>
               </TableRow>
             )}
@@ -287,11 +286,13 @@ function MerchantManagement() {
 
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          Total {farmers.length} merchants found
+          {t("merchant_mgmt.table.total_found", { count: merchants.length })}
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-xs font-medium">Rows per page</p>
+            <p className="text-xs font-medium mm:mb-0">
+              {t("farmer_mgmt.pagination.rows_per_page")}
+            </p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => table.setPageSize(Number(value))}
@@ -313,8 +314,10 @@ function MerchantManagement() {
 
           <div className="flex items-center gap-4">
             <span className="text-xs font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              {t("farmer_mgmt.pagination.page_info", {
+                current: table.getState().pagination.pageIndex + 1,
+                total: table.getPageCount(),
+              })}
             </span>
             <div className="flex items-center space-x-2">
               <Button
@@ -323,7 +326,7 @@ function MerchantManagement() {
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                {t("farmer_mgmt.pagination.prev")}
               </Button>
               <Button
                 variant="outline"
@@ -331,7 +334,7 @@ function MerchantManagement() {
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                Next
+                {t("farmer_mgmt.pagination.next")}
               </Button>
             </div>
           </div>

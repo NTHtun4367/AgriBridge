@@ -21,6 +21,9 @@ export interface IUser extends Document {
   otpExpires?: Date;
   // New field for pending identity changes
   tempIdentifier?: string;
+  settings: {
+    aiEnabled: boolean;
+  };
 
   matchPassword(password: string): Promise<boolean>;
   matchOtp(otp: string): Promise<boolean>;
@@ -46,6 +49,9 @@ const userSchema = new Schema<IUser>(
     otp: String,
     otpExpires: Date,
     tempIdentifier: String,
+    settings: {
+      aiEnabled: { type: Boolean, default: true },
+    },
   },
   { timestamps: true },
 );

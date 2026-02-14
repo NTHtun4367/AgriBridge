@@ -40,7 +40,7 @@ const ConfirmModal = ({
             </div>
             <CardTitle className="text-xl">{title}</CardTitle>
           </div>
-          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8 mm:leading-loose">
             {description}
           </p>
 

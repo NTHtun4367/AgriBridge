@@ -3,7 +3,8 @@ import SideBar from "@/common/SideBar";
 import type { Page } from "@/types/sidebar";
 import { useState, useMemo } from "react";
 import { Outlet } from "react-router";
-import { useCurrentUserQuery } from "@/store/slices/userApi"; // Ensure path is correct
+import { useCurrentUserQuery } from "@/store/slices/userApi";
+import { useTranslation } from "react-i18next"; // Added i18next hook
 import {
   LayoutDashboard,
   TrendingUp,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 function MerchantPanel() {
+  const { t } = useTranslation(); // Initialize translation function
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -26,52 +28,46 @@ function MerchantPanel() {
   const filteredPages = useMemo(() => {
     const allPages: Page[] = [
       {
-        name: "Dashboard",
+        name: t("merchant_panel.nav.dashboard"),
         path: "/merchant/dashboard",
         icon: <LayoutDashboard className="w-5 h-5" />,
       },
-      // {
-      //   name: "Analytics",
-      //   path: "/merchant/analytics",
-      //   icon: <BarChartHorizontal className="w-5 h-5" />,
-      //   protected: true,
-      // },
       {
-        name: "Market Prices",
+        name: t("merchant_panel.nav.market_prices"),
         path: "/merchant/markets",
         icon: <TrendingUp className="w-5 h-5" />,
       },
       {
-        name: "Merchants",
+        name: t("merchant_panel.nav.merchants"),
         path: "/merchant/merchants",
         icon: <Store className="w-5 h-5" />,
       },
       {
-        name: "Market Management",
+        name: t("merchant_panel.nav.market_management"),
         path: "/merchant/manage-market",
         icon: <BarChart3 className="w-5 h-5" />,
-        protected: true, // Custom flag to identify restricted routes
+        protected: true,
       },
       {
-        name: "Records",
+        name: t("merchant_panel.nav.records"),
         path: "/merchant/records",
         icon: <BookOpenText className="w-5 h-5" />,
         protected: true,
       },
       {
-        name: "Preorders",
+        name: t("merchant_panel.nav.preorders"),
         path: "/merchant/preorders",
         icon: <ShoppingBag className="w-5 h-5" />,
         protected: true,
       },
       {
-        name: "Invoices",
+        name: t("merchant_panel.nav.invoices"),
         path: "/merchant/invoices",
         icon: <Receipt className="w-5 h-5" />,
         protected: true,
       },
       {
-        name: "Settings",
+        name: t("merchant_panel.nav.settings"),
         path: "/merchant/settings",
         icon: <Settings className="w-5 h-5" />,
       },
@@ -84,7 +80,7 @@ function MerchantPanel() {
     }
 
     return allPages.filter((page: any) => !page.protected);
-  }, [user]);
+  }, [user, t]); // Added 't' to dependency array
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -107,7 +103,7 @@ function MerchantPanel() {
         `}
       >
         <SideBar
-          pages={filteredPages} // Passing the filtered list here
+          pages={filteredPages}
           isCollapsed={isCollapsed}
           closeMobile={() => setIsMobileOpen(false)}
         />
@@ -120,14 +116,13 @@ function MerchantPanel() {
           openMobile={() => setIsMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary">
-          {/* Optional: Add a verification alert if not verified */}
+          {/* Verification alert translated */}
           {user && user.verificationStatus !== "verified" && (
-            <div className="mb-4 p-4 bg-orange-100 border-l-4 border-orange-500 text-orange-700 text-sm">
-              <p className="font-bold">Account Verification Pending</p>
-              <p>
-                Please complete your verification to access Market Management,
-                Preorders, and Invoices.
+            <div className="mb-4 p-4 bg-orange-100 border-l-4 border-orange-500 text-orange-700 text-sm rounded-r-md">
+              <p className="font-bold mm:leading-loose">
+                {t("merchant_panel.verification.title")}
               </p>
+              <p className="mm:leading-loose">{t("merchant_panel.verification.message")}</p>
             </div>
           )}
           <Outlet />

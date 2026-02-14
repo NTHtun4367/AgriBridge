@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableBody,
@@ -27,7 +28,6 @@ import {
   Eye,
   MapPin,
   Phone,
-  // Mail,
   Package,
   FileText,
   Loader2,
@@ -42,20 +42,18 @@ import {
 } from "@/store/slices/preorderApi";
 import { useNavigate } from "react-router";
 
-// --- Helper Components & Functions ---
-
 const formatNRC = (nrc: any) => {
   if (!nrc) return "N/A";
   return `${nrc.region}/${nrc.township}${nrc.type}${nrc.number}`;
 };
 
 export function MerchantOrderList() {
+  const { t, i18n } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
-  // 1. Data Fetching
   const { data: orders, isLoading } = useGetMerchantPreordersQuery(user?.id, {
     skip: !user?.id,
   });
@@ -63,10 +61,9 @@ export function MerchantOrderList() {
   const [updateStatus, { isLoading: isUpdating }] =
     useUpdatePreorderStatusMutation();
 
-  // 2. Delivery Date Calculation Helper
   const getDeliveryDate = (
     createdAt: string,
-    timeline: { count: number; unit: string }
+    timeline: { count: number; unit: string },
   ) => {
     const date = new Date(createdAt);
     const count = timeline?.count || 0;
@@ -76,21 +73,20 @@ export function MerchantOrderList() {
     else if (unit.includes("week")) date.setDate(date.getDate() + count * 7);
     else if (unit.includes("month")) date.setMonth(date.getMonth() + count);
 
-    return date.toLocaleDateString("en-GB", {
+    return date.toLocaleDateString(i18n.language === "my" ? "my-MM" : "en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
   };
 
-  // 3. Search & Filter Logic (Updated for new schema fields)
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
     return orders.filter(
       (order: any) =>
         order.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.nrc?.number?.includes(searchQuery) ||
-        order._id.toLowerCase().includes(searchQuery.toLowerCase())
+        order._id.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [orders, searchQuery]);
 
@@ -99,8 +95,6 @@ export function MerchantOrderList() {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await updateStatus({ id, status }).unwrap();
-      // Keep dialog open for "confirmed" so they can print invoice,
-      // otherwise close it.
       if (status === "cancelled") setSelectedOrderId(null);
     } catch (err) {
       console.error("Failed to update status:", err);
@@ -118,14 +112,13 @@ export function MerchantOrderList() {
   return (
     <TooltipProvider>
       <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Search and Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black tracking-tight">
-              Preorders
+            <h1 className="text-2xl font-black tracking-tight mm:leading-loose">
+              {t("merchant_preorders.title")}
             </h1>
-            <p className="text-sm text-slate-500 font-medium">
-              Review and manage farmer preorders
+            <p className="text-sm text-slate-500 font-medium mm:leading-loose">
+              {t("merchant_preorders.subtitle")}
             </p>
           </div>
           <div className="relative w-full md:w-80">
@@ -134,7 +127,7 @@ export function MerchantOrderList() {
               size={18}
             />
             <Input
-              placeholder="Search with farmer name..."
+              placeholder={t("merchant_preorders.search_placeholder")}
               className="pl-10 bg-white border-slate-200"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -148,22 +141,22 @@ export function MerchantOrderList() {
               <TableHeader className="bg-secondary">
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="pl-6 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Order ID
+                    {t("merchant_preorders.table.order_id")}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Farmer Name
+                    {t("merchant_preorders.table.farmer_name")}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    NRC Number
+                    {t("merchant_preorders.table.nrc")}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">
-                    Est. Delivery
+                    {t("merchant_preorders.table.est_delivery")}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Status
+                    {t("merchant_preorders.table.status")}
                   </TableHead>
                   <TableHead className="text-right pr-6 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Actions
+                    {t("merchant_preorders.table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -194,7 +187,7 @@ export function MerchantOrderList() {
                         >
                           {getDeliveryDate(
                             order.createdAt,
-                            order.deliveryTimeline
+                            order.deliveryTimeline,
                           )}
                         </Badge>
                       </TableCell>
@@ -205,13 +198,13 @@ export function MerchantOrderList() {
                             order.status === "pending"
                               ? "bg-amber-100 text-amber-700"
                               : order.status === "confirmed"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : order.status === "cancelled"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-blue-100 text-blue-700"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : order.status === "cancelled"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-blue-100 text-blue-700"
                           }`}
                         >
-                          {order.status}
+                          {t(`${order.status}`)}
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-6 text-right">
@@ -221,7 +214,8 @@ export function MerchantOrderList() {
                           onClick={() => setSelectedOrderId(order._id)}
                           className="h-8 gap-2 border-slate-200"
                         >
-                          <Eye size={14} /> View
+                          <Eye size={14} />{" "}
+                          {t("merchant_preorders.labels.view")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -232,7 +226,7 @@ export function MerchantOrderList() {
                       colSpan={6}
                       className="h-32 text-center text-slate-400"
                     >
-                      No preorders found.
+                      {t("no_data")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -241,7 +235,6 @@ export function MerchantOrderList() {
           </CardContent>
         </Card>
 
-        {/* DETAILS DIALOG */}
         <Dialog
           open={!!selectedOrderId}
           onOpenChange={(open) => !open && setSelectedOrderId(null)}
@@ -253,20 +246,20 @@ export function MerchantOrderList() {
                   <div className="flex justify-between items-start">
                     <div>
                       <Badge className="bg-blue-500 text-white border-none mb-2 uppercase text-[10px]">
-                        Order Verification
+                        {t("merchant_preorders.details.verification")}
                       </Badge>
                       <DialogTitle className="text-2xl font-black">
                         #{selectedOrder._id.slice(-6).toUpperCase()}
                       </DialogTitle>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">
-                        Date Submitted
+                      <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mm:leading-loose mm:text-sm mm:-mb-1">
+                        {t("merchant_preorders.details.date_submitted")}
                       </p>
                       <p className="text-sm font-bold flex items-center gap-2 justify-end mt-1">
                         <Calendar size={14} className="text-blue-400" />
                         {new Date(selectedOrder.createdAt).toLocaleDateString(
-                          "en-GB"
+                          i18n.language === "my" ? "my-MM" : "en-GB",
                         )}
                       </p>
                     </div>
@@ -274,11 +267,10 @@ export function MerchantOrderList() {
                 </DialogHeader>
 
                 <div className="p-6 space-y-6 overflow-y-auto">
-                  {/* Farmer Information Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
                       <h4 className="text-[10px] uppercase font-bold text-slate-400">
-                        Identity Details
+                        {t("merchant_preorders.details.identity")}
                       </h4>
                       <div className="space-y-2">
                         <p className="text-sm font-black text-slate-800 flex items-center gap-2">
@@ -286,7 +278,8 @@ export function MerchantOrderList() {
                         </p>
                         <p className="text-xs text-slate-600 flex items-center gap-2">
                           <CreditCard size={14} className="text-slate-400" />
-                          NRC: {formatNRC(selectedOrder.nrc)}
+                          {t("merchant_preorders.labels.nrc_label")}:{" "}
+                          {formatNRC(selectedOrder.nrc)}
                         </p>
                         <p className="text-xs text-slate-600 flex items-center gap-2">
                           <Phone size={14} className="text-slate-400" />
@@ -297,7 +290,7 @@ export function MerchantOrderList() {
 
                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
                       <h4 className="text-[10px] uppercase font-bold text-slate-400">
-                        Logistics Info
+                        {t("merchant_preorders.details.logistics")}
                       </h4>
                       <div className="flex gap-2 text-xs text-slate-600">
                         <MapPin size={14} className="text-red-400 shrink-0" />
@@ -311,28 +304,26 @@ export function MerchantOrderList() {
                           </p>
                         </div>
                       </div>
-                      {/* <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <Mail size={14} className="text-slate-400" />
-                        {selectedOrder.farmerInfo?.email || "No email provided"}
-                      </div> */}
                     </div>
                   </div>
 
-                  {/* Items Table */}
                   <div className="space-y-3">
                     <h4 className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-2">
-                      <Package size={12} /> Ordered Produce
+                      <Package size={12} />{" "}
+                      {t("merchant_preorders.details.ordered_produce")}
                     </h4>
                     <div className="border rounded-xl overflow-hidden bg-white">
                       <Table>
                         <TableHeader className="bg-slate-50">
                           <TableRow>
-                            <TableHead className="text-xs">Crop Name</TableHead>
+                            <TableHead className="text-xs">
+                              {t("merchant_preorders.labels.crop_name")}
+                            </TableHead>
                             <TableHead className="text-center text-xs">
-                              Quantity
+                              {t("merchant_preorders.labels.quantity")}
                             </TableHead>
                             <TableHead className="text-right text-xs">
-                              Est. Unit Price
+                              {t("merchant_preorders.labels.est_unit_price")}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -355,19 +346,18 @@ export function MerchantOrderList() {
                     </div>
                   </div>
 
-                  {/* Timeline & Notes */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-center">
                       <div className="flex items-center gap-2 mb-1">
                         <Clock size={14} className="text-blue-600" />
                         <span className="text-[10px] font-bold text-blue-800 uppercase">
-                          Target Delivery
+                          {t("merchant_preorders.details.target_delivery")}
                         </span>
                       </div>
                       <span className="text-lg font-black text-blue-700">
                         {getDeliveryDate(
                           selectedOrder.createdAt,
-                          selectedOrder.deliveryTimeline
+                          selectedOrder.deliveryTimeline,
                         )}
                       </span>
                     </div>
@@ -375,7 +365,7 @@ export function MerchantOrderList() {
                     {selectedOrder.notes && (
                       <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                         <h4 className="text-[10px] uppercase font-bold text-amber-600 mb-1">
-                          Farmer's Note
+                          {t("merchant_preorders.details.farmer_note")}
                         </h4>
                         <p className="text-xs italic text-amber-800">
                           "{selectedOrder.notes}"
@@ -398,7 +388,8 @@ export function MerchantOrderList() {
                           }
                           className="text-red-600 hover:bg-red-50 border-red-200 font-bold"
                         >
-                          <X size={14} className="mr-1" /> Reject Order
+                          <X size={14} className="mr-1" />{" "}
+                          {t("merchant_preorders.details.reject")}
                         </Button>
                         <Button
                           size="sm"
@@ -408,12 +399,12 @@ export function MerchantOrderList() {
                           }
                           className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                         >
-                          <Check size={14} className="mr-1" /> Approve Order
+                          <Check size={14} className="mr-1" />{" "}
+                          {t("merchant_preorders.details.approve")}
                         </Button>
                       </>
                     )}
                   </div>
-
                   <Button
                     className="bg-slate-900 font-bold gap-2"
                     disabled={selectedOrder.status !== "confirmed"}
@@ -423,7 +414,8 @@ export function MerchantOrderList() {
                       })
                     }
                   >
-                    <FileText size={16} /> Generate Invoice
+                    <FileText size={16} />{" "}
+                    {t("merchant_preorders.details.generate_invoice")}
                   </Button>
                 </DialogFooter>
               </>

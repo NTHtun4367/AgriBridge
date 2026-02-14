@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface MarketTableProps {
   data: any[];
@@ -23,7 +24,14 @@ export function MarketPriceTable({
   sortConfig,
   onRowClick,
 }: MarketTableProps) {
-  // Helper to render the correct icon based on sort state
+  const { t, i18n } = useTranslation();
+  const isMyanmar = i18n.language === "my";
+
+  console.log("Hello from market price table");
+  
+  // Typography adjustment for Burmese script
+  const mmLeading = isMyanmar ? "leading-loose py-2" : "leading-normal";
+
   const getSortIcon = (key: string) => {
     if (sortConfig.key !== key)
       return <ArrowUpDown className="ml-2 h-3 w-3 inline opacity-50" />;
@@ -36,95 +44,108 @@ export function MarketPriceTable({
 
   return (
     <Table>
-      <TableCaption>A list of all market prices.</TableCaption>
+      <TableCaption className={mmLeading}>
+        {t("marketTable.caption")}
+      </TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead
-            className="w-[150px] font-bold py-4 cursor-pointer select-none"
+            className={`w-[150px] font-bold py-4 cursor-pointer select-none ${mmLeading}`}
             onClick={() => onSort("cropName")}
           >
-            Crop Name {getSortIcon("cropName")}
+            {t("marketTable.cropName")} {getSortIcon("cropName")}
           </TableHead>
           <TableHead
-            className="text-center font-bold py-4 cursor-pointer select-none"
+            className={`text-center font-bold py-4 cursor-pointer select-none ${mmLeading}`}
             onClick={() => onSort("category")}
           >
-            Category {getSortIcon("category")}
+            {t("marketTable.category")} {getSortIcon("category")}
           </TableHead>
-          {/* Added Amount Header */}
           <TableHead
-            className="text-center font-bold py-4 cursor-pointer select-none"
+            className={`text-center font-bold py-4 cursor-pointer select-none ${mmLeading}`}
             onClick={() => onSort("amount")}
           >
-            Amount(Qty) {getSortIcon("amount")}
+            {t("marketTable.amount")} {getSortIcon("amount")}
           </TableHead>
-          <TableHead className="text-center font-bold py-4">Unit</TableHead>
+          <TableHead className={`text-center font-bold py-4 ${mmLeading}`}>
+            {t("marketTable.unit")}
+          </TableHead>
           <TableHead
-            className="text-center font-bold py-4 cursor-pointer select-none"
+            className={`text-center font-bold py-4 cursor-pointer select-none ${mmLeading}`}
             onClick={() => onSort("previousPrice")}
           >
-            Previous Price {getSortIcon("previousPrice")}
+            {t("marketTable.previousPrice")} {getSortIcon("previousPrice")}
           </TableHead>
           <TableHead
-            className="text-center font-bold py-4 cursor-pointer select-none"
+            className={`text-center font-bold py-4 cursor-pointer select-none ${mmLeading}`}
             onClick={() => onSort("currentPrice")}
           >
-            Current Price {getSortIcon("currentPrice")}
+            {t("marketTable.currentPrice")} {getSortIcon("currentPrice")}
           </TableHead>
-          <TableHead className="text-right font-bold py-4">Changes</TableHead>
+          <TableHead className={`text-right font-bold py-4 ${mmLeading}`}>
+            {t("marketTable.changes")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.length > 0 ? (
-          data.map((market) => (
+          data.map((market: any) => (
             <TableRow
               key={market.cropId}
               className="cursor-pointer hover:bg-slate-50/50 transition-colors"
               onClick={() => onRowClick(market.cropId, market.marketId)}
             >
-              <TableCell className="font-medium">{market.cropName}</TableCell>
-              <TableCell className="text-center font-medium">
+              <TableCell className={`font-medium ${mmLeading}`}>
+                {market.cropName}
+              </TableCell>
+              <TableCell className={`text-center font-medium ${mmLeading}`}>
                 {market.category}
               </TableCell>
-              {/* Added Amount Cell */}
               <TableCell className="text-center font-medium">
                 {market.amount !== undefined && market.amount !== null
-                  ? market.amount.toLocaleString()
+                  ? market.amount.toLocaleString(i18n.language)
                   : "-"}
               </TableCell>
               <TableCell className="text-center">
-                <Badge variant="outline">{market.unit}</Badge>
+                <Badge variant="outline" className={mmLeading}>
+                  {market.unit}
+                </Badge>
               </TableCell>
-              <TableCell className="text-center font-bold italic text-slate-500">
+              <TableCell className="text-center font-bold italic text-slate-500 tabular-nums">
                 {market.previousPrice
-                  ? market.previousPrice.toLocaleString()
-                  : "0.00"}{" "}
-                MMK
+                  ? market.previousPrice.toLocaleString(i18n.language)
+                  : "0"}{" "}
+                <span className="text-[10px] ml-0.5">
+                  {t("marketTable.currency")}
+                </span>
               </TableCell>
-              <TableCell className="text-center font-bold">
-                {market.currentPrice.toLocaleString()} MMK
+              <TableCell className="text-center font-bold tabular-nums text-primary">
+                {market.currentPrice.toLocaleString(i18n.language)}{" "}
+                <span className="text-[10px] ml-0.5">
+                  {t("marketTable.currency")}
+                </span>
               </TableCell>
               <TableCell
-                className={`text-right font-bold italic ${
+                className={`text-right font-bold italic tabular-nums ${
                   market.priceChange < 0 ? "text-destructive" : "text-green-600"
                 }`}
               >
                 {market.priceChange > 0
-                  ? `+${market.priceChange}`
-                  : market.priceChange}{" "}
-                MMK
+                  ? `+${market.priceChange.toLocaleString(i18n.language)}`
+                  : market.priceChange.toLocaleString(i18n.language)}{" "}
+                <span className="text-[10px] ml-0.5 font-normal">
+                  {t("marketTable.currency")}
+                </span>
               </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
             <TableCell
-              colSpan={
-                7
-              } /* Updated colSpan from 6 to 7 to match new column count */
-              className="h-24 text-center text-muted-foreground"
+              colSpan={7}
+              className={`h-24 text-center text-muted-foreground ${mmLeading}`}
             >
-              No results found.
+              {t("marketTable.noResults")}
             </TableCell>
           </TableRow>
         )}

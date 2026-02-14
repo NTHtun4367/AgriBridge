@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   Receipt,
   Phone,
@@ -80,6 +81,7 @@ export function InvoiceCreator({
   initialData: any;
   mode: "preorder" | "manual";
 }) {
+  const { t } = useTranslation();
   const [isPreorderMode, setIsPreorderMode] = useState(mode === "preorder");
   const navigate = useNavigate();
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
@@ -94,7 +96,6 @@ export function InvoiceCreator({
 
   const marketPrices = marketResponse?.data || [];
 
-  // Get crop names from market price data
   const merchantCrops = useMemo(() => {
     return marketPrices.map((item: any) => item.cropName);
   }, [marketPrices]);
@@ -151,7 +152,6 @@ export function InvoiceCreator({
     if (initialData) reset(initialData);
   }, [initialData, reset]);
 
-  // Logic to auto-fill Unit and Price when CropName changes
   useEffect(() => {
     formValues.items?.forEach((item, index) => {
       if (item.cropName) {
@@ -269,10 +269,6 @@ export function InvoiceCreator({
     return `${formValues.nrcRegion}/${formValues.nrcTownship}${formValues.nrcType}${formValues.nrcNumber}`;
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -288,21 +284,11 @@ export function InvoiceCreator({
             -webkit-print-color-adjust: exact !important; 
             print-color-adjust: exact !important;
           }
-          
           #invoice-print-area {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: auto;
-            margin: 0;
-            padding: 40px;
-            box-shadow: none !important;
-            border: none !important;
+            position: fixed; left: 0; top: 0; width: 100vw; height: auto;
+            margin: 0; padding: 40px; box-shadow: none !important; border: none !important;
           }
-
           .no-print { display: none !important; }
-          
           @page { margin: 0; size: auto; }
         }
       `,
@@ -316,35 +302,36 @@ export function InvoiceCreator({
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                    <Receipt className="text-primary" /> Invoice Details
+                  <CardTitle className="text-2xl font-bold flex items-center gap-2 mm:leading-loose">
+                    <Receipt className="text-primary" />{" "}
+                    {t("merchant_dash.invoice.title")}
                   </CardTitle>
-                  <CardDescription>
-                    Fill in farmer info or auto-fill from a preorder.
+                  <CardDescription className="mm:leading-loose">
+                    {t("merchant_dash.invoice.description")}
                   </CardDescription>
                 </div>
                 <div className="bg-slate-100 p-1.5 rounded-xl flex items-center">
                   <button
                     type="button"
                     onClick={() => setIsPreorderMode(false)}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all mm:leading-loose mm:text-[10px] ${
                       !isPreorderMode
                         ? "bg-white shadow-sm text-primary"
                         : "text-slate-500"
                     }`}
                   >
-                    Manual
+                    {t("merchant_dash.invoice.mode_manual")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsPreorderMode(true)}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all mm:leading-loose mm:text-[10px] ${
                       isPreorderMode
                         ? "bg-white shadow-sm text-primary"
                         : "text-slate-500"
                     }`}
                   >
-                    Preorder
+                    {t("merchant_dash.invoice.mode_preorder")}
                   </button>
                 </div>
               </div>
@@ -353,12 +340,16 @@ export function InvoiceCreator({
             <CardContent className="space-y-8 pt-4">
               {isPreorderMode && (
                 <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
-                  <Label className="text-primary font-bold">
-                    Search Existing Preorders
+                  <Label className="text-primary font-bold mm:leading-loose">
+                    {t("merchant_dash.invoice.preorder_search")}
                   </Label>
                   <Select onValueChange={handleSelectPreorder}>
-                    <SelectTrigger className="bg-white border-blue-200 h-12 shadow-sm">
-                      <SelectValue placeholder="Select a preorder..." />
+                    <SelectTrigger className="bg-white border-blue-200 h-12 shadow-sm mm:leading-loose">
+                      <SelectValue
+                        placeholder={t(
+                          "merchant_dash.invoice.preorder_placeholder",
+                        )}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {preorders?.map((po: any) => (
@@ -375,7 +366,7 @@ export function InvoiceCreator({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                    Full Name
+                    {t("merchant_dash.invoice.field_name")}
                   </Label>
                   <Input
                     {...register("farmerName")}
@@ -385,7 +376,7 @@ export function InvoiceCreator({
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                    Phone Number
+                    {t("merchant_dash.invoice.field_phone")}
                   </Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3.5 size-4 text-slate-400" />
@@ -399,7 +390,8 @@ export function InvoiceCreator({
 
                 <div className="md:col-span-2 space-y-3">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
-                    <ShieldCheck size={14} /> Identity (NRC)
+                    <ShieldCheck size={14} />{" "}
+                    {t("merchant_dash.invoice.field_nrc")}
                   </Label>
                   <div className="grid grid-cols-7 gap-2">
                     <div className="col-span-1">
@@ -483,7 +475,7 @@ export function InvoiceCreator({
 
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                    Address
+                    {t("merchant_dash.invoice.field_address")}
                   </Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3.5 size-4 text-slate-400" />
@@ -501,7 +493,8 @@ export function InvoiceCreator({
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold flex items-center gap-2">
-                    <Package size={18} className="text-primary" /> Line Items
+                    <Package size={18} className="text-primary" />{" "}
+                    {t("merchant_dash.invoice.items_title")}
                   </h3>
                   <Button
                     type="button"
@@ -517,34 +510,35 @@ export function InvoiceCreator({
                     }
                     className="rounded-full border-dashed px-4"
                   >
-                    <Plus size={16} className="mr-1" /> Add Row
+                    <Plus size={16} className="mr-1" />{" "}
+                    {t("merchant_dash.invoice.add_row")}
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-12 gap-3 px-2">
                   <div className="col-span-3">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
-                      Crop Name
+                      {t("merchant_dash.invoice.col_item")}
                     </Label>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
-                      Qty
+                      {t("merchant_dash.invoice.col_qty")}
                     </Label>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
-                      Unit
+                      {t("merchant_dash.invoice.col_unit")}
                     </Label>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
-                      Price
+                      {t("merchant_dash.invoice.col_price")}
                     </Label>
                   </div>
                   <div className="col-span-3 text-right pr-10">
                     <Label className="text-[10px] font-bold uppercase text-slate-400">
-                      Total
+                      {t("merchant_dash.invoice.col_total")}
                     </Label>
                   </div>
                 </div>
@@ -594,49 +588,26 @@ export function InvoiceCreator({
                         />
                       </div>
                       <div className="col-span-2">
-                        <Controller
-                          control={control}
-                          name={`items.${index}.unit`}
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              disabled // Unit is now auto-filled and disabled
-                            >
-                              <SelectTrigger className="h-10 bg-slate-50 opacity-80">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {UNITS.map((u) => (
-                                  <SelectItem key={u} value={u}>
-                                    {u}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
+                        <Input
+                          value={formValues.items?.[index]?.unit}
+                          disabled
+                          className="h-10 bg-slate-50 opacity-80"
                         />
                       </div>
                       <div className="col-span-2">
                         <Input
-                          type="number"
-                          {...register(`items.${index}.price`, {
-                            valueAsNumber: true,
-                          })}
+                          value={formValues.items?.[index]?.price}
+                          disabled
                           className="h-10 bg-slate-50 opacity-80"
-                          disabled // Price is now auto-filled and disabled
                         />
                       </div>
                       <div className="col-span-3 flex items-center justify-end gap-2">
-                        <div className="text-right">
-                          <span className="font-mono text-xs font-bold text-slate-700">
-                            {(
-                              (Number(formValues.items?.[index]?.quantity) ||
-                                0) *
-                              (Number(formValues.items?.[index]?.price) || 0)
-                            ).toLocaleString()}
-                          </span>
-                        </div>
+                        <span className="font-mono text-xs font-bold text-slate-700">
+                          {(
+                            (Number(formValues.items?.[index]?.quantity) || 0) *
+                            (Number(formValues.items?.[index]?.price) || 0)
+                          ).toLocaleString()}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
@@ -653,7 +624,7 @@ export function InvoiceCreator({
 
                 <div className="mt-4 p-5 bg-secondary rounded-2xl flex justify-between items-center">
                   <span className="font-bold text-xs uppercase tracking-widest">
-                    Total Amount Due
+                    {t("merchant_dash.invoice.total_due")}
                   </span>
                   <div className="text-right">
                     <span className="text-3xl font-black">
@@ -666,11 +637,12 @@ export function InvoiceCreator({
 
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
-                  <FileText size={14} /> Notes & Payment Terms
+                  <FileText size={14} />{" "}
+                  {t("merchant_dash.invoice.notes_label")}
                 </Label>
                 <Textarea
                   {...register("notes")}
-                  placeholder="e.g. Please pay within 7 days. Thank you for your business!"
+                  placeholder={t("merchant_dash.invoice.notes_placeholder")}
                   className="min-h-[100px] bg-slate-50/50 border-slate-200 resize-none"
                 />
               </div>
@@ -687,13 +659,9 @@ export function InvoiceCreator({
               className="border-none shadow-2xl overflow-hidden bg-white min-h-[700px] flex flex-col"
             >
               <div className="h-3 bg-primary w-full" />
-
               <CardContent className="p-8 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-12">
                   <div>
-                    <div className="bg-primary text-white p-2 inline-block rounded-lg mb-4 no-print">
-                      <Receipt size={24} />
-                    </div>
                     <h2 className="text-2xl font-black tracking-tighter">
                       INVOICE
                     </h2>
@@ -714,7 +682,7 @@ export function InvoiceCreator({
                 <div className="grid grid-cols-2 gap-8 mb-12 text-sm">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                      Billed To
+                      {t("merchant_dash.invoice.preview_billed_to")}
                     </p>
                     <p className="font-bold text-slate-900">
                       {formValues.farmerName || "—"}
@@ -728,7 +696,7 @@ export function InvoiceCreator({
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">
-                      Date Issued
+                      {t("merchant_dash.invoice.preview_date")}
                     </p>
                     <p className="font-bold">
                       {new Date().toLocaleDateString()}
@@ -740,9 +708,15 @@ export function InvoiceCreator({
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b-2 border-slate-100 text-[10px] uppercase text-slate-400 font-bold">
-                        <th className="text-left pb-3">Item</th>
-                        <th className="text-center pb-3">Qty</th>
-                        <th className="text-right pb-3">Total</th>
+                        <th className="text-left pb-3">
+                          {t("merchant_dash.invoice.col_item")}
+                        </th>
+                        <th className="text-center pb-3">
+                          {t("merchant_dash.invoice.col_qty")}
+                        </th>
+                        <th className="text-right pb-3">
+                          {t("merchant_dash.invoice.col_total")}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -770,19 +744,8 @@ export function InvoiceCreator({
                   </table>
                 </div>
 
-                {formValues.notes && (
-                  <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Notes
-                    </p>
-                    <p className="text-xs text-slate-600 leading-relaxed italic">
-                      "{formValues.notes}"
-                    </p>
-                  </div>
-                )}
-
                 <div className="mt-8 pt-4 border-t-2 border-slate-900 flex justify-between items-center text-xl font-black">
-                  <span>Amount Due</span>
+                  <span>{t("merchant_dash.invoice.total_due")}</span>
                   <span className="text-primary">
                     {subtotal.toLocaleString()} MMK
                   </span>
@@ -794,10 +757,10 @@ export function InvoiceCreator({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handlePrint}
+                onClick={() => window.print()}
                 className="py-7 font-bold flex items-center gap-2 border-2"
               >
-                <Printer size={20} /> Print Preview
+                <Printer size={20} /> {t("merchant_dash.invoice.btn_print")}
               </Button>
 
               <Button
@@ -806,10 +769,10 @@ export function InvoiceCreator({
                 className="bg-primary text-white font-black py-7 text-lg shadow-xl flex items-center gap-2"
               >
                 {isCreating ? (
-                  "Processing..."
+                  t("merchant_dash.invoice.status_processing")
                 ) : (
                   <>
-                    <Send size={20} /> Send Invoice
+                    <Send size={20} /> {t("merchant_dash.invoice.btn_send")}
                   </>
                 )}
               </Button>

@@ -3,6 +3,7 @@ import { Invoice } from "../models/invoice";
 import { preorderService } from "../../preorder/services/preorder";
 import { notificationService } from "../../notification/services/notification";
 import { authService } from "../../auth/services/auth";
+import { autoTranslate } from "../../../shared/utils/ai";
 
 export class InvoiceService {
   async createInvoice(
@@ -18,7 +19,7 @@ export class InvoiceService {
       items: any[];
       notes?: string;
       status?: string;
-    }
+    },
   ) {
     const {
       farmerId,
@@ -36,7 +37,7 @@ export class InvoiceService {
     const totalAmount = items.reduce(
       (acc: number, item: any) =>
         acc + Number(item.quantity) * Number(item.price),
-      0
+      0,
     );
 
     const invoice = new Invoice({
@@ -56,18 +57,22 @@ export class InvoiceService {
 
     const savedInvoice = await invoice.save();
 
-    // Notification Logic
+    // --- Notification Logic (Localized) ---
     if (farmerId) {
       try {
         const merchant = (await authService.getMerchantById(merchantId)) as any;
         const businessName =
-          merchant?.merchantId?.businessName || merchant?.name || "A Merchant";
+          merchant?.merchantId?.businessName || merchant?.name || "ကုန်သည်";
+
+        // တောင်သူများအတွက် မြန်မာလို Notification ပို့ပေးခြင်း
+        const title = "အော်ဒါပြေစာအသစ် ရောက်ရှိလာပါသည်";
+        const message = `${businessName} မှ သင့်ထံသို့ ပြေစာအမှတ် ${invoiceId} အတွက် ကျသင့်ငွေ ${totalAmount.toLocaleString()} MMK ပေးပို့ထားပါသည်။`;
 
         await notificationService.createNotification(
-          "New Invoice Received",
-          `${businessName} sent you invoice ${invoiceId} for ${totalAmount.toLocaleString()} MMK.`,
+          title,
+          message,
           [farmerId],
-          "farmer"
+          "farmer",
         );
       } catch (error) {
         console.error("Notification failed:", error);
@@ -78,20 +83,24 @@ export class InvoiceService {
   }
 
   async getAllInvoices(merchantId: string) {
-    return await Invoice.find({ merchantId }).sort({ createdAt: -1 });
+    return await Invoice.find({ merchantId }).sort({ createdAt: -1 }).lean();
   }
 
   async getInvoicesForFarmer(farmerId: string) {
-    return await Invoice.find({ farmerId: new Types.ObjectId(farmerId) }).sort({
-      createdAt: -1,
-    });
+    const invoices = await Invoice.find({
+      farmerId: new Types.ObjectId(farmerId),
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return invoices;
   }
 
   async updateInvoiceStatus(invoiceId: string, status: string) {
     return await Invoice.findByIdAndUpdate(
       invoiceId,
       { status },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -99,12 +108,12 @@ export class InvoiceService {
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoiceId,
       { status: "paid" },
-      { new: true }
+      { new: true },
     );
     if (updatedInvoice?.preorderId) {
       await preorderService.updatePreorderStatus(
         updatedInvoice.preorderId.toString(),
-        "delivered"
+        "delivered",
       );
     }
     return updatedInvoice;

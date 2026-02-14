@@ -12,35 +12,47 @@ import {
 import { format } from "date-fns";
 import { useGetAllVerificationPendingUsersQuery } from "@/store/slices/adminApi";
 import VerificationDetails from "@/components/admin/VerificationDetails";
+import { useTranslation } from "react-i18next";
 
 function Verification() {
+  const { t } = useTranslation();
   const { data } = useGetAllVerificationPendingUsersQuery(undefined);
 
   return (
-    <div className="bw-full h-screen p-4">
-      <h2 className="text-2xl font-bold mb-6">Verification</h2>
+    <div className="w-full h-screen p-4">
+      <h2 className="text-2xl font-bold mb-6">{t("verification.title")}</h2>
       <Card>
-        <CardContent>
+        <CardContent className="pt-6">
           <Table>
-            <TableCaption>
-              A list of your all verification pending users.
-            </TableCaption>
+            <TableCaption className="mm:leading-loose">{t("verification.table_caption")}</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Name</TableHead>
-                <TableHead className="text-center">Role</TableHead>
-                <TableHead className="text-center">Email</TableHead>
-                <TableHead className="text-center">
-                  Verification Status
+                <TableHead className="text-left">
+                  {t("verification.columns.name")}
                 </TableHead>
-                <TableHead className="text-center">Submitted At</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-center">
+                  {t("verification.columns.role")}
+                </TableHead>
+                <TableHead className="text-center">
+                  {t("verification.columns.email")}
+                </TableHead>
+                <TableHead className="text-center">
+                  {t("verification.columns.status")}
+                </TableHead>
+                <TableHead className="text-center">
+                  {t("verification.columns.submitted")}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t("verification.columns.action")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data?.map((user) => (
                 <TableRow key={user._id}>
-                  <TableCell className="text-center">{user.name}</TableCell>
+                  <TableCell className="text-left font-medium">
+                    {user.name}
+                  </TableCell>
                   <TableCell className="text-center capitalize">
                     <Badge variant={"outline"} className="bg-white">
                       {user.role}
@@ -55,12 +67,13 @@ function Verification() {
                           : "bg-amber-500"
                       }
                     >
-                      {user.verificationStatus}
+                      {/* Using dynamic key for status localization */}
+                      {t(`verification.status.${user.verificationStatus}`)}
                     </Badge>
                   </TableCell>
-                  <TableHead className="text-center">
+                  <TableCell className="text-center">
                     {format(new Date(user.createdAt), "dd MMM yy")}
-                  </TableHead>
+                  </TableCell>
                   <TableCell className="flex items-center justify-end">
                     <VerificationDetails user={user} />
                   </TableCell>

@@ -31,7 +31,7 @@ function Navigation() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `transition-colors mm:text-lg mm:tracking-wide ${
+                `transition-colors mm:text-sm mm:tracking-wide ${
                   isActive
                     ? "text-base font-bold text-primary"
                     : "text-sm font-medium text-slate-600 hover:text-primary"
@@ -47,12 +47,12 @@ function Navigation() {
           <ModeToggle />
           <Button
             variant="outline"
-            className="hidden sm:inline-flex mm:text-base"
+            className="hidden sm:inline-flex mm:text-sm"
             asChild
           >
             <Link to="/login">{t("nav.login")}</Link>
           </Button>
-          <Button className="bg-primary mm:text-base" asChild>
+          <Button className="bg-primary mm:text-sm" asChild>
             <Link to="/register">{t("nav.register")}</Link>
           </Button>
           <LanguageToggle />

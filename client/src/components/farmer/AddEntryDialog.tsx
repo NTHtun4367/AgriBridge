@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import {
   CalendarIcon,
   PlusCircle,
@@ -14,6 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { type RootState } from "@/store";
+import { localizeData } from "@/utils/translator";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -54,26 +58,67 @@ import {
   useGetCropsQuery,
 } from "@/store/slices/farmerApi";
 
-const UNIT_OPTIONS: Record<string, string[]> = {
-  seeds: ["Bag", "Packet", "Kg", "Grams", "Viss"],
-  fertilizer: ["Bag", "Kg", "Liter", "Packet"],
-  pesticide: ["Liter", "ml", "Bottle", "Kg"],
-  labor: ["Day", "Hour", "Person", "Flat Rate"],
-  machinery: ["Hour", "Acre", "Trip", "Liter"],
-  transport: ["Trip", "Km", "Tons"],
-  other: ["none"],
-};
-
-const CROP_UNIT_DEFAULTS = ["Bag", "Packet", "Kg", "Grams", "Viss"];
-
 const AddEntryDialog = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"expense" | "income">("expense");
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // API Hooks
+  const { lang } = useSelector((state: RootState) => state.settings);
+
+  // Localized Unit Options Logic
+  const UNIT_OPTIONS: Record<string, string[]> = useMemo(
+    () => ({
+      seeds: [
+        t("units.bag"),
+        t("units.packet"),
+        t("units.kg"),
+        t("units.grams"),
+        t("units.viss"),
+      ],
+      fertilizer: [
+        t("units.bag"),
+        t("units.kg"),
+        t("units.liter"),
+        t("units.packet"),
+      ],
+      pesticide: [
+        t("units.liter"),
+        t("units.ml"),
+        t("units.bottle"),
+        t("units.kg"),
+      ],
+      labor: [
+        t("units.day"),
+        t("units.hour"),
+        t("units.person"),
+        t("units.flat_rate"),
+      ],
+      machinery: [
+        t("units.hour"),
+        t("units.acre"),
+        t("units.trip"),
+        t("units.liter"),
+      ],
+      transport: [t("units.trip"), t("units.km"), t("units.tons")],
+      other: [t("units.none")],
+    }),
+    [t],
+  );
+
+  const CROP_UNIT_DEFAULTS = useMemo(
+    () => [
+      t("units.bag"),
+      t("units.packet"),
+      t("units.kg"),
+      t("units.grams"),
+      t("units.viss"),
+    ],
+    [t],
+  );
+
   const { data: activeSeason, isLoading: isSeasonLoading } =
     useGetActiveSeasonQuery();
   const { data: crops } = useGetCropsQuery(activeSeason?._id, {
@@ -105,21 +150,17 @@ const AddEntryDialog = () => {
     } else {
       return crops?.map((c: any) => c.cropName) || ["other"];
     }
-  }, [type, crops]);
+  }, [type, crops, UNIT_OPTIONS]);
 
   const availableUnits = useMemo(() => {
     if (!selectedCategory) return [];
-    if (type === "expense") {
-      return UNIT_OPTIONS[selectedCategory] || [];
-    } else {
-      return CROP_UNIT_DEFAULTS;
-    }
-  }, [selectedCategory, type]);
+    return type === "expense"
+      ? UNIT_OPTIONS[selectedCategory] || []
+      : CROP_UNIT_DEFAULTS;
+  }, [selectedCategory, type, UNIT_OPTIONS, CROP_UNIT_DEFAULTS]);
 
   useEffect(() => {
-    if (activeSeason) {
-      form.setValue("season", activeSeason.name);
-    }
+    if (activeSeason) form.setValue("season", activeSeason.name);
   }, [activeSeason, form, open]);
 
   useEffect(() => {
@@ -127,9 +168,7 @@ const AddEntryDialog = () => {
       const matchedCrop = crops.find(
         (c: any) => c.cropName === selectedCategory,
       );
-      if (matchedCrop) {
-        form.setValue("cropId", matchedCrop._id);
-      }
+      if (matchedCrop) form.setValue("cropId", matchedCrop._id);
     } else if (type === "expense" && selectedCategory !== "seeds") {
       form.setValue("cropId", "");
     }
@@ -138,7 +177,7 @@ const AddEntryDialog = () => {
   const handleOpenAttempt = (isOpen: boolean) => {
     if (isOpen) {
       if (!isSeasonLoading && !activeSeason) {
-        toast.error("Please start an agricultural season first.");
+        toast.error(t("entry.toast.season_required"));
         navigate("/farmer/agri-manager");
         return;
       }
@@ -193,16 +232,14 @@ const AddEntryDialog = () => {
       const formData = new FormData();
       formData.append("date", data.date.toISOString());
       formData.append("type", type);
-      formData.append("season", activeSeason.name);
+      formData.append("season", activeSeason?.name || "");
       formData.append("value", data.value);
       formData.append("notes", data.notes || "");
       formData.append("quantity", data.quantity || "");
       formData.append("unit", data.unit || "");
       if (data.billImage) formData.append("billImage", data.billImage);
 
-      // --- Logic for Category Selection ---
       if (type === "expense" && data.category === "seeds" && data.cropId) {
-        // Find the crop name from the crops list using the selected cropId
         const selectedCrop = crops?.find((c: any) => c._id === data.cropId);
         formData.append(
           "category",
@@ -210,16 +247,15 @@ const AddEntryDialog = () => {
         );
         formData.append("cropId", data.cropId);
       } else {
-        // Default behavior for other expenses or income
         formData.append("category", data.category);
         if (data.cropId) formData.append("cropId", data.cropId);
       }
 
       await addEntry(formData).unwrap();
-      toast.success("Record saved successfully!");
+      toast.success(t("entry.toast.success"));
       handleClose();
     } catch (err) {
-      toast.error("Failed to save record.");
+      toast.error(t("entry.toast.error"));
     }
   };
 
@@ -227,16 +263,18 @@ const AddEntryDialog = () => {
     <div className="flex justify-center">
       <Dialog open={open} onOpenChange={handleOpenAttempt}>
         <DialogTrigger asChild>
-          <Button className="shadow-lg bg-primary hover:bg-primary/90 transition-all font-bold">
-            <PlusCircle className="h-5 w-5" /> Add New Entry
+          <Button className="shadow-lg bg-primary hover:bg-primary/90 transition-all font-bold mm:leading-loose">
+            <PlusCircle className="h-5 w-5" /> {t("entry.add_btn")}
           </Button>
         </DialogTrigger>
 
         <DialogContent className="max-w-[95vw] lg:max-w-[600px] h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b pb-4">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800 mm:leading-loose">
               <Landmark className="h-5 w-5 text-primary" />
-              {type === "expense" ? "Record Investment" : "Record Income"}
+              {type === "expense"
+                ? t("entry.title_expense")
+                : t("entry.title_income")}
             </DialogTitle>
           </DialogHeader>
 
@@ -247,13 +285,13 @@ const AddEntryDialog = () => {
                 form.setValue("category", "");
               }}
               className={cn(
-                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
+                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm mm:leading-loose",
                 type === "expense"
                   ? "bg-white text-red-500 shadow-sm"
                   : "text-slate-500 hover:bg-slate-50",
               )}
             >
-              Expense
+              {t("entry.type_expense")}
             </div>
             <div
               onClick={() => {
@@ -261,13 +299,13 @@ const AddEntryDialog = () => {
                 form.setValue("category", "");
               }}
               className={cn(
-                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm",
+                "flex-1 flex items-center justify-center py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-bold text-sm mm:leading-loose",
                 type === "income"
                   ? "bg-white text-primary shadow-sm"
                   : "text-slate-500 hover:bg-slate-50",
               )}
             >
-              Income
+              {t("entry.type_income")}
             </div>
           </div>
 
@@ -282,8 +320,8 @@ const AddEntryDialog = () => {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Date
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {t("entry.date")}
                       </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -291,13 +329,18 @@ const AddEntryDialog = () => {
                             <Button
                               variant="outline"
                               className={cn(
-                                "pl-3 text-left font-normal border-slate-200",
+                                "pl-3 text-left font-normal border-slate-200 mm:h-11 mm:leading-loose",
                                 !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value
-                                ? format(field.value, "PPP")
-                                : "Pick a date"}
+                                ? lang === "mm"
+                                  ? localizeData(
+                                      format(field.value, "PPP"),
+                                      "mm",
+                                    )
+                                  : format(field.value, "PPP")
+                                : t("entry.date_placeholder")}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
@@ -319,14 +362,17 @@ const AddEntryDialog = () => {
                     </FormItem>
                   )}
                 />
-
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm text-slate-600 font-semibold">
-                    Active Season
+                  <span className="text-sm text-slate-600 font-semibold mm:leading-loose">
+                    {t("entry.active_season")}
                   </span>
-                  <div className="flex items-center px-4 bg-primary/5 border border-primary/10 text-primary font-bold overflow-hidden text-ellipsis whitespace-nowrap py-1.5 rounded-md">
+                  <div className="flex items-center px-4 bg-primary/5 border border-primary/10 text-primary font-bold overflow-hidden text-ellipsis whitespace-nowrap py-1.5 rounded-md mm:leading-loose">
                     <Info className="h-4 w-4 mr-2 shrink-0" />
-                    {activeSeason?.name || "No active season"}
+                    {activeSeason?.name
+                      ? lang === "mm"
+                        ? localizeData(activeSeason.name, "mm")
+                        : activeSeason.name
+                      : t("entry.no_season")}
                   </div>
                 </div>
               </div>
@@ -337,8 +383,10 @@ const AddEntryDialog = () => {
                   name="category"
                   render={({ field }) => (
                     <FormItem className="w-full">
-                      <FormLabel className="text-slate-600 font-semibold">
-                        {type === "income" ? "Select Crop" : "Category"}
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {type === "income"
+                          ? t("entry.crop_label")
+                          : t("entry.category_label")}
                       </FormLabel>
                       <Select
                         onValueChange={(val) => {
@@ -348,12 +396,12 @@ const AddEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize">
+                          <SelectTrigger className="w-full h-12 border-slate-200 capitalize mm:leading-loose">
                             <SelectValue
                               placeholder={
                                 type === "income"
-                                  ? "Select Crop Sold"
-                                  : "Select Category"
+                                  ? t("entry.crop_sold_placeholder")
+                                  : t("entry.category_placeholder")
                               }
                             />
                           </SelectTrigger>
@@ -363,9 +411,11 @@ const AddEntryDialog = () => {
                             <SelectItem
                               key={cat}
                               value={cat}
-                              className="capitalize"
+                              className="capitalize mm:leading-loose"
                             >
-                              {cat}
+                              {String(
+                                t(`categories.${cat}`, { defaultValue: cat }),
+                              )}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -381,24 +431,28 @@ const AddEntryDialog = () => {
                     name="cropId"
                     render={({ field }) => (
                       <FormItem className="w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                        <FormLabel className="text-primary font-bold flex items-center gap-1">
-                          Linked Crop (Seeds)
+                        <FormLabel className="text-primary font-bold flex items-center gap-1 mm:leading-loose">
+                          {t("entry.linked_crop")}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full h-12 border-primary/30 bg-primary/5">
-                              <SelectValue placeholder="Which crop?" />
+                            <SelectTrigger className="w-full h-12 border-primary/30 bg-primary/5 mm:leading-loose">
+                              <SelectValue
+                                placeholder={t("entry.which_crop")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {crops?.map((crop: any) => (
-                              <SelectItem key={crop._id} value={crop._id}>
-                                <div className="flex items-center gap-2">
-                                  {crop.cropName}
-                                </div>
+                              <SelectItem
+                                key={crop._id}
+                                value={crop._id}
+                                className="mm:leading-loose"
+                              >
+                                {crop.cropName}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -417,8 +471,8 @@ const AddEntryDialog = () => {
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-600 font-semibold">
-                          Quantity
+                        <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                          {t("entry.quantity")}
                         </FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0.00" {...field} />
@@ -433,8 +487,8 @@ const AddEntryDialog = () => {
                   name="unit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-600 font-semibold">
-                        Unit
+                      <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                        {t("entry.unit")}
                       </FormLabel>
                       <Select
                         disabled={!selectedCategory}
@@ -442,13 +496,19 @@ const AddEntryDialog = () => {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full border-slate-200">
-                            <SelectValue placeholder="Unit" />
+                          <SelectTrigger className="w-full border-slate-200 mm:leading-loose">
+                            <SelectValue
+                              placeholder={t("entry.unit_placeholder")}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {availableUnits.map((u) => (
-                            <SelectItem key={u} value={u.toLowerCase()}>
+                            <SelectItem
+                              key={u}
+                              value={u}
+                              className="mm:leading-loose"
+                            >
                               {u}
                             </SelectItem>
                           ))}
@@ -465,8 +525,10 @@ const AddEntryDialog = () => {
                 name="value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Total {type === "income" ? "Sale Price" : "Value"} (MMK)
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {type === "income"
+                        ? t("entry.value_income")
+                        : t("entry.value_expense")}
                     </FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0" {...field} />
@@ -481,17 +543,17 @@ const AddEntryDialog = () => {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Additional Notes
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {t("entry.notes")}
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder={
                           type === "income"
-                            ? "e.g. Sold to wholesale buyer..."
-                            : "e.g. Purchased from Aung Market..."
+                            ? t("entry.notes_placeholder_income")
+                            : t("entry.notes_placeholder_expense")
                         }
-                        className="resize-none h-24"
+                        className="resize-none h-24 mm:leading-loose"
                         {...field}
                       />
                     </FormControl>
@@ -506,8 +568,8 @@ const AddEntryDialog = () => {
                   field: { onChange, value: _, ref: fieldRef, ...fieldProps },
                 }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-semibold">
-                      Bill Photo / Receipt
+                    <FormLabel className="text-slate-600 font-semibold mm:leading-loose">
+                      {t("entry.bill_photo")}
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-4">
@@ -519,7 +581,6 @@ const AddEntryDialog = () => {
                           onChange={(e) => handleFileChange(e, onChange)}
                           {...fieldProps}
                         />
-
                         {preview ? (
                           <div className="relative group w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">
                             <img
@@ -532,10 +593,11 @@ const AddEntryDialog = () => {
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="rounded-full gap-2"
+                                className="rounded-full gap-2 mm:leading-loose"
                                 onClick={() => removeImage(onChange)}
                               >
-                                <X className="h-4 w-4" /> Remove Photo
+                                <X className="h-4 w-4" />{" "}
+                                {t("entry.remove_photo")}
                               </Button>
                             </div>
                           </div>
@@ -547,17 +609,16 @@ const AddEntryDialog = () => {
                             <div className="bg-white p-4 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
                               <UploadCloud className="h-8 w-8 text-primary" />
                             </div>
-                            <p className="text-sm font-bold text-slate-700">
-                              Click to upload bill
+                            <p className="text-sm font-bold text-slate-700 mm:leading-loose">
+                              {t("entry.upload_click")}
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              PNG, JPG up to 5MB
+                            <p className="text-xs text-slate-400 mt-1 mm:leading-loose">
+                              {t("entry.upload_limit")}
                             </p>
                           </div>
                         )}
                       </div>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -565,14 +626,14 @@ const AddEntryDialog = () => {
               <DialogFooter className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full font-bold shadow-lg shadow-primary/20"
+                  className="w-full font-bold shadow-lg shadow-primary/20 mm:leading-loose"
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    "Processing..."
+                    t("entry.processing")
                   ) : (
                     <>
-                      <Save className="h-5 w-5 mr-2" /> Save Entry
+                      <Save className="h-5 w-5 mr-2" /> {t("entry.save_btn")}
                     </>
                   )}
                 </Button>

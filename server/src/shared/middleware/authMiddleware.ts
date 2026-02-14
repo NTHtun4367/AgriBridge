@@ -1,23 +1,26 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { User } from "../../modules/auth/models/user";
+import { User as UserModel } from "../../modules/auth/models/user";
 import { Types } from "mongoose";
 import { ENV } from "../utils/env";
 
-interface User {
-  _id: Types.ObjectId | string;
+interface UserPayload {
+  _id: any;
   role: "farmer" | "merchant" | "admin";
-  merchantId?: Types.ObjectId | string;
+  merchantId?: any;
+  settings?: {
+    aiEnabled: boolean;
+  };
 }
 
 export interface AuthRequest extends Request {
-  user?: User;
+  user?: UserPayload;
 }
 
-export const protect = (
+export const protect = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
@@ -27,13 +30,21 @@ export const protect = (
 
   try {
     const token = authHeader.split(" ")[1];
-
     const decoded = jwt.verify(token, ENV.JWT_SECRET!) as any;
 
+    const userAccount = await UserModel.findById(decoded._id)
+      .select("role merchantId settings")
+      .lean(); // lean() သုံးခြင်းက POJO (Plain Object) ရစေပြီး type error လျော့နည်းစေသည်
+
+    if (!userAccount) {
+      return res.status(401).json({ message: "User no longer exists" });
+    }
+
     req.user = {
-      _id: decoded._id,
-      role: decoded.role,
-      merchantId: decoded.merchantId,
+      _id: userAccount._id,
+      role: userAccount.role as "farmer" | "merchant" | "admin",
+      merchantId: userAccount.merchantId,
+      settings: userAccount.settings as { aiEnabled: boolean } | undefined,
     };
 
     next();

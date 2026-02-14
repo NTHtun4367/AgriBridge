@@ -17,11 +17,12 @@ export const getAllMerchants = asyncHandler(
   },
 );
 
-export const getVerifiedMerchants = asyncHandler(
+export const getAdminVerifiedMerchants = asyncHandler(
   async (req: Request, res: Response) => {
     const merchants = await authService.getVerifiedMerchants();
 
     if (!merchants || merchants.length === 0) {
+      res.status(404);
       throw new Error("No verified merchants found");
     }
 
@@ -66,7 +67,6 @@ export const getMerchantInfoWithMerchantId = asyncHandler(
 export const getAdminOverview = asyncHandler(
   async (req: Request, res: Response) => {
     const userStats = await authService.getUserDashboardStats();
-    // Assuming disputeService exists as per your provided snippet
     const disputeStats = await disputeService.getDisputeDashboardStats();
 
     res.status(200).json({
@@ -77,7 +77,7 @@ export const getAdminOverview = asyncHandler(
           totalMerchants: userStats.totalMerchants,
           pendingDisputes: disputeStats.pendingDisputes,
         },
-        chartData: userStats.formattedGrowth, // Array of { name, farmers, merchants }
+        chartData: userStats.formattedGrowth,
         recentActivity: disputeStats.recentActivity,
       },
     });

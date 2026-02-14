@@ -67,7 +67,7 @@
     },
     "table": {
       "market_as_of": "Prices for {{marketName}} as of {{date}}",
-      "crops_found": "{{count}} crops found",
+      "crops_found": "{{displayCount}} crops found",
       "no_data": "No price data available for this selection."
     }
   },
@@ -256,7 +256,8 @@
     "status": {
       "paid": "Paid",
       "pending": "Pending"
-    }
+    },
+    "mmk": "MMK"
   },
   "farmer_disputes": {
     "trust_safety": "Trust & Safety",
@@ -436,6 +437,759 @@
       "delete_title": "Delete your account?",
       "delete_desc": "This action is permanent and cannot be undone. All your profile data, documents, and merchant information will be permanently deleted from AgriBridge.",
       "delete_confirm": "Yes, Delete Permanently"
+    }
+  },
+  "entry": {
+    "add_btn": "Add New Entry",
+    "title_expense": "Record Investment",
+    "title_income": "Record Income",
+    "type_expense": "Expense",
+    "type_income": "Income",
+    "date": "Date",
+    "date_placeholder": "Pick a date",
+    "active_season": "Active Season",
+    "no_season": "No active season",
+    "category_label": "Category",
+    "crop_label": "Select Crop",
+    "category_placeholder": "Select Category",
+    "crop_sold_placeholder": "Select Crop Sold",
+    "linked_crop": "Linked Crop (Seeds)",
+    "which_crop": "Which crop?",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "unit_placeholder": "Unit",
+    "value_income": "Total Sale Price (MMK)",
+    "value_expense": "Total Value (MMK)",
+    "notes": "Additional Notes",
+    "notes_placeholder_income": "e.g. Sold to wholesale buyer...",
+    "notes_placeholder_expense": "e.g. Purchased from Aung Market...",
+    "bill_photo": "Bill Photo / Receipt",
+    "upload_click": "Click to upload bill",
+    "upload_limit": "PNG, JPG up to 5MB",
+    "remove_photo": "Remove Photo",
+    "save_btn": "Save Entry",
+    "processing": "Processing...",
+    "toast": {
+      "success": "Record saved successfully!",
+      "error": "Failed to save record.",
+      "season_required": "Please start an agricultural season first."
+    }
+  },
+  "categories": {
+    "seeds": "Seeds",
+    "fertilizer": "Fertilizer",
+    "pesticide": "Pesticide",
+    "labor": "Labor",
+    "machinery": "Machinery",
+    "transport": "Transport",
+    "other": "Other"
+  },
+  "units": {
+    "bag": "Bag",
+    "packet": "Packet",
+    "kg": "kg",
+    "grams": "Grams",
+    "viss": "Viss",
+    "liter": "Liter",
+    "ml": "ml",
+    "bottle": "Bottle",
+    "day": "Day",
+    "hour": "Hour",
+    "person": "Person",
+    "flat_rate": "Flat Rate",
+    "acre": "Acre",
+    "trip": "Trip",
+    "km": "km",
+    "tons": "Tons",
+    "none": "None"
+  },
+  "preorder": {
+    "title": "Place Preorder",
+    "description": "Requesting crops from",
+    "terms_title": "Terms & Conditions",
+    "terms_desc": "Please review our terms and privacy policy before placing a preorder with",
+    "continue_btn": "Continue to Preorder",
+    "confirm_btn": "Confirm Preorder",
+    "processing": "Processing...",
+    "success": "Preorder successful!",
+    "error": "Failed to place preorder",
+    "add_crop": "Add Crop",
+    "selected_crops": "Selected Crops",
+    "sections": {
+      "contact": "Full Name",
+      "phone": "Phone Number",
+      "nrc": "Identity (NRC)",
+      "address": "Your Address",
+      "delivery": "Expected Delivery Timing",
+      "notes": "Additional Notes (Optional)"
+    },
+    "fields": {
+      "name_placeholder": "Enter your name",
+      "phone_placeholder": "+95...",
+      "nrc_region": "No.",
+      "nrc_township": "Township",
+      "nrc_number": "6-digit serial number",
+      "address_placeholder": "Enter your full street address, village, or landmark",
+      "qty": "Qty",
+      "price": "Price",
+      "unit": "Unit",
+      "days": "Day(s)",
+      "months": "Month(s)",
+      "crop_placeholder": "Select a crop"
+    },
+    "terms": {
+      "commitment": "1. Farmer Commitment",
+      "commitment_text": "By participating in this preorder, you are required to provide a valid NRC and active contact information. Please be aware that your request is contingent upon the merchant's current capacity and stock availability.",
+      "data": "2. Data Usage Notice",
+      "data_text": "To process your order, your personal details (Name, Phone, NRC, and Address) will be shared with the designated merchant. This information is used strictly for logistical fulfillment.",
+      "harvest": "3. Harvest & Logistics Warning",
+      "harvest_text": "The delivery schedule is a preliminary estimate only. You must acknowledge that actual timing depends entirely on crop maturity, weather-related harvest conditions, and transportation availability.",
+      "price": "4. Price Adjustment Policy",
+      "price_text": "Note that pricing is subject to change based on the quality and specifications of the goods for delivery.",
+      "checkbox": "I have read and agree to the Terms of Service and Privacy Policy. I understand my information will be processed to complete this transaction."
+    }
+  },
+  "merchant_panel": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "market_prices": "Market Prices",
+      "merchants": "Merchants",
+      "market_management": "Market Management",
+      "records": "Records",
+      "preorders": "Preorders",
+      "invoices": "Invoices",
+      "settings": "Settings"
+    },
+    "verification": {
+      "title": "Account Verification Pending",
+      "message": "Please complete your verification to access Market Management, Preorders, and Invoices."
+    }
+  },
+  "merchant_dash": {
+    "title": "Category Profitability",
+    "subtitle": "Detailed performance audit across procurement categories.",
+    "actions": {
+      "manual_invoice": "Manual Invoice",
+      "exit_editor": "Exit Editor"
+    },
+    "stats": {
+      "income": "Total Income",
+      "expenses": "Total Expenses",
+      "profit": "Net Profit"
+    },
+    "chart": {
+      "title": "Performance Analytics",
+      "subtitle": "Revenue vs Expense Comparison",
+      "income_label": "Income",
+      "expense_label": "Expense"
+    },
+    "table": {
+      "search": "Search by category...",
+      "view_toggle": "View",
+      "col_category": "Category",
+      "col_income": "Income",
+      "col_expense": "Expense",
+      "col_profit": "Net Profit",
+      "no_results": "No data found.",
+      "footer_count": "Total {{count}} categories",
+      "rows_per_page": "Rows",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "loading": "Calculating category analytics...",
+    "invoice": {
+      "title": "Invoice Details",
+      "description": "Fill in farmer info or auto-fill from a preorder.",
+      "mode_manual": "Manual",
+      "mode_preorder": "Preorder",
+      "preorder_search": "Search Existing Preorders",
+      "preorder_placeholder": "Select a preorder...",
+      "field_name": "Full Name",
+      "field_phone": "Phone Number",
+      "field_nrc": "Identity (NRC)",
+      "field_address": "Address",
+      "items_title": "Line Items",
+      "add_row": "Add Row",
+      "col_item": "Crop Name",
+      "col_qty": "Qty",
+      "col_unit": "Unit",
+      "col_price": "Price",
+      "col_total": "Total",
+      "total_due": "Total Amount Due",
+      "notes_label": "Notes & Payment Terms",
+      "notes_placeholder": "e.g. Please pay within 7 days.",
+      "preview_billed_to": "Billed To",
+      "preview_date": "Date Issued",
+      "btn_print": "Print Preview",
+      "btn_send": "Send Invoice",
+      "status_processing": "Processing..."
+    }
+  },
+  "transaction": {
+    "new": "New Transaction",
+    "record_expense": "Record Purchase/Expense",
+    "record_income": "Record Sales/Income",
+    "expense": "Expense",
+    "income": "Income",
+    "date": "Date",
+    "select_date": "Select Date",
+    "category": "Expense Category",
+    "crop_name": "Crop Name",
+    "select_category": "Select Category",
+    "select_crop": "Select Crop",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "amount": "Total Amount (MMK)",
+    "notes": "Notes",
+    "notes_placeholder": "Voucher info, names, etc...",
+    "receipt": "Receipt Image",
+    "upload": "Upload receipt",
+    "remove": "Remove",
+    "save": "Save Entry",
+    "saving": "Saving...",
+    "success": "Transaction saved!",
+    "error": "Failed to save transaction."
+  },
+  "merchant_records": {
+    "title": "Inventory Records",
+    "subtitle": "History of all your inventory transactions and logistics",
+    "total_records": "Total Records",
+    "search_placeholder": "Search by category or notes...",
+    "filter_type": "Filter by Type",
+    "all_types": "All Types",
+    "income_only": "Income Only",
+    "expense_only": "Expenses Only",
+    "clear_filters": "Clear Filters",
+    "table": {
+      "date": "Date",
+      "category": "Category",
+      "type": "Transaction Type",
+      "amount": "Amount"
+    },
+    "status": {
+      "loading": "Loading history...",
+      "no_records": "No records found",
+      "try_adjusting": "Try adjusting your search or filters",
+      "system_updated": "System updated"
+    }
+  },
+  "merchant_preorders": {
+    "title": "Preorders",
+    "subtitle": "Review and manage farmer preorders",
+    "search_placeholder": "Search with farmer name...",
+    "table": {
+      "order_id": "Order ID",
+      "farmer_name": "Farmer Name",
+      "nrc": "NRC Number",
+      "est_delivery": "Est. Delivery",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "details": {
+      "verification": "Order Verification",
+      "date_submitted": "Date Submitted",
+      "identity": "Identity Details",
+      "logistics": "Logistics Info",
+      "ordered_produce": "Ordered Produce",
+      "target_delivery": "Target Delivery",
+      "farmer_note": "Farmer's Note",
+      "reject": "Reject Order",
+      "approve": "Approve Order",
+      "generate_invoice": "Generate Invoice"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "loading": "Loading preorders...",
+      "no_data": "No preorders found."
+    },
+    "labels": {
+      "nrc_label": "NRC",
+      "crop_name": "Crop Name",
+      "quantity": "Quantity",
+      "est_unit_price": "Est. Unit Price",
+      "view": "View"
+    }
+  },
+  "merchant_invoices": {
+    "title": "Ledger Overview",
+    "subtitle": "Manage and settle farmer transactions",
+    "stats": {
+      "total_volume": "Total Volume",
+      "total_collected": "Total Collected",
+      "pending_receivables": "Pending Receivables"
+    },
+    "list": {
+      "title": "Recent Invoices",
+      "search_placeholder": "Search farmer or ID...",
+      "no_data": "No transactions found. Process merchant_preorders to generate a ledger.",
+      "date": "Date"
+    },
+    "footer": {
+      "title": "Digital Settlement",
+      "description": "Invoices marked as paid are instantly synced with the central treasury ledger."
+    },
+    "modal": {
+      "close": "Close",
+      "invoice_header": "INVOICE",
+      "verified": "Platform Verified Receipt",
+      "billed_to": "Billed To",
+      "status": "Status",
+      "date_issued": "Date Issued",
+      "table_item": "Item",
+      "table_qty": "Qty",
+      "table_price": "Price",
+      "table_total": "Total",
+      "total_due": "Total Due",
+      "save_gallery": "Save Receipt to Gallery",
+      "syncing": "Syncing Ledger Data...",
+      "generating": "Generating Receipt Image..."
+    }
+  },
+  "merchant_disputes": {
+    "title": "Report Merchant",
+    "description": "Submit a formal merchant_dispute regarding <strong>{{name}}</strong>. The admin team will review your report.",
+    "reason_label": "Reason for Merchant Dispute",
+    "reason_placeholder": "Select a reason",
+    "reasons": {
+      "pricing": "Incorrect Pricing",
+      "payment": "Payment Issues",
+      "behavior": "Unprofessional Behavior",
+      "fraud": "Suspected Fraud",
+      "other": "Other"
+    },
+    "desc_label": "Detailed Description",
+    "desc_placeholder": "Explain what happened in detail...",
+    "cancel": "Cancel",
+    "submit": "Submit Report",
+    "success": "Merchant dispute reported to admin successfully.",
+    "error": "Failed to submit report.",
+    "validation": {
+      "reason": "Please select a reason for the merchant_dispute",
+      "description": "Please provide at least 20 characters describing the issue"
+    }
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "farmer_mgmt": "Farmer Management",
+    "merchant_mgmt": "Merchant Management",
+    "market_mgmt": "Market Management",
+    "add_crops": "Add Crops",
+    "add_markets": "Add Markets",
+    "update_prices": "Update Prices",
+    "verification": "Verification",
+    "announcements": "Announcements",
+    "merchant_disputes": "Merchant Disputes",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Global ecosystem metrics and user acquisition.",
+    "syncing": "Syncing Ecosystem Data...",
+    "stats": {
+      "active_farmers": "Active Farmers",
+      "farmers_sub": "Verified agricultural farmers",
+      "verified_merchants": "Verified Merchants",
+      "merchants_sub": "Authorized buying entities",
+      "dispute_queue": "Merchant Dispute Queue",
+      "dispute_sub": "Critical resolution required"
+    },
+    "charts": {
+      "growth_title": "Network Growth",
+      "growth_sub": "Real-time Acquisition",
+      "farmers": "Farmers",
+      "merchants": "Merchants"
+    },
+    "disputes_feed": {
+      "title": "Recent Merchant Disputes",
+      "see_all": "See All",
+      "id_label": "Dispute ID",
+      "resolve": "RESOLVE CASE",
+      "activity": "New Activity",
+      "empty": "Clean Record: No Open Merchant Disputes"
+    }
+  },
+  "farmer_mgmt": {
+    "title": "Farmer Management",
+    "description": "Overview of all farmers registered on AgriBridge.",
+    "search_placeholder": "Search by name...",
+    "view_dropdown": "View",
+    "table": {
+      "user_id": "User ID",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "action": "Action",
+      "loading": "Loading data...",
+      "no_data": "No farmers found.",
+      "total_found": "Total {{count}} farmers found"
+    },
+    "pagination": {
+      "rows_per_page": "Rows per page",
+      "page_info": "Page {{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next"
+    }
+  },
+  "merchant_mgmt": {
+    "title": "Merchant Management",
+    "description": "Overview of all verified merchants registered on AgriBridge.",
+    "search_placeholder": "Search by name...",
+    "view_dropdown": "View",
+    "table": {
+      "user_id": "User ID",
+      "name": "Name",
+      "email": "Email",
+      "status": "Account",
+      "verification": "Verification",
+      "actions": "Actions",
+      "loading": "Loading data...",
+      "no_data": "No merchants found.",
+      "total_found": "Total {{count}} merchants found"
+    },
+    "status": {
+      "verified": "Verified",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
+  },
+  "crop_mgmt": {
+    "title": "Crop Inventory",
+    "description": "Manage the varieties and categories available in the market.",
+    "syncing": "Syncing...",
+    "add_card": {
+      "title": "Add New Crop",
+      "description": "Enter the details for the new crop variety.",
+      "label_name": "Variety Name",
+      "placeholder_name": "e.g. Matpe",
+      "label_category": "Category",
+      "placeholder_category": "Select category",
+      "submit_btn": "Create Crop",
+      "saving_btn": "Saving..."
+    },
+    "table": {
+      "title": "Available Crops",
+      "description": "A list of all registered crops in the system.",
+      "col_name": "Crop Name",
+      "col_category": "Category",
+      "col_action": "Action",
+      "loading": "Loading data...",
+      "no_data": "No crops found. Add one to get started.",
+      "toast_success": "Crop variety added successfully",
+      "toast_delete": "Crop deleted successfully",
+      "toast_error": "Failed to process request. Please try again."
+    },
+    "categories": {
+      "rice": "Rice",
+      "beans": "Beans"
+    }
+  },
+  "market_mgmt": {
+    "title": "Market Directory",
+    "description": "Register and manage trading locations and regional hubs.",
+    "updating": "Updating...",
+    "add_card": {
+      "title": "Add New Market",
+      "description": "Define a new trading location for price tracking.",
+      "label_name": "Market Name",
+      "placeholder_name": "e.g. Bayint Naung Market",
+      "label_region": "Region / State",
+      "placeholder_region": "e.g. Yangon",
+      "submit_btn": "Create Market",
+      "saving_btn": "Saving..."
+    },
+    "table": {
+      "title": "Active Markets",
+      "description": "Overview of all registered markets in the system.",
+      "col_name": "Market Name",
+      "col_region": "Region",
+      "col_status": "Status",
+      "col_action": "Action",
+      "status_active": "Active",
+      "status_inactive": "Inactive",
+      "loading": "Loading data...",
+      "no_data": "No markets found. Add one to get started.",
+      "toast_success": "Market location added successfully",
+      "toast_delete": "Market removed successfully",
+      "toast_error": "Failed to process request. Please try again."
+    }
+  },
+  "price_update": {
+    "title_admin": "Market Price Manager",
+    "title_merchant": "Inventory Price Update",
+    "steps": {
+      "label": "Step {{current}} of {{total}}",
+      "step1": "Start by choosing a marketplace.",
+      "step2": "Select the crops you want to update.",
+      "step3": "Assign current rates, quantity, and units."
+    },
+    "market_card": {
+      "title": "Select Marketplace",
+      "continue": "Continue to Crops"
+    },
+    "crop_card": {
+      "title": "Select Crops",
+      "description": "Only selected crops will appear in the next step.",
+      "search_placeholder": "Search crops...",
+      "back": "Back to Market",
+      "next": "Set Prices & Units"
+    },
+    "finalize_card": {
+      "title": "Finalize Details",
+      "col_crop": "Crop",
+      "col_qty": "Amount (Qty)",
+      "col_unit": "Unit Type",
+      "col_price": "Price (MMK)",
+      "back": "Back to Crops",
+      "publish": "Publish Prices",
+      "toast_success": "Prices updated successfully!",
+      "toast_error": "Failed to update prices."
+    },
+    "units": {
+      "viss": "Viss (1.63kg)",
+      "bag": "Bag",
+      "tin": "Tin",
+      "basket": "Basket",
+      "ton": "Metric Ton",
+      "lb": "Pound (lb)"
+    }
+  },
+  "verification": {
+    "title": "Verification",
+    "table_caption": "A list of all verification pending users.",
+    "columns": {
+      "name": "Name",
+      "role": "Role",
+      "email": "Email",
+      "status": "Verification Status",
+      "submitted": "Submitted At",
+      "action": "Action"
+    },
+    "status": {
+      "verified": "Verified",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
+  },
+  "verification_details": {
+    "view_button": "View Details",
+    "account_type": "Merchant Account",
+    "status_pending": "Pending Review",
+    "id_label": "ID",
+    "sections": {
+      "contact": "Contact & Account",
+      "business": "Business Info",
+      "address": "Registered Address",
+      "identity": "Identity Verification"
+    },
+    "labels": {
+      "email": "Email",
+      "phone": "Phone",
+      "legal_name": "Legal Business Name",
+      "nrc": "NRC Identification",
+      "division": "Division",
+      "district": "District",
+      "township": "Township",
+      "home_address": "Full Home Address",
+      "nrc_front": "NRC FRONT PHOTO",
+      "nrc_back": "NRC BACK PHOTO",
+      "open_full": "Open Full",
+      "tip_scroll": "Tip: Scroll to see back side",
+      "instruction": "Check if the person's photo on the NRC matches the account name and ensure the document is not expired or blurred."
+    },
+    "actions": {
+      "reject": "Reject & Ban",
+      "approve": "Approve Merchant"
+    }
+  },
+  "announcement": {
+    "title": "Announcements",
+    "create_card": {
+      "title": "Create New Announcement",
+      "fields": {
+        "title": "Title",
+        "title_placeholder": "Announcement Title",
+        "target": "Target Users",
+        "target_placeholder": "Select target",
+        "message": "Message"
+      },
+      "submit": "Send Announcement",
+      "sending": "Sending...",
+      "success": "Announcement sent successfully!",
+      "error": "Failed to send announcement."
+    },
+    "history_card": {
+      "title": "Announcement History",
+      "search_placeholder": "Search by title...",
+      "view_toggle": "View",
+      "columns": {
+        "title": "Title",
+        "target": "Target Group",
+        "date": "Date Sent",
+        "action": "Action"
+      },
+      "table": {
+        "loading": "Loading history...",
+        "empty": "No announcements found.",
+        "details": "View Details",
+        "total": "Total {{count}} items",
+        "rows_per_page": "Rows per page",
+        "page_info": "Page {{current}} of {{total}}",
+        "prev": "Previous",
+        "next": "Next"
+      }
+    },
+    "targets": {
+      "all": "All Users",
+      "farmers": "Farmers",
+      "merchants": "Merchants"
+    }
+  },
+  "admin_disputes": {
+    "title": "Dispute Control Center",
+    "description": "Overview and resolution of merchant-farmer trade conflicts.",
+    "search_placeholder": "Search by merchant...",
+    "view_toggle": "View",
+    "total_count": "Total {{count}} disputes found",
+    "table": {
+      "columns": {
+        "id": "ID",
+        "date": "Date",
+        "merchant": "Merchant",
+        "farmer": "Farmer",
+        "reason": "Reason",
+        "status": "Status",
+        "action": "Action"
+      },
+      "loading": "Loading records...",
+      "empty": "No disputes found.",
+      "details_btn": "Details",
+      "rows_per_page": "Rows per page",
+      "page_info": "Page {{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "modal": {
+      "title": "Dispute Details",
+      "record_id": "Record ID",
+      "issue_type": "Issue Type",
+      "lodged_on": "Lodged On",
+      "plaintiff": "Farmer (Plaintiff)",
+      "defendant": "Merchant (Defendant)",
+      "description_label": "Description",
+      "status_badge": "Currently {{status}}",
+      "close": "Close",
+      "resolve_btn": "Mark as Resolved"
+    },
+    "statuses": {
+      "pending": "pending",
+      "resolved": "resolved",
+      "rejected": "rejected"
+    }
+  },
+  "details": {
+    "title": "Entry Details",
+    "back": "Back",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "amount": "Transaction Amount",
+    "date": "Date",
+    "season": "Season",
+    "category": "Category",
+    "quantity": "Quantity",
+    "notes": "Notes",
+    "attachment": "Attachment",
+    "noReceipt": "No receipt attached",
+    "created": "CREATED",
+    "currency": "MMK"
+  },
+  "modals": {
+    "deleteTitle": "Delete Entry",
+    "deleteDescription": "Are you sure you want to delete this {{category}} entry? This action cannot be undone.",
+    "confirmDelete": "Delete Entry",
+    "success": "Entry deleted successfully",
+    "error": "Failed to delete entry"
+  },
+  "types": {
+    "expense": "Expense",
+    "income": "Income",
+    "merchant_disputes": "Merchant Dispute",
+    "merchant_preorders": "Merchant Preorder"
+  },
+  "marketTable": {
+    "caption": "A list of all market prices.",
+    "cropName": "Crop Name",
+    "category": "Category",
+    "amount": "Amount(Qty)",
+    "unit": "Unit",
+    "previousPrice": "Previous Price",
+    "currentPrice": "Current Price",
+    "changes": "Changes",
+    "noResults": "No results found.",
+    "currency": "MMK"
+  },
+  "statusCards": {
+    "totalBalance": "Total Balance",
+    "totalIncome": "Total Income",
+    "totalExpense": "Total Expense",
+    "disputes": "Merchant Disputes",
+    "preorders": "Merchant Preorders",
+    "currency": "MMK"
+  },
+  "merchant_card": {
+    "title": "Merchant Partners",
+    "merchant_disputes": "Merchant Disputes",
+    "status": {
+      "verified": "Verified"
+    },
+    "labels": {
+      "business_name": "Business Name",
+      "owner": "Owner",
+      "phone": "Phone",
+      "location": "Location"
+    },
+    "actions": {
+      "view_details": "View Details"
+    }
+  },
+  "disputes": {
+    "trust_safety": "Trust & Safety",
+    "subtitle": "Track and manage your merchant_disputes and case resolutions",
+    "stats": {
+      "total": "Total Cases",
+      "pending": "Pending",
+      "resolved": "Resolved"
+    },
+    "labels": {
+      "id": "Case ID",
+      "description": "Issue Description",
+      "merchant": "Merchant Information",
+      "merchant_partner": "Merchant Partner",
+      "verified_merchant": "Verified Partner",
+      "timeline": "Timeline",
+      "location": "Merchant Location",
+      "no_location": "Location not provided",
+      "email": "Email Address",
+      "support": "Support Line",
+      "resolution_time": "Standard resolution: 3-5 business days",
+      "case_reason": "Reason for Case",
+      "submission_date": "Date Submitted"
+    },
+    "actions": {
+      "close": "Close Details"
+    },
+    "reasons": {
+      "payment_issue": "Payment Issue",
+      "quality_dispute": "Quality Dispute",
+      "delivery_delay": "Delivery Delay",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "investigating": "Investigating"
     }
   }
 }

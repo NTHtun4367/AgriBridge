@@ -8,8 +8,8 @@ export const handleGetActiveSeason = async (
 ) => {
   try {
     const userId = req.user?._id as string;
+
     const season = await farmerService.getActiveSeason(userId);
-    // Returns the active season object or null if none active
     res.json(season);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -44,11 +44,10 @@ export const handleBulkAddCrops = async (req: AuthRequest, res: Response) => {
 
 export const handleGetCrops = async (req: AuthRequest, res: Response) => {
   try {
-    const { seasonId } = req.query;
-    const crops = await farmerService.getCropsBySeason(
-      req.user?._id as string,
-      seasonId as string,
-    );
+    const userId = req.user?._id as string;
+    const seasonId = req.query.seasonId as string;
+
+    const crops = await farmerService.getCropsBySeason(userId, seasonId);
     res.json(crops);
   } catch (error: any) {
     res.status(500).json({ message: error.message });

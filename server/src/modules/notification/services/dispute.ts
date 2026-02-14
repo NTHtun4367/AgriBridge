@@ -12,12 +12,11 @@ export class DisputeService {
       const admins = await authService.getAllUsersByRole("admin");
       const adminIds = admins.map((u) => u._id.toString());
 
-      console.log(adminIds.length);
-
-      if (adminIds.length) {
+      if (adminIds.length > 0) {
+        // Notification now uses the raw reason since autoTranslate is removed
         await notificationService.createNotification(
-          "New Dispute Raised",
-          `Farmer filed a dispute: ${savedDispute.reason}`,
+          "အငြင်းပွားမှုအသစ် တင်ပြလာပါသည်",
+          `တောင်သူတစ်ဦးမှ အငြင်းပွားမှု တင်ပြလာပါသည်- ${savedDispute.reason}`,
           adminIds,
           "admin",
         );
@@ -29,7 +28,10 @@ export class DisputeService {
     return savedDispute;
   }
 
-  async getDisputesByFarmerId(farmerId: string): Promise<any[]> {
+  async getDisputesByFarmerId(
+    farmerId: string,
+    lang?: string, // Kept for signature compatibility if needed elsewhere
+  ): Promise<any[]> {
     const disputes = await Dispute.find({
       farmerId: new Types.ObjectId(farmerId),
     })
@@ -42,14 +44,12 @@ export class DisputeService {
           const merchantUser = await authService.getMerchantById(
             d.merchantId.toString(),
           );
-
           return {
             ...d,
             merchantId: {
               _id: merchantUser?._id,
               name: merchantUser?.name,
               email: merchantUser?.email,
-              // phoneNumber: merchantUser?.phone, // Added for frontend
               merchantId: merchantUser?.merchantId,
               merchantAddress: `${merchantUser?.division},${merchantUser?.district},${merchantUser?.township},${merchantUser?.homeAddress}`,
             },
@@ -64,10 +64,8 @@ export class DisputeService {
     );
   }
 
-  /** ✅ ADMIN - Populates farmerId and merchantId manually */
   async getAllDisputes() {
     const disputes = await Dispute.find().sort({ createdAt: -1 }).lean();
-
     return Promise.all(
       disputes.map(async (d) => {
         try {
@@ -80,7 +78,6 @@ export class DisputeService {
 
           return {
             ...d,
-            // Rename keys to match frontend's "merchantId.name" / "farmerId.name"
             farmerId: {
               _id: farmer._id,
               name: farmer.name,
@@ -90,7 +87,6 @@ export class DisputeService {
               _id: merchantUser?._id,
               name: merchantUser?.name,
               email: merchantUser?.email,
-              // Pass business info so frontend can use merchantId.merchantId.businessName
               merchantId: merchantUser?.merchantId,
             },
           };
@@ -110,9 +106,8 @@ export class DisputeService {
   }
 
   async getDisputeDashboardStats() {
+    // Count specific merchant_disputes that are pending
     const pendingDisputes = await Dispute.countDocuments({ status: "pending" });
-
-    // Get recent activity logs
     const recentActivity = await Dispute.find()
       .populate("farmerId", "name")
       .populate("merchantId", "name")

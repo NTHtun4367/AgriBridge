@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useTranslation } from "react-i18next"; // Added
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,15 +13,22 @@ import {
 import { useGetMyPreordersQuery } from "@/store/slices/preorderApi";
 import { Button } from "@/components/ui/button";
 import type { RootState } from "@/store";
+import { localizeData } from "@/utils/translator";
 
 function PreorderList() {
-  const { t } = useTranslation(); // Added
+  const { t, i18n } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const { data, isLoading } = useGetMyPreordersQuery(user?.id, {
     skip: !user?.id,
   });
+
+  // Apply localization to the fetched data based on current language
+  const localizedOrders = useMemo(() => {
+    if (!data) return [];
+    return localizeData(data, i18n.language as "en" | "mm");
+  }, [data, i18n.language]);
 
   if (isLoading)
     return (
@@ -36,7 +43,7 @@ function PreorderList() {
         <Package className="text-primary" /> {t("farmer_preorders.title")}
       </h2>
 
-      {data?.map((order: any) => {
+      {localizedOrders?.map((order: any) => {
         const isExpanded = selectedOrderId === order._id;
         const merchant = order.merchantInfo;
 
@@ -62,7 +69,9 @@ function PreorderList() {
                   <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                     <CalendarClock className="w-3 h-3" />
                     {t("farmer_preorders.ordered_date")}:{" "}
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {new Date(order.createdAt).toLocaleDateString(
+                      i18n.language === "mm" ? "my-MM" : "en-US",
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -75,6 +84,7 @@ function PreorderList() {
                           : "bg-green-500"
                     }
                   >
+                    {/* Assuming status strings like "pending" are in your i18n JSON */}
                     {t(`${order.status}`)}
                   </Badge>
                   <ChevronRight
@@ -114,7 +124,7 @@ function PreorderList() {
                             <span className="font-medium text-slate-700">
                               {item.cropName || "Crop"}
                             </span>
-                            <span className="font-mono font-bold text-primary">
+                            <span className="font-mono font-bold text-primary mm:leading-loose">
                               {item.quantity} {item.unit}
                             </span>
                           </li>
@@ -129,7 +139,7 @@ function PreorderList() {
                       </h4>
                       <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-md border border-slate-100">
                         <p className="font-medium">{merchant?.homeAddress}</p>
-                        <p className="text-xs">
+                        <p className="text-xs mm:mt-0 mm:mb-0">
                           {merchant?.township}, {merchant?.division}
                         </p>
                       </div>
