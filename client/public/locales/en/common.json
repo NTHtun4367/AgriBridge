@@ -781,7 +781,8 @@
     "verification": "Verification",
     "announcements": "Announcements",
     "merchant_disputes": "Merchant Disputes",
-    "settings": "Settings"
+    "settings": "Settings",
+    "logout": "Logout"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1191,5 +1192,40 @@
       "resolved": "Resolved",
       "investigating": "Investigating"
     }
+  },
+  "market_dashboard": {
+    "title": "Market Prices",
+    "subtitle": "Real-time updates of the latest market prices.",
+    "latest_update": "Latest Update",
+    "filter_market": "Filter by Market",
+    "all_markets": "All Markets",
+    "all_categories": "All Categories",
+    "search_placeholder": "Search crops by name...",
+    "table": {
+      "market_as_of": "{{marketName}} as of {{date}}",
+      "crops_found": "{{count}} crops found"
+    }
+  },
+  "profile": {
+    "loading": "Loading your profile...",
+    "not_set": "Not Set",
+    "email": "Email",
+    "contact": "Contact",
+    "joined": "Joined",
+    "edit_button": "Edit Profile",
+    "biography_title": "User Biography",
+    "no_bio": "No bio available.",
+    "registered_address": "Registered Address",
+    "status_active": "Active Location",
+    "division": "Division",
+    "district": "District",
+    "township": "Township",
+    "street_address_label": "Street & Home Address",
+    "merchant_id_label": "Merchant ID"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete"
   }
 }

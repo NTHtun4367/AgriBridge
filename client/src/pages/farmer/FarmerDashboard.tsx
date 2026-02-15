@@ -15,10 +15,9 @@ import {
   Calendar,
   Sprout,
 } from "lucide-react";
-import { format } from "date-fns";
 
 import { type RootState } from "@/store";
-import { localizeData } from "@/utils/translator";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator"; // Added toMyanmarNumerals
 import StatusCard from "@/common/StatusCard";
 import AddEntryDialog from "@/components/farmer/AddEntryDialog";
 import { Button } from "@/components/ui/button";
@@ -53,13 +52,30 @@ const SEASONS = [
   "Winter 2027",
 ];
 
+/**
+ * Helper to format dates without date-fns
+ */
+const formatDateNative = (
+  dateString: string,
+  lang: "en" | "mm",
+  pattern: "short" | "year",
+) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions =
+    pattern === "short"
+      ? { day: "2-digit", month: "short" }
+      : { year: "numeric" };
+
+  const formatted = new Intl.DateTimeFormat("en-US", options).format(date);
+  return lang === "mm" ? toMyanmarNumerals(formatted) : formatted;
+};
+
 function FarmerDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: user } = useCurrentUserQuery();
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
 
-  // Redux state for language
   const { lang } = useSelector((state: RootState) => state.settings);
 
   const { data: response } = useGetFinancialOverviewQuery({
@@ -68,30 +84,20 @@ function FarmerDashboard() {
 
   const { data: entries, isLoading: entriesLoading } = useGetAllEntriesQuery();
 
-  /**
-   * Localize Financial Overview Data
-   */
   const localizedFinance = useMemo(() => {
     if (!response?.overall) return { income: 0, expense: 0, profit: 0 };
     return localizeData(response.overall, lang as "en" | "mm");
   }, [response, lang]);
 
-  /**
-   * Localize and Filter Entries
-   */
   const recentEntries = useMemo(() => {
     if (!entries) return [];
 
-    // 1. Filter by season first
     const filtered =
       selectedSeason === "all"
         ? entries
         : entries.filter((en: any) => en.season === selectedSeason);
 
-    // 2. Take top 8
     const limited = filtered.slice(0, 8);
-
-    // 3. Localize the subset
     return localizeData(limited, lang as "en" | "mm");
   }, [entries, selectedSeason, lang]);
 
@@ -133,12 +139,28 @@ function FarmerDashboard() {
               <SelectItem key="all" value="all">
                 {t("farmer_dash.filter_all")}
               </SelectItem>
-              {SEASONS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {/* Localize season name in dropdown if needed */}
-                  {lang === "mm" ? localizeData(s, "mm") : s}
-                </SelectItem>
-              ))}
+              {SEASONS.map((s) => {
+                // split "Summer 2026" into ["Summer", "2026"]
+                const [name, year] = s.split(" ");
+
+                const seasonMap: Record<string, string> = {
+                  Summer: "နွေရာသီ",
+                  Rainy: "မိုးရာသီ",
+                  Winter: "ဆောင်ရာသီ",
+                };
+
+                // use toMyanmarNumerals for the year part specifically
+                const translatedName =
+                  lang === "mm" ? seasonMap[name] || name : name;
+                const translatedYear =
+                  lang === "mm" ? toMyanmarNumerals(year) : year;
+
+                return (
+                  <SelectItem key={s} value={s}>
+                    {lang === "mm" ? `${translatedName} ${translatedYear}` : s}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -226,86 +248,90 @@ function FarmerDashboard() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  recentEntries.map((en: any) => {
-                    return (
-                      <TableRow
-                        key={en._id}
-                        className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors border-slate-50 dark:border-slate-800"
-                        onClick={() =>
-                          navigate(`/${user?.role}/records/${en._id}`)
-                        }
-                      >
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 dark:text-slate-200">
-                              {/* Date formatted then localized via manual check or localizeData side-effect */}
-                              {lang === "mm"
-                                ? localizeData(
-                                    format(new Date(en.date), "dd MMM"),
-                                    "mm",
-                                  )
-                                : format(new Date(en.date), "dd MMM")}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              {lang === "mm"
-                                ? localizeData(
-                                    format(new Date(en.date), "yyyy"),
-                                    "mm",
-                                  )
-                                : format(new Date(en.date), "yyyy")}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold capitalize">
-                              {en.category}
-                            </span>
-                            <span className="text-xs text-slate-400 line-clamp-1">
-                              {en.notes || t("farmer_dash.no_notes")}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
-                            {en.season}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div
-                            className={`flex items-center gap-1 text-[10px] font-black uppercase ${en.type?.toLowerCase().includes("income") || en.type?.includes("ဝင်ငွေ") ? "text-emerald-600" : "text-red-500"}`}
-                          >
-                            {en.type?.toLowerCase().includes("income") ||
-                            en.type?.includes("ဝင်ငွေ") ? (
-                              <ArrowUpRight size={14} />
-                            ) : (
-                              <ArrowDownLeft size={14} />
+                  recentEntries.map((en: any) => (
+                    <TableRow
+                      key={en._id}
+                      className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors border-slate-50 dark:border-slate-800"
+                      onClick={() =>
+                        navigate(`/${user?.role}/records/${en._id}`)
+                      }
+                    >
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 dark:text-slate-200">
+                            {formatDateNative(
+                              en.date,
+                              lang as "en" | "mm",
+                              "short",
                             )}
-                            {/* Display localized type */}
-                            {en.type === "income"
-                              ? t("entry.type_income")
-                              : en.type === "expense"
-                                ? t("entry.type_expense")
-                                : en.type}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={`font-black ${en.type?.toLowerCase().includes("income") || en.type?.includes("ဝင်ငွေ") ? "text-emerald-600" : "text-destructive"}`}
-                          >
-                            {en.type?.toLowerCase().includes("income") ||
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {formatDateNative(
+                              en.date,
+                              lang as "en" | "mm",
+                              "year",
+                            )}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold capitalize">
+                            {en.category}
+                          </span>
+                          <span className="text-xs text-slate-400 line-clamp-1">
+                            {en.notes || t("farmer_dash.no_notes")}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
+                          {en.season}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div
+                          className={`flex items-center gap-1 text-[10px] font-black uppercase ${
+                            en.type?.toLowerCase().includes("income") ||
                             en.type?.includes("ဝင်ငွေ")
-                              ? "+"
-                              : "-"}{" "}
-                            {en.value}
-                          </span>
-                          <span className="block text-[8px] text-slate-400 font-bold">
-                            {t("details.currency")}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                              ? "text-emerald-600"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {en.type?.toLowerCase().includes("income") ||
+                          en.type?.includes("ဝင်ငွေ") ? (
+                            <ArrowUpRight size={14} />
+                          ) : (
+                            <ArrowDownLeft size={14} />
+                          )}
+                          {en.type === "income"
+                            ? t("entry.type_income")
+                            : en.type === "expense"
+                              ? t("entry.type_expense")
+                              : en.type}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={`font-black ${
+                            en.type?.toLowerCase().includes("income") ||
+                            en.type?.includes("ဝင်ငွေ")
+                              ? "text-emerald-600"
+                              : "text-destructive"
+                          }`}
+                        >
+                          {en.type?.toLowerCase().includes("income") ||
+                          en.type?.includes("ဝင်ငွေ")
+                            ? "+"
+                            : "-"}{" "}
+                          {en.value}
+                        </span>
+                        <span className="block text-[8px] text-slate-400 font-bold">
+                          {t("details.currency")}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>

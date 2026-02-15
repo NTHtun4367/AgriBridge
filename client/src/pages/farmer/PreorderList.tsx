@@ -13,7 +13,7 @@ import {
 import { useGetMyPreordersQuery } from "@/store/slices/preorderApi";
 import { Button } from "@/components/ui/button";
 import type { RootState } from "@/store";
-import { localizeData } from "@/utils/translator";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 function PreorderList() {
   const { t, i18n } = useTranslation();
@@ -69,9 +69,21 @@ function PreorderList() {
                   <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                     <CalendarClock className="w-3 h-3" />
                     {t("farmer_preorders.ordered_date")}:{" "}
-                    {new Date(order.createdAt).toLocaleDateString(
-                      i18n.language === "mm" ? "my-MM" : "en-US",
-                    )}
+                    {new Date(order.createdAt)
+                      .toLocaleDateString(
+                        i18n.language === "mm" ? "my-MM" : "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )
+                      .split(" ")
+                      .map((part) =>
+                        // If it's Myanmar language, ensure numbers are converted
+                        i18n.language === "mm" ? toMyanmarNumerals(part) : part,
+                      )
+                      .join(" ")}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

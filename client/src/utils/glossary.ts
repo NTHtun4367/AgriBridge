@@ -2,6 +2,7 @@ export const GLOSSARY: Record<string, string> = {
   // Common UI & Status
   merchant_preorders: "ကြိုတင်မှာယူမှုများ",
   merchant_disputes: "အငြင်းပွားမှုများ",
+  farmer: "လယ်သမား",
   merchant: "ကုန်သည်",
   wholesaler: "လက်ကားရောင်းချသူ",
   retailer: "လက်လီရောင်းချသူ",
@@ -72,6 +73,7 @@ export const GLOSSARY: Record<string, string> = {
   thon: "သုံး",
   ba: "ဗ",
   gyi: "ကြီး",
+  kaung: "ကောင်း",
 
   // Time Markers (AM/PM)
   am: "နံနက်",

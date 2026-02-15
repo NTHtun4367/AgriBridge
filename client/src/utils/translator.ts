@@ -4,8 +4,16 @@ const formatNumberWithCommas = (val: string | number): string => {
   const stringVal = val.toString().replace(/,/g, "");
   const num = Number(stringVal);
   if (isNaN(num) || stringVal === "") return stringVal;
+  // Preserve years like 2026 without commas
   if (num >= 1000 && num <= 2100 && stringVal.length === 4) return stringVal;
   return num.toLocaleString("en-US");
+};
+
+/**
+ * Escapes special characters so they can be used safely in a RegExp
+ */
+const escapeRegExp = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
 export const toMyanmarNumerals = (val: string | number | any): string => {
@@ -14,10 +22,12 @@ export const toMyanmarNumerals = (val: string | number | any): string => {
   let stringVal =
     typeof val === "number" ? formatNumberWithCommas(val) : val.toString();
 
+  // Sort by length descending so that "Yangon (Bayintnaung)" is replaced
+  // before "Yangon" is caught individually.
   const sortedKeys = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
   sortedKeys.forEach((key) => {
-    const regex = new RegExp(`\\b${key}\\b`, "gi");
+    const regex = new RegExp(escapeRegExp(key), "gi");
     stringVal = stringVal.replace(regex, GLOSSARY[key]);
   });
 
@@ -49,24 +59,28 @@ export const localizeData = (data: any, lang: "en" | "mm" = "en"): any => {
       const val = output[key];
       const lowerKey = key.toLowerCase();
 
-      // FIXED: Allow "merchantId" to be localized if it's an object,
-      // but skip it if it's just a string/number ID.
+      // Skip actual IDs and Technical fields
       const isActualIdValue =
         typeof val !== "object" &&
         (lowerKey.endsWith("id") || /^(id|_id|__v)$/i.test(key));
 
+      // Skip Date and Time fields
       const isDateKey =
         lowerKey.includes("date") ||
         lowerKey.includes("time") ||
         (lowerKey.endsWith("at") && lowerKey !== "unit");
 
-      if (isActualIdValue || isDateKey) continue;
+      // NEW: Skip Email fields to prevent numerals from being converted
+      const isEmailKey = lowerKey.includes("email");
+
+      if (isActualIdValue || isDateKey || isEmailKey) continue;
 
       if (typeof val === "string") {
         let text = val.trim();
         if (lang === "mm") {
           output[key] = toMyanmarNumerals(text);
         } else {
+          // English formatting: Add commas to numbers found in strings
           if (!isNaN(Number(text.replace(/,/g, ""))) && text !== "") {
             output[key] = formatNumberWithCommas(text);
           }

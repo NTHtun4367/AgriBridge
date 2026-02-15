@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import {
   MapPin,
@@ -9,7 +9,7 @@ import {
   User as UserIcon,
   Loader2,
   Edit3,
-  ExternalLink,
+  // ExternalLink,
   Globe,
   Building2,
   Navigation,
@@ -21,10 +21,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { type RootState } from "@/store";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 const Profile: React.FC = () => {
-  const { data: user, isLoading } = useCurrentUserQuery();
+  const { t } = useTranslation();
+  const { data: rawUser, isLoading } = useCurrentUserQuery();
   const navigate = useNavigate();
+
+  // Get current language for localization
+  const { lang } = useSelector((state: RootState) => state.settings);
+
+  // Memoize localized user data
+  const user = useMemo(() => localizeData(rawUser, lang), [rawUser, lang]);
 
   if (isLoading) {
     return (
@@ -32,7 +43,7 @@ const Profile: React.FC = () => {
         <div className="text-center">
           <Loader2 className="animate-spin text-primary h-10 w-10 mx-auto mb-4" />
           <p className="text-muted-foreground animate-pulse">
-            Loading your profile...
+            {t("profile.loading")}
           </p>
         </div>
       </div>
@@ -43,16 +54,21 @@ const Profile: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-      day: "numeric",
-    });
+    const date = new Date(dateString);
+    const formatted = date.toLocaleDateString(
+      lang === "mm" ? "my-MM" : "en-US",
+      {
+        month: "long",
+        year: "numeric",
+        day: "numeric",
+      },
+    );
+    return lang === "mm" ? toMyanmarNumerals(formatted) : formatted;
   };
 
   const renderValue = (val: any) => {
-    if (val === null || val === undefined) return "Not Set";
-    if (typeof val === "object") return "Not Set";
+    if (val === null || val === undefined || typeof val === "object")
+      return t("profile.not_set");
     return String(val);
   };
 
@@ -92,27 +108,27 @@ const Profile: React.FC = () => {
                     variant="outline"
                     className="mt-2 uppercase tracking-tighter border-primary/30 text-primary bg-primary/5"
                   >
-                    {renderValue(user.role)}
+                    {/* Translate role if necessary, e.g., t('roles.merchant') */}
+                    {user.role}
                   </Badge>
                 </div>
 
                 <div className="w-full mt-8 space-y-3">
                   <QuickInfo
                     icon={<Mail size={14} />}
-                    label="Email"
+                    label={t("profile.email")}
                     value={renderValue(user.email)}
                   />
 
-                  {/* FIXED: Added optional chaining to prevent crash if merchantId is null */}
                   <QuickInfo
                     icon={<Phone size={14} />}
-                    label="Contact"
+                    label={t("profile.contact")}
                     value={renderValue(user.phone || user.merchantId?.phone)}
                   />
 
                   <QuickInfo
                     icon={<Calendar size={14} />}
-                    label="Joined"
+                    label={t("profile.joined")}
                     value={formatDate(user.createdAt)}
                   />
                 </div>
@@ -121,7 +137,8 @@ const Profile: React.FC = () => {
                   onClick={() => navigate(`/${user.role}/settings`)}
                   className="w-full mt-8 rounded-xl bg-slate-900 dark:bg-primary hover:scale-[1.02] transition-transform py-6"
                 >
-                  <Edit3 size={18} className="mr-2" /> Edit Profile
+                  <Edit3 size={18} className="mr-2" />{" "}
+                  {t("profile.edit_button")}
                 </Button>
               </CardContent>
             </Card>
@@ -133,14 +150,14 @@ const Profile: React.FC = () => {
             <Card className="border-none shadow-md bg-white dark:bg-slate-900">
               <CardContent className="p-8">
                 <div className="flex items-center gap-2 mb-4 text-primary font-bold uppercase text-xs tracking-widest">
-                  <UserIcon size={16} /> User Biography
+                  <UserIcon size={16} /> {t("profile.biography_title")}
                 </div>
                 <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                  "
-                  {renderValue(user.bio) === "Not Set"
-                    ? "No bio available."
+                  &ldquo;
+                  {renderValue(user.bio) === t("profile.not_set")
+                    ? t("profile.no_bio")
                     : user.bio}
-                  "
+                  &rdquo;
                 </p>
               </CardContent>
             </Card>
@@ -151,27 +168,27 @@ const Profile: React.FC = () => {
                 <div className="bg-slate-50 dark:bg-slate-800/50 px-8 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                   <h3 className="font-bold flex items-center gap-2">
                     <Navigation size={18} className="text-primary" />
-                    Registered Address
+                    {t("profile.registered_address")}
                   </h3>
-                  <Badge className="bg-emerald-500/10 text-emerald-600 border-none">
-                    Active Location
+                  <Badge className="bg-emerald-500/10 text-emerald-600 border-none mm:leading-loose">
+                    {t("profile.status_active")}
                   </Badge>
                 </div>
 
                 <CardContent className="p-0">
                   <div className="grid grid-cols-1 md:grid-cols-3">
                     <AddressNode
-                      label="Division"
+                      label={t("profile.division")}
                       value={renderValue(user.division)}
                       icon={<Globe size={18} />}
                     />
                     <AddressNode
-                      label="District"
+                      label={t("profile.district")}
                       value={renderValue(user.district)}
                       icon={<Building2 size={18} />}
                     />
                     <AddressNode
-                      label="Township"
+                      label={t("profile.township")}
                       value={renderValue(user.township)}
                       icon={<Compass size={18} />}
                     />
@@ -186,56 +203,34 @@ const Profile: React.FC = () => {
 
                     <div className="relative z-10">
                       <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2">
-                        Street & Home Address
+                        {t("profile.street_address_label")}
                       </p>
                       <p className="text-2xl font-medium tracking-tight leading-snug max-w-2xl">
                         {renderValue(user.homeAddress)}
                       </p>
-
-                      {/* <div className="mt-6 flex items-center gap-4">
-                        <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                        <span className="text-xs text-slate-400 font-mono tracking-widest">
-                          SECURE_LOCATION_VERIFIED
-                        </span>
-                      </div> */}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Merchant / Account IDs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Merchant Specific ID */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {user.role === "merchant" && (
                   <Card className="border-none shadow-md bg-blue-600 text-white">
                     <CardContent className="p-6 flex items-center justify-between">
                       <div>
                         <p className="text-xs font-bold text-white/60 uppercase">
-                          Merchant ID
+                          {t("profile.merchant_id_label")}
                         </p>
-                        {/* FIXED: Render specific string property ID instead of the whole object */}
                         <p className="text-xl font-mono font-black mt-1 uppercase">
-                          {renderValue(user.merchantId?._id)}
+                          {user.merchantId?._id || "N/A"}
                         </p>
                       </div>
                       <ExternalLink size={24} className="text-white/20" />
                     </CardContent>
                   </Card>
                 )}
-
-                <Card className="border-none shadow-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">
-                        System UID
-                      </p>
-                      <p className="text-sm font-mono mt-1 text-slate-500 uppercase">
-                        {renderValue(user._id)}
-                      </p>
-                    </div>
-                    <ShieldCheck size={24} className="text-primary/20" />
-                  </CardContent>
-                </Card>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -259,7 +254,7 @@ const QuickInfo = ({
     <span className="text-muted-foreground flex items-center gap-2">
       {icon} {label}
     </span>
-    <span className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
+    <span className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px] mm:leading-loose mm:text-xs">
       {value}
     </span>
   </div>

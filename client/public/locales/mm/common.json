@@ -781,7 +781,8 @@
     "verification": "အတည်ပြုချက်များ",
     "announcements": "သတင်းထုတ်ပြန်ချက်များ",
     "merchant_disputes": "ကုန်သည် အငြင်းပွားမှုများ",
-    "settings": "ဆက်တင်များ"
+    "settings": "ဆက်တင်များ",
+    "logout": "ထွက်ရန်"
   },
   "dashboard": {
     "title": "ပင်မ ဒိုင်ခွက်",
@@ -1191,5 +1192,40 @@
       "resolved": "ဖြေရှင်းပြီး",
       "investigating": "စစ်ဆေးနေဆဲ"
     }
+  },
+  "market_dashboard": {
+    "title": "ဈေးနှုန်းများ",
+    "subtitle": "နောက်ဆုံးရရှိထားသော ဈေးကွက်ပေါက်ဈေးများကို အချိန်နှင့်တပြေးညီ ကြည့်ရှုနိုင်ပါသည်။",
+    "latest_update": "နောက်ဆုံးပြင်ဆင်ချိန်",
+    "filter_market": "ဈေးကွက်အလိုက် ရှာဖွေရန်",
+    "all_markets": "ဈေးကွက်အားလုံး",
+    "all_categories": "အမျိုးအစားအားလုံး",
+    "search_placeholder": "သီးနှံအမည်ဖြင့် ရှာဖွေရန်...",
+    "table": {
+      "market_as_of": "{{marketName}} ({{date}} ရက်နေ့ရှိ ဈေးနှုန်း)",
+      "crops_found": "သီးနှံ ({{displayCount}}) မျိုး တွေ့ရှိသည်"
+    }
+  },
+  "profile": {
+    "loading": "ပရိုဖိုင်ကို ရယူနေပါသည်...",
+    "not_set": "သတ်မှတ်မထားပါ",
+    "email": "အီးမေးလ်",
+    "contact": "ဆက်သွယ်ရန်",
+    "joined": "စတင်ဝင်ရောက်သည့်နေ့",
+    "edit_button": "ပရိုဖိုင်ပြင်ဆင်ရန်",
+    "biography_title": "အချက်အလက်အကျဉ်း",
+    "no_bio": "ကိုယ်ရေးအကျဉ်း မရှိသေးပါ။",
+    "registered_address": "မှတ်ပုံတင်ထားသော လိပ်စာ",
+    "status_active": "လက်ရှိတည်နေရာ",
+    "division": "တိုင်းဒေသကြီး/ပြည်နယ်",
+    "district": "ခရိုင်",
+    "township": "မြို့နယ်",
+    "street_address_label": "လမ်းနှင့် အိမ်နံပါတ်",
+    "merchant_id_label": "ကုန်သည် ကုဒ်နံပါတ်"
+  },
+  "common": {
+    "cancel": "ပယ်ဖျက်မည်",
+    "confirm": "အတည်ပြုမည်",
+    "delete": "ဖျက်မည်"
   }
 }

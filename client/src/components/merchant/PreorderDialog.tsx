@@ -53,6 +53,9 @@ import { useNavigate, useParams } from "react-router";
 
 import nrcDataRaw from "@/utils/nrcData.json";
 import { Checkbox } from "../ui/checkbox";
+// Import your localization utilities
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+
 const nrcData = nrcDataRaw as Record<string, string[]>;
 
 const formSchema = z.object({
@@ -93,7 +96,8 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
   isOpen,
   setIsOpen,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as "en" | "mm"; // Detect current language
   const { userId } = useParams();
   const { user } = useSelector((state: RootState) => state.auth);
   const [createPreorder, { isLoading }] = useCreatePreorderMutation();
@@ -101,6 +105,18 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
 
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [tempCheck, setTempCheck] = useState(false);
+
+  // Localize Merchant and Crop Data based on current language
+  const localizedMerchant = useMemo(
+    () => localizeData(merchant, lang),
+    [merchant, lang],
+  );
+  const localizedCrops = useMemo(
+    () => localizeData(rawData, lang),
+    [rawData, lang],
+  );
+
+  console.log(localizedCrops);
 
   const form = useForm<PreorderFormValues>({
     resolver: zodResolver(formSchema),
@@ -174,14 +190,17 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
       toast.success(t("preorder.success"));
       setIsOpen(false);
       form.reset();
-      navigate("/farmer/preorders");
+      navigate("/farmer/merchant_preorders"); // Using personalized term
     } catch (err: any) {
       toast.error(err?.data?.message || t("preorder.error"));
     }
   };
 
   const handleCropChange = (index: number, cropName: string) => {
-    const selectedCrop = rawData.find((item) => item.cropName === cropName);
+    // Find from rawData to keep English values for form state/database
+    const selectedCrop = localizedCrops.find(
+      (item: any) => item.cropName === cropName,
+    );
     if (selectedCrop) {
       form.setValue(
         `items.${index}.price`,
@@ -211,7 +230,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
               <DialogDescription className="mm:leading-loose">
                 {t("preorder.terms_desc")}{" "}
                 <span className="font-semibold text-foreground">
-                  {merchant.merchantId.businessName}
+                  {localizedMerchant.merchantId.businessName}
                 </span>
                 .
               </DialogDescription>
@@ -286,7 +305,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
               <DialogDescription>
                 {t("preorder.description")}{" "}
                 <span className="font-bold text-primary">
-                  {merchant.merchantId.businessName}
+                  {localizedMerchant.merchantId.businessName}
                 </span>
               </DialogDescription>
             </DialogHeader>
@@ -371,7 +390,9 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                               <SelectContent>
                                 {Object.keys(nrcData).map((reg) => (
                                   <SelectItem key={reg} value={reg}>
-                                    {reg}
+                                    {lang === "mm"
+                                      ? toMyanmarNumerals(reg)
+                                      : reg}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -399,9 +420,11 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {nrcTownshipOptions.map((t) => (
-                                  <SelectItem key={t} value={t}>
-                                    {t}
+                                {nrcTownshipOptions.map((town) => (
+                                  <SelectItem key={town} value={town}>
+                                    {lang === "mm"
+                                      ? toMyanmarNumerals(town)
+                                      : town}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -426,7 +449,9 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                               <SelectContent>
                                 {["(N)", "(P)", "(E)"].map((type) => (
                                   <SelectItem key={type} value={type}>
-                                    {type}
+                                    {lang === "mm"
+                                      ? toMyanmarNumerals(type)
+                                      : type}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -512,7 +537,10 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-bold text-slate-400">
-                          # {index + 1}
+                          #{" "}
+                          {lang === "mm"
+                            ? toMyanmarNumerals(index + 1)
+                            : index + 1}
                         </span>
                         {fields.length > 1 && (
                           <Button
@@ -548,7 +576,7 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {rawData?.map((item) => (
+                                {localizedCrops?.map((item: any) => (
                                   <SelectItem
                                     key={item.cropName}
                                     value={item.cropName}
@@ -572,7 +600,11 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                                 {t("preorder.fields.qty")}
                               </FormLabel>
                               <FormControl>
-                                <Input type="number" {...field} />
+                                <Input
+                                  className="mm:leading-loose"
+                                  type="number"
+                                  {...field}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
@@ -582,9 +614,12 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             {t("preorder.fields.price")}
                           </FormLabel>
                           <Input
-                            value={form.watch(`items.${index}.price`)}
+                            value={localizeData(
+                              form.watch(`items.${index}.price`),
+                              lang,
+                            )}
                             readOnly
-                            className="bg-slate-50 font-mono"
+                            className="bg-slate-50 font-mono mm:leading-loose mm:pt-1"
                           />
                         </FormItem>
                         <FormItem>
@@ -592,9 +627,12 @@ export const PreorderDialog: React.FC<PreorderDialogProps> = ({
                             {t("preorder.fields.unit")}
                           </FormLabel>
                           <Input
-                            value={form.watch(`items.${index}.unit`)}
+                            value={localizeData(
+                              form.watch(`items.${index}.unit`),
+                              lang,
+                            )}
                             readOnly
-                            className="bg-slate-50"
+                            className="bg-slate-50 mm:leading-loose mm:pt-4"
                           />
                         </FormItem>
                       </div>

@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, NavLink, useNavigate, useLocation } from "react-router";
 import heroBg from "@/assets/logo.png";
+import { useTranslation } from "react-i18next";
 
 interface SideBarProps {
   pages: Page[];
@@ -17,6 +18,7 @@ interface SideBarProps {
 }
 
 function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -181,7 +183,9 @@ function SideBar({ pages, isCollapsed, closeMobile }: SideBarProps) {
           onClick={handleLogout}
         >
           <LogOut size={18} />
-          {!isCollapsed && <span className="font-bold">Logout</span>}
+          {!isCollapsed && (
+            <span className="font-bold">{t(`sidebar.logout`)}</span>
+          )}
         </Button>
       </div>
     </div>

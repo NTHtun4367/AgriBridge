@@ -69,8 +69,6 @@ function MarketPriceLanding() {
 
   const rawData = useMemo(() => response?.data || [], [response]);
 
-  console.log(rawData, response, markets);
-
   // 4. Filter Options
   const categoryOptions = useMemo(() => {
     const unique = Array.from(

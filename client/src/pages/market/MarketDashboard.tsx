@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
+import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar } from "lucide-react"; // Added Calendar icon
+import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,12 +17,17 @@ import {
   useGetMarketPricesQuery,
   useGetAllMarketsQuery,
 } from "@/store/slices/marketApi";
-import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns"; // Import format for date handling
+import { format, isValid } from "date-fns";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+import { type RootState } from "@/store";
 
 function MarketDashboard() {
-  const { data: user } = useCurrentUserQuery();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Get current language from Redux state
+  const { lang } = useSelector((state: RootState) => state.settings);
 
   // --- Search, Filter & Sort States ---
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,63 +37,82 @@ function MarketDashboard() {
     key: string;
     direction: "asc" | "desc" | null;
   }>({
-    key: "cropName", // Default sort
+    key: "cropName",
     direction: "asc",
   });
 
   // --- API Calls ---
-  const { data: markets = [] } = useGetAllMarketsQuery(undefined);
-  const { data: response } = useGetMarketPricesQuery({
+  // Fetch markets and prices
+  const { data: rawMarkets = [] } = useGetAllMarketsQuery(undefined);
+  const { data: rawResponse } = useGetMarketPricesQuery({
     official: true,
+    // When "all" is selected, we pass undefined to fetch everything
     marketId: selectedMarket === "all" ? undefined : selectedMarket,
   });
 
-  const navigate = useNavigate();
-  const rawData = response?.data || [];
+  // --- Localization Logic ---
+  // Localize market list for the tags/buttons
+  const localizedMarkets = useMemo(
+    () => localizeData(rawMarkets, lang),
+    [rawMarkets, lang],
+  );
+
+  console.log(localizedMarkets);
+
+  // Localize the actual price data
+  const localizedResponse = useMemo(
+    () => localizeData(rawResponse, lang),
+    [rawResponse, lang],
+  );
+
+  const rawData = useMemo(
+    () => localizedResponse?.data || [],
+    [localizedResponse],
+  );
 
   // --- Date Logic ---
-  // Get the most recent update date from the dataset
-  const lastUpdatedDate = useMemo(() => {
-    if (rawData.length === 0) return null;
-    const dates = rawData.map((item: any) => new Date(item.updatedAt || item.date).getTime());
-    return new Date(Math.max(...dates));
-  }, [rawData]);
+  const todayDate = useMemo(() => {
+    const now = new Date();
+    if (!isValid(now)) return "";
+    const d = format(now, "dd-MM-yyyy");
+    return lang === "mm" ? toMyanmarNumerals(d) : d;
+  }, [lang]);
 
-  // Generate unique categories for the dropdown
-  const categoryOptions = useMemo(() => {
+  // --- Filter Options ---
+  const categoryOptions = useMemo<string[]>(() => {
     const unique = Array.from(
-      new Set(rawData.map((item: any) => item.category)),
+      new Set(rawData.map((item: any) => item.category as string)),
     );
-    return ["all", ...unique];
+    return ["all", ...unique] as string[];
   }, [rawData]);
 
-  // Combined logic: Search -> Category Filter -> Market Filter -> Sort
+  // --- Processing Logic (Search, Category, Market, Sort) ---
   const processedData = useMemo(() => {
     let filtered = [...rawData];
 
-    // 1. Search filter
     if (searchTerm) {
-      filtered = filtered.filter((item) =>
-        item.cropName.toLowerCase().includes(searchTerm.toLowerCase()),
+      filtered = filtered.filter((item: any) =>
+        item.cropName?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
-    // 2. Category filter
     if (selectedCategory !== "all") {
-      filtered = filtered.filter((item) => item.category === selectedCategory);
+      filtered = filtered.filter(
+        (item: any) => item.category === selectedCategory,
+      );
     }
 
-    // 3. Market filter (Crucial for single market view)
+    // Direct ID filtering to ensure Yangon/Mandalay switch correctly
     if (selectedMarket !== "all") {
-      filtered = filtered.filter((item) => item.marketId === selectedMarket);
+      filtered = filtered.filter(
+        (item: any) => item.marketId === selectedMarket,
+      );
     }
 
-    // 4. Sorting logic
     if (sortConfig.key && sortConfig.direction) {
       filtered.sort((a: any, b: any) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
-
         if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
@@ -96,18 +122,17 @@ function MarketDashboard() {
     return filtered;
   }, [rawData, searchTerm, selectedCategory, selectedMarket, sortConfig]);
 
-  // Group data by market for the "All Markets" view
+  // --- Grouping Logic for "All Markets" View ---
   const groupedData = useMemo(() => {
     if (selectedMarket !== "all") return [];
-
-    return markets
+    return localizedMarkets
       .map((m: any) => ({
         marketName: m.name,
         marketId: m._id,
         items: processedData.filter((item: any) => item.marketId === m._id),
       }))
       .filter((group: any) => group.items.length > 0);
-  }, [processedData, selectedMarket, markets]);
+  }, [processedData, selectedMarket, localizedMarkets]);
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -119,32 +144,20 @@ function MarketDashboard() {
 
   return (
     <div className="w-full h-screen p-4">
-      {/* HEADER SECTION WITH DATE */}
+      {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold">Market Prices</h2>
+          <h2 className="text-2xl font-bold">{t("market_dashboard.title")}</h2>
           <p className="text-muted-foreground mt-2">
-            Real-time updates of the latest market prices.
+            {t("market_dashboard.subtitle")}
           </p>
         </div>
-        
-        {lastUpdatedDate && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <Calendar className="h-4 w-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-tight">Latest Update</span>
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                {format(lastUpdatedDate, "dd MMMM yyyy")}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Horizontal Market Tags */}
+      {/* Market Selection Tags */}
       <div className="mb-8">
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-3">
-          Filter by Market
+          {t("market_dashboard.filter_market")}
         </span>
         <div className="flex flex-wrap gap-2">
           <button
@@ -156,9 +169,9 @@ function MarketDashboard() {
                 : "bg-white text-slate-600 border-slate-200 hover:border-primary/50 hover:bg-slate-50",
             )}
           >
-            All Markets
+            {t("market_dashboard.all_markets")}
           </button>
-          {markets.map((m: any) => (
+          {localizedMarkets.map((m: any) => (
             <button
               key={m._id}
               onClick={() => setSelectedMarket(m._id)}
@@ -175,14 +188,14 @@ function MarketDashboard() {
         </div>
       </div>
 
-      {/* Search and Category Filter Row */}
+      {/* Search and Category Card */}
       <Card className="mb-4">
         <CardContent>
           <div className="flex flex-col md:flex-row gap-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search crops by name..."
+                placeholder={t("market_dashboard.search_placeholder")}
                 className="pl-9 bg-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -193,13 +206,15 @@ function MarketDashboard() {
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-full md:w-[220px] bg-white">
-                <SelectValue placeholder="All Categories" />
+              <SelectTrigger className="w-full md:w-[220px] bg-white mm:leading-loose">
+                <SelectValue
+                  placeholder={t("market_dashboard.all_categories")}
+                />
               </SelectTrigger>
               <SelectContent>
-                {categoryOptions.map((cat) => (
+                {categoryOptions.map((cat: string) => (
                   <SelectItem key={cat} value={cat}>
-                    {cat === "all" ? "All Categories" : cat}
+                    {cat === "all" ? t("market_dashboard.all_categories") : cat}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -209,49 +224,86 @@ function MarketDashboard() {
       </Card>
 
       {/* Table Section */}
-      <div className="space-y-8 pb-10">
+      <main className="max-w-6xl mx-auto mt-12">
         {selectedMarket === "all" ? (
-          // Grouped Multi-Table View
-          groupedData.map((group: any) => (
-            <div key={group.marketId} className="space-y-4">
-              <div className="flex items-center gap-2 px-2 text-primary font-bold text-lg uppercase tracking-wider">
-                <MapPin className="h-4 w-4" />
-                {group.marketName}
+          <div className="space-y-20">
+            {groupedData.map((group: any) => (
+              <div key={group.marketId} className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg mm:mb-3">
+                      <MapPin className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl text-primary font-semibold uppercase tracking-tight mm:leading-loose">
+                        {group.marketName}
+                      </h2>
+                      <p className="text-xs text-slate-500 font-medium mm:leading-loose">
+                        {t("market.table.market_as_of", {
+                          marketName: group.marketName,
+                          date: todayDate,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-400 font-medium italic">
+                    {t("market.table.crops_found", {
+                      count: group.items.length,
+                      displayCount:
+                        lang === "mm"
+                          ? toMyanmarNumerals(group.items.length)
+                          : group.items.length,
+                    })}
+                  </div>
+                </div>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <MarketPriceTable
+                      data={group.items}
+                      onSort={handleSort}
+                      sortConfig={sortConfig}
+                      onRowClick={(cropId, marketId) =>
+                        navigate(
+                          `/crop-price-history?cropId=${cropId}&marketId=${marketId}`,
+                        )
+                      }
+                    />
+                  </CardContent>
+                </Card>
               </div>
-              <Card>
-                <CardContent className="pt-6">
-                  <MarketPriceTable
-                    data={group.items}
-                    onSort={handleSort}
-                    sortConfig={sortConfig}
-                    onRowClick={(cropId, marketId) =>
-                      navigate(
-                        `/${user?.role}/crop-price-history?cropId=${cropId}&marketId=${marketId}`,
-                      )
-                    }
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          // Single Selected Market View
-          <div className="space-y-4">
-            {processedData.length > 0 && (
-              <div className="flex items-center gap-2 px-2 text-primary font-bold text-lg uppercase tracking-wider">
-                <MapPin className="h-4 w-4" />
-                {processedData[0]?.marketName}
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-4 gap-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-normal text-slate-800 uppercase tracking-tight">
+                    {processedData[0]?.marketName}
+                  </h2>
+                  <p className="text-[12px] text-slate-500 font-light">
+                    {t("market.table.market_as_of", {
+                      marketName: processedData[0]?.marketName || "",
+                      date: todayDate,
+                    })}
+                  </p>
+                </div>
               </div>
-            )}
-            <Card>
-              <CardContent className="pt-6">
+            </div>
+
+            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
+              <CardContent className="p-0">
                 <MarketPriceTable
                   data={processedData}
                   onSort={handleSort}
                   sortConfig={sortConfig}
                   onRowClick={(cropId, marketId) =>
                     navigate(
-                      `/${user?.role}/crop-price-history?cropId=${cropId}&marketId=${marketId}`,
+                      `/crop-price-history?cropId=${cropId}&marketId=${marketId}`,
                     )
                   }
                 />
@@ -259,7 +311,7 @@ function MarketDashboard() {
             </Card>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

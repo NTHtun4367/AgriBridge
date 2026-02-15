@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Loader2, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const ConfirmModal = ({
   isOpen,
@@ -21,6 +22,7 @@ const ConfirmModal = ({
   confirmText: string;
   icon?: React.ReactNode;
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -51,7 +53,7 @@ const ConfirmModal = ({
               onClick={onClose}
               disabled={isLoading}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
