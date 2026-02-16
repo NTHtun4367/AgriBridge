@@ -44,6 +44,7 @@ import { Settings2, Search, ArrowUpDown } from "lucide-react";
 import { useGetMerchantsAdminQuery } from "@/store/slices/adminApi";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
 import MerchantVerificationDropDown from "@/components/admin/MerchantVerificationDropDown";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 interface Merchant {
   _id: string;
@@ -56,9 +57,16 @@ interface Merchant {
 const columnHelper = createColumnHelper<Merchant>();
 
 function MerchantManagement() {
-  const { t } = useTranslation();
-  const { data: merchants = [], isLoading } =
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language as "en" | "mm") || "en";
+
+  const { data: rawMerchants = [], isLoading } =
     useGetMerchantsAdminQuery(undefined);
+
+  // Localize row data (names, statuses, etc.)
+  const localizedMerchants = useMemo(() => {
+    return localizeData(rawMerchants, currentLang) as Merchant[];
+  }, [rawMerchants, currentLang]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -67,6 +75,11 @@ function MerchantManagement() {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  // Helper to handle UI number localization for Myanmar language
+  const formatUI = (val: string | number) => {
+    return currentLang === "mm" ? toMyanmarNumerals(val) : val.toString();
+  };
 
   const columns = useMemo(
     () => [
@@ -102,11 +115,11 @@ function MerchantManagement() {
               variant="outline"
               className={
                 status === "active"
-                  ? "border-primary text-primary"
-                  : "border-destructive text-destructive"
+                  ? "border-primary text-primary capitalize"
+                  : "border-destructive text-destructive capitalize"
               }
             >
-              {status}
+              {t(`${status}`, status)}
             </Badge>
           );
         },
@@ -124,7 +137,7 @@ function MerchantManagement() {
             <Badge
               className={`${styles[vStatus] || ""} capitalize border shadow-none hover:bg-transparent`}
             >
-              {t(`merchant_mgmt.status.${vStatus}`)}
+              {t(`${vStatus}`)}
             </Badge>
           );
         },
@@ -148,11 +161,11 @@ function MerchantManagement() {
         ),
       }),
     ],
-    [t],
+    [t, currentLang],
   );
 
   const table = useReactTable({
-    data: merchants,
+    data: localizedMerchants,
     columns,
     state: {
       sorting,
@@ -212,7 +225,6 @@ function MerchantManagement() {
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {/* Fallback to column ID if specialized translation isn't found */}
                   {t(
                     `merchant_mgmt.table.${column.id === "_id" ? "user_id" : column.id}`,
                     column.id,
@@ -284,9 +296,12 @@ function MerchantManagement() {
         </Table>
       </div>
 
+      {/* Pagination Footer with Localization Fixes */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {t("merchant_mgmt.table.total_found", { count: merchants.length })}
+          {t("merchant_mgmt.table.total_found", {
+            count: localizedMerchants.length,
+          }).replace(/\d+/g, (m) => formatUI(m))}
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
           <div className="flex items-center space-x-2">
@@ -298,14 +313,14 @@ function MerchantManagement() {
               onValueChange={(value) => table.setPageSize(Number(value))}
             >
               <SelectTrigger className="h-8 w-[70px] border-2">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
+                <SelectValue>
+                  {formatUI(table.getState().pagination.pageSize)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent side="top">
                 {[10, 20, 30, 40, 50].map((pageSize) => (
                   <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
+                    {formatUI(pageSize)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -317,7 +332,7 @@ function MerchantManagement() {
               {t("farmer_mgmt.pagination.page_info", {
                 current: table.getState().pagination.pageIndex + 1,
                 total: table.getPageCount(),
-              })}
+              }).replace(/\d+/g, (m) => formatUI(m))}
             </span>
             <div className="flex items-center space-x-2">
               <Button

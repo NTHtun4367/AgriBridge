@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,11 +60,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 const myanmarData = myanmarDataRaw as Record<string, Record<string, string[]>>;
 const nrcData = nrcDataRaw as Record<string, string[]>;
 
 function Register() {
+  const { t, i18n } = useTranslation(); // get current language
   const [registerFarmerMutation, { isLoading: farmerLoading }] =
     useRegisterFarmerMutation();
   const [registerMerchantMutation, { isLoading: merchantLoading }] =
@@ -73,6 +76,9 @@ function Register() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
+
+  const displayLabel = (value: string) =>
+    i18n.language === "mm" ? localizeData([value], "mm")[0] : value;
 
   const form = useForm<any>({
     resolver: zodResolver(registerSchema),
@@ -139,7 +145,6 @@ function Register() {
         result = await registerFarmerMutation({ ...data, identifier }).unwrap();
       } else {
         const formData = new FormData();
-        // 1. General Fields
         formData.append("identifier", identifier);
         formData.append("name", data.name);
         formData.append("password", data.password);
@@ -148,15 +153,12 @@ function Register() {
         formData.append("district", data.district);
         formData.append("township", data.township);
         formData.append("businessName", data.businessName || "");
-
         formData.append("businessPhone", data.businessPhone || "");
-
         formData.append("nrcRegion", data.nrcRegion);
         formData.append("nrcTownship", data.nrcTownship);
         formData.append("nrcType", data.nrcType);
         formData.append("nrcNumber", data.nrcNumber);
 
-        // 2. Image Files
         if (data.nrcFrontImage?.file)
           formData.append("nrcFront", data.nrcFrontImage.file);
         if (data.nrcBackImage?.file)
@@ -166,12 +168,12 @@ function Register() {
       }
 
       if (result.requiresOtp) {
-        toast.success("OTP sent! Please check your email.");
+        toast.success(t("registration.otpSent"));
         navigate("/verify-otp", {
           state: { identifier: identifier, role: data.role },
         });
       } else {
-        toast.success("Registration successful!");
+        toast.success(t("registration.success"));
         if (role === "merchant") {
           navigate("/pending-approval");
         } else {
@@ -179,7 +181,7 @@ function Register() {
         }
       }
     } catch (error: any) {
-      toast.error(error?.data?.message || "Registration failed.");
+      toast.error(error?.data?.message || t("registration.failed"));
     }
   };
 
@@ -243,22 +245,6 @@ function Register() {
     name: "nrcRegion",
   });
 
-  const nrcTownshipOptions = useMemo(() => {
-    return selectedNrcRegion ? nrcData[selectedNrcRegion] || [] : [];
-  }, [selectedNrcRegion]);
-
-  const divisionOptions = useMemo(() => Object.keys(myanmarData), []);
-  const districtOptions = useMemo(() => {
-    return selectedDivision
-      ? Object.keys(myanmarData[selectedDivision] || {})
-      : [];
-  }, [selectedDivision]);
-  const townshipOptions = useMemo(() => {
-    return selectedDivision && selectedDistrict
-      ? myanmarData[selectedDivision][selectedDistrict] || []
-      : [];
-  }, [selectedDivision, selectedDistrict]);
-
   useEffect(() => {
     form.setValue("district", "");
     form.setValue("township", "");
@@ -273,10 +259,10 @@ function Register() {
   }, [selectedNrcRegion, form]);
 
   const stepsConfig = [
-    { label: "Account", icon: User },
-    { label: "Location", icon: MapPin },
-    { label: "Business", icon: Briefcase },
-    { label: "Identity", icon: ShieldCheck },
+    { label: t("steps.account"), icon: User },
+    { label: t("steps.location"), icon: MapPin },
+    { label: t("steps.business"), icon: Briefcase },
+    { label: t("steps.identity"), icon: ShieldCheck },
   ];
 
   return (
@@ -288,11 +274,11 @@ function Register() {
             <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
               <CheckCircle2 className="h-6 w-6 text-primary" />
             </div>
-            <DialogTitle className="text-2xl font-bold">
-              Welcome to AgriBridge
+            <DialogTitle className="text-2xl font-bold mm:leading-loose">
+              {t("dialog.welcome")}
             </DialogTitle>
-            <DialogDescription className="text-base">
-              Choose what type of account you want to open.
+            <DialogDescription className="text-base mm:leading-loose">
+              {t("dialog.chooseAccount")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-4">
@@ -315,7 +301,7 @@ function Register() {
               >
                 <User size={24} />
               </div>
-              <span className="font-semibold">Farmer</span>
+              <span className="font-semibold">{t("role.farmer")}</span>
             </button>
             <button
               onClick={() => handleChoice("merchant")}
@@ -336,7 +322,7 @@ function Register() {
               >
                 <Briefcase size={24} />
               </div>
-              <span className="font-semibold">Merchant</span>
+              <span className="font-semibold">{t("role.merchant")}</span>
             </button>
           </div>
         </DialogContent>
@@ -347,8 +333,15 @@ function Register() {
           <CardTitle className="text-2xl font-extrabold text-primary italic">
             <Link to={"/"}>AgriBridge</Link>
           </CardTitle>
-          <CardDescription>
-            Step {step} of {totalSteps}: {stepsConfig[step - 1].label} info
+          <CardDescription className="mm:leading-loose">
+            {t("registration.stepCount", {
+              step: i18n.language === "mm" ? toMyanmarNumerals(step) : step,
+              total:
+                i18n.language === "mm"
+                  ? toMyanmarNumerals(totalSteps)
+                  : totalSteps,
+              label: stepsConfig[step - 1].label,
+            })}
           </CardDescription>
         </CardHeader>
 
@@ -396,9 +389,14 @@ function Register() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.name")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input
+                            placeholder={t("placeholders.name")}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -408,9 +406,14 @@ function Register() {
                     name="identifier"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email or Phone Number</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.identifier")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Email or Phone" {...field} />
+                          <Input
+                            placeholder={t("placeholders.identifier")}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -420,7 +423,9 @@ function Register() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.password")}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -441,20 +446,24 @@ function Register() {
                     name="division"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Division</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.division")}
+                        </FormLabel>
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select division" />
+                            <SelectTrigger className="w-full mm:leading-loose">
+                              <SelectValue
+                                placeholder={t("placeholders.selectDivision")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {divisionOptions.map((d) => (
+                            {Object.keys(myanmarData).map((d) => (
                               <SelectItem key={d} value={d}>
-                                {d}
+                                {displayLabel(d)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -463,52 +472,70 @@ function Register() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     name="district"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>District</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.district")}
+                        </FormLabel>
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select district" />
+                            <SelectTrigger className="w-full mm:leading-loose">
+                              <SelectValue
+                                placeholder={t("placeholders.selectDistrict")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {districtOptions.map((d) => (
-                              <SelectItem key={d} value={d}>
-                                {d}
-                              </SelectItem>
-                            ))}
+                            {selectedDivision
+                              ? Object.keys(myanmarData[selectedDivision]).map(
+                                  (d) => (
+                                    <SelectItem key={d} value={d}>
+                                      {displayLabel(d)}
+                                    </SelectItem>
+                                  ),
+                                )
+                              : null}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     name="township"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Township</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.township")}
+                        </FormLabel>
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select township" />
+                            <SelectTrigger className="w-full mm:leading-loose">
+                              <SelectValue
+                                placeholder={t("placeholders.selectTownship")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {townshipOptions.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t}
-                              </SelectItem>
-                            ))}
+                            {selectedDivision && selectedDistrict
+                              ? myanmarData[selectedDivision][
+                                  selectedDistrict
+                                ].map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {displayLabel(t)}
+                                  </SelectItem>
+                                ))
+                              : null}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -519,9 +546,14 @@ function Register() {
                     name="homeAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Home Address</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.homeAddress")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Your home address" {...field} />
+                          <Input
+                            placeholder={t("placeholders.homeAddress")}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -536,9 +568,14 @@ function Register() {
                     name="businessName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Business Name</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.businessName")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Company Name" {...field} />
+                          <Input
+                            placeholder={t("placeholders.businessName")}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -548,9 +585,11 @@ function Register() {
                     name="businessPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Business Phone</FormLabel>
+                        <FormLabel className="mm:leading-loose">
+                          {t("fields.businessPhone")}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="09xxxxxxx" {...field} />
+                          <Input placeholder={t("fields.phone")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -561,7 +600,9 @@ function Register() {
 
               {role === "merchant" && step === 4 && (
                 <div className="space-y-4">
-                  <FormLabel>NRC Information</FormLabel>
+                  <FormLabel className="mm:leading-loose">
+                    {t("fields.nrcInfo")}
+                  </FormLabel>
                   <div className="flex gap-2">
                     <FormField
                       name="nrcRegion"
@@ -572,13 +613,15 @@ function Register() {
                         >
                           <FormControl>
                             <SelectTrigger className="w-[70px]">
-                              <SelectValue placeholder="1" />
+                              <SelectValue
+                                placeholder={t("fields.nrcRegion")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {Object.keys(nrcData).map((n) => (
                               <SelectItem key={n} value={n}>
-                                {n}
+                                {displayLabel(n)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -593,39 +636,53 @@ function Register() {
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Township" />
+                            <SelectTrigger className="flex-1 mm:leading-loose">
+                              <SelectValue
+                                placeholder={t("placeholders.township")}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {nrcTownshipOptions.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t}
-                              </SelectItem>
-                            ))}
+                            {selectedNrcRegion
+                              ? nrcData[selectedNrcRegion].map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {displayLabel(t)}
+                                  </SelectItem>
+                                ))
+                              : null}
                           </SelectContent>
                         </Select>
                       )}
                     />
                     <FormField
                       name="nrcType"
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-[70px]">
-                              <SelectValue placeholder="N" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="(N)">(N)</SelectItem>
-                            <SelectItem value="(P)">(P)</SelectItem>
-                            <SelectItem value="(E)">(E)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      render={({ field }) => {
+                        const nrcTypes = ["(N)", "(P)", "(E)"];
+
+                        return (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-[70px] mm:leading-loose">
+                                <SelectValue
+                                  placeholder={t("fields.nrcType")}
+                                />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {nrcTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {i18n.language === "mm"
+                                    ? localizeData([type], "mm")[0]
+                                    : type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        );
+                      }}
                     />
                   </div>
                   <FormField
@@ -633,13 +690,23 @@ function Register() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input placeholder="123456" {...field} />
+                          <Input
+                            placeholder={t("fields.nrcNumber")}
+                            value={
+                              i18n.language === "mm"
+                                ? toMyanmarNumerals(field.value)
+                                : field.value
+                            }
+                            onChange={field.onChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormLabel>NRC Documents (Images)</FormLabel>
+                  <FormLabel className="mm:leading-loose">
+                    {t("fields.nrcDocuments")}
+                  </FormLabel>
                   <div className="flex gap-4">
                     <FormField
                       name="nrcFrontImage"
@@ -649,7 +716,9 @@ function Register() {
                             image={field.value}
                             onChange={field.onChange}
                           />
-                          <p className="text-[10px] text-center">Front</p>
+                          <p className="text-[10px] text-center">
+                            {t("fields.front")}
+                          </p>
                         </FormItem>
                       )}
                     />
@@ -661,7 +730,9 @@ function Register() {
                             image={field.value}
                             onChange={field.onChange}
                           />
-                          <p className="text-[10px] text-center">Back</p>
+                          <p className="text-[10px] text-center">
+                            {t("fields.back")}
+                          </p>
                         </FormItem>
                       )}
                     />
@@ -682,12 +753,12 @@ function Register() {
                     onClick={prevStep}
                     className="flex-1"
                   >
-                    <ChevronLeft /> Back
+                    <ChevronLeft /> {t("buttons.back")}
                   </Button>
                 )}
                 {step < totalSteps ? (
                   <Button type="button" onClick={nextStep} className="flex-1">
-                    Next <ChevronRight />
+                    {t("buttons.next")} <ChevronRight />
                   </Button>
                 ) : (
                   <Button
@@ -696,8 +767,8 @@ function Register() {
                     className="flex-1"
                   >
                     {role === "farmer"
-                      ? "Create Account"
-                      : "Submit Verification"}
+                      ? t("buttons.createAccount")
+                      : t("buttons.submitVerification")}
                   </Button>
                 )}
               </div>
@@ -706,12 +777,12 @@ function Register() {
         </CardContent>
         <Separator />
         <p className="p-4 text-center text-xs text-muted-foreground">
-          Already have an account?
+          {t("registration.haveAccount")}
           <button
             onClick={() => navigate("/login")}
             className="pl-2 text-primary font-semibold hover:underline cursor-pointer"
           >
-            Login
+            {t("buttons.login")}
           </button>
         </p>
       </Card>

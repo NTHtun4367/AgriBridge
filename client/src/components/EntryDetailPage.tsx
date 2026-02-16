@@ -29,11 +29,14 @@ import { toMyanmarNumerals, localizeData } from "@/utils/translator";
 import EditEntryDialog from "./EditEntryDialog";
 import ConfirmModal from "@/common/ConfirmModel";
 import { cn } from "@/lib/utils";
+import { useCurrentUserQuery } from "@/store/slices/userApi";
 
 function EntryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const { data: user } = useCurrentUserQuery();
 
   const { lang } = useSelector((state: RootState) => state.settings);
   const isMyanmar = lang === "mm";
@@ -240,12 +243,14 @@ function EntryDetailPage() {
                         value={formatLocalizedDate(rawEntry.date)}
                         mmLeading={mmLeading}
                       />
-                      <DetailRow
-                        icon={<CloudSun className="h-4 w-4" />}
-                        label={t("details.season")}
-                        value={entry.season}
-                        mmLeading={mmLeading}
-                      />
+                      {user?.role !== "merchant" && (
+                        <DetailRow
+                          icon={<CloudSun className="h-4 w-4" />}
+                          label={t("details.season")}
+                          value={entry.season}
+                          mmLeading={mmLeading}
+                        />
+                      )}
                       <DetailRow
                         icon={<Tag className="h-4 w-4" />}
                         label={t("details.category")}

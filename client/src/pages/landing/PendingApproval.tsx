@@ -1,16 +1,12 @@
 import { useNavigate } from "react-router";
-import {
-  CheckCircle2,
-  Clock,
-  ShieldCheck,
-  Ban,
-  Eye,
-} from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, Ban, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 export default function PendingApproval() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-4">
@@ -30,11 +26,10 @@ export default function PendingApproval() {
 
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Application Received!
+              {t("pending_approval.title")}
             </h1>
             <p className="text-slate-500 text-sm leading-relaxed">
-              Your merchant verification documents have been submitted. Our team
-              is currently reviewing your details.
+              {t("pending_approval.description")}
             </p>
           </div>
 
@@ -44,17 +39,17 @@ export default function PendingApproval() {
               <div className="flex items-center gap-2 mb-3">
                 <Eye className="w-4 h-4 text-emerald-600" />
                 <p className="text-sm font-bold text-slate-700">
-                  What you can do now:
+                  {t("pending_approval.allowed_title")}
                 </p>
               </div>
               <ul className="grid grid-cols-1 gap-2">
                 <li className="flex items-center gap-2 text-xs text-slate-600">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{" "}
-                  View real-time market prices
+                  {t("pending_approval.allowed_item1")}
                 </li>
                 <li className="flex items-center gap-2 text-xs text-slate-600">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{" "}
-                  Complete your business profile
+                  {t("pending_approval.allowed_item2")}
                 </li>
               </ul>
             </div>
@@ -63,17 +58,17 @@ export default function PendingApproval() {
               <div className="flex items-center gap-2 mb-3">
                 <Ban className="w-4 h-4 text-amber-600" />
                 <p className="text-sm font-bold text-slate-700">
-                  Restricted until verified:
+                  {t("pending_approval.restricted_title")}
                 </p>
               </div>
               <ul className="grid grid-cols-1 gap-2">
                 <li className="flex items-center gap-2 text-xs text-slate-500 italic">
                   <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />{" "}
-                  Posting trade offers or setting prices
+                  {t("pending_approval.restricted_item1")}
                 </li>
                 <li className="flex items-center gap-2 text-xs text-slate-500 italic">
                   <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />{" "}
-                  Finalizing transactions with farmers
+                  {t("pending_approval.restricted_item2")}
                 </li>
               </ul>
             </div>
@@ -83,31 +78,19 @@ export default function PendingApproval() {
           <div className="flex items-center justify-center gap-2 py-2 px-4 bg-primary/5 rounded-full w-fit mx-auto">
             <Clock className="w-3.5 h-3.5 text-primary" />
             <span className="text-[11px] font-semibold text-primary uppercase tracking-wider">
-              Verification usually takes 24-48 hours
+              {t("pending_approval.timeline")}
             </span>
           </div>
 
           {/* Navigation Buttons */}
           <div className="pt-2 space-y-3">
-            {/* <Button
-              className="w-full h-12 text-base font-bold shadow-lg shadow-primary/20 gap-2"
-              onClick={() => navigate("/merchant/dashboard")}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Go to Dashboard
-            </Button> */}
-
-            <Button
-              // variant="ghost"
-              className="w-full"
-              onClick={() => navigate("/login")}
-            >
-              Back to Login
+            <Button className="w-full" onClick={() => navigate("/login")}>
+              {t("pending_approval.back_button")}
             </Button>
           </div>
 
           <p className="text-[10px] text-slate-400">
-            Questions? Contact us at{" "}
+            {t("pending_approval.footer_text")}{" "}
             <span className="text-primary font-medium">
               support@agribridge.com
             </span>

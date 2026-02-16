@@ -43,6 +43,7 @@ import { Settings2, Search, ArrowUpDown } from "lucide-react";
 
 import { useGetAllFarmersQuery } from "@/store/slices/adminApi";
 import UserStatusDropDown from "@/components/admin/UserStatusDropDown";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 interface Farmer {
   _id: string;
@@ -54,8 +55,14 @@ interface Farmer {
 const columnHelper = createColumnHelper<Farmer>();
 
 function FarmerManagement() {
-  const { t } = useTranslation();
-  const { data: farmers = [], isLoading } = useGetAllFarmersQuery(undefined);
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language as "en" | "mm") || "en";
+
+  const { data: rawFarmers = [], isLoading } = useGetAllFarmersQuery(undefined);
+
+  const localizedFarmers = useMemo(() => {
+    return localizeData(rawFarmers, currentLang) as Farmer[];
+  }, [rawFarmers, currentLang]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -65,7 +72,11 @@ function FarmerManagement() {
     pageSize: 10,
   });
 
-  // Use useMemo for columns to react to 't' changes
+  // Helper to handle UI number localization
+  const formatUI = (val: string | number) => {
+    return currentLang === "mm" ? toMyanmarNumerals(val) : val.toString();
+  };
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("_id", {
@@ -95,6 +106,8 @@ function FarmerManagement() {
         header: t("farmer_mgmt.table.status"),
         cell: (info) => {
           const status = info.getValue();
+          const displayStatus = status === "ban" ? "unactive" : status;
+
           return (
             <Badge
               className={
@@ -103,7 +116,7 @@ function FarmerManagement() {
                   : "bg-destructive hover:bg-destructive/90 capitalize"
               }
             >
-              {status}
+              {t(`farmer_mgmt.status.${displayStatus}`, displayStatus)}
             </Badge>
           );
         },
@@ -123,11 +136,11 @@ function FarmerManagement() {
         ),
       }),
     ],
-    [t],
+    [t, currentLang],
   );
 
   const table = useReactTable({
-    data: farmers,
+    data: localizedFarmers,
     columns,
     state: {
       sorting,
@@ -157,7 +170,7 @@ function FarmerManagement() {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-sm:max-w-none max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t("farmer_mgmt.search_placeholder")}
@@ -257,9 +270,13 @@ function FarmerManagement() {
         </Table>
       </div>
 
+      {/* Pagination & Statistics Section */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {t("farmer_mgmt.table.total_found", { count: farmers.length })}
+          {t("farmer_mgmt.table.total_found", {
+            count: localizedFarmers.length,
+            interpolation: { escapeValue: false },
+          }).replace(/\d+/g, (m) => formatUI(m))}
         </div>
         <div className="flex items-center space-x-4 lg:space-x-8">
           <div className="flex items-center space-x-2">
@@ -270,15 +287,15 @@ function FarmerManagement() {
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => table.setPageSize(Number(value))}
             >
-              <SelectTrigger className="h-8 w-[70px] border-2">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
+              <SelectTrigger className="h-8 w-20 border-2">
+                <SelectValue>
+                  {formatUI(table.getState().pagination.pageSize)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent side="top">
                 {[10, 20, 30, 40, 50].map((pageSize) => (
                   <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
+                    {formatUI(pageSize)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -287,10 +304,11 @@ function FarmerManagement() {
 
           <div className="flex items-center gap-4">
             <span className="text-xs font-medium">
+              {/* FIX: Pass numbers to t() and format the output if needed */}
               {t("farmer_mgmt.pagination.page_info", {
                 current: table.getState().pagination.pageIndex + 1,
                 total: table.getPageCount(),
-              })}
+              }).replace(/\d+/g, (m) => formatUI(m))}
             </span>
             <div className="flex items-center space-x-2">
               <Button

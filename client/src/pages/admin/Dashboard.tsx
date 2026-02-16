@@ -24,14 +24,20 @@ import {
 } from "recharts";
 import { Link } from "react-router";
 import { useGetDisputesQuery } from "@/store/slices/disputeApi";
+import {
+  formatNumberWithCommas,
+  localizeData,
+  toMyanmarNumerals,
+} from "@/utils/translator";
 
 const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+// FIXED: Tooltip now handles localized values and labels
+const CustomTooltip = ({ active, payload, label, currentLang }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg border-t-4 border-t-[#6EAE19]">
-        <p className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-wider">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg border-t-4 border-t-[#6EAE19] mm:m-0">
+        <p className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-wider mm:leading-loose">
           {label}
         </p>
         <div className="space-y-2 mm:space-y-0">
@@ -45,12 +51,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                   className="h-2 w-2 rounded-full"
                   style={{ backgroundColor: entry.fill }}
                 />
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mm:leading-loose mm:mb-0">
                   {entry.name}
                 </p>
               </div>
-              <p className="text-xs font-black text-slate-800 dark:text-slate-100">
-                {entry.value}
+              <p className="text-xs font-black text-slate-800 dark:text-slate-100 mm:mb-0">
+                {localizeData(entry.value, currentLang)}
               </p>
             </div>
           ))}
@@ -62,28 +68,45 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language as "en" | "mm") || "en";
 
-  // Updated naming for Merchant Disputes
-  const { data: merchantDisputeResponse, isLoading: disputesLoading } =
+  const { data: rawMerchantDisputes, isLoading: disputesLoading } =
     useGetDisputesQuery(undefined);
 
   const {
-    data: response,
+    data: rawDashboard,
     isLoading: dashboardLoading,
     refetch,
   } = useGetAdminDashboardQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
+  // Localize Dashboard Stats
+  const localizedStats = useMemo(() => {
+    return localizeData(rawDashboard?.data?.stats, currentLang) || {};
+  }, [rawDashboard, currentLang]);
+
+  // Localize merchant_disputes Feed
+  const localizedDisputes = useMemo(() => {
+    return localizeData(rawMerchantDisputes?.data, currentLang) || [];
+  }, [rawMerchantDisputes, currentLang]);
+
+  // FIXED: Explicitly mapping name to localized version for X-Axis Myanmar labels
+  const chartData = useMemo(() => {
+    const data = rawDashboard?.data?.chartData || [];
+    return data.map((item: any) => ({
+      // item.name (e.g., "Jan") is passed to localizeData to get "ဇန်နဝါရီ"
+      name: currentLang === "mm" ? toMyanmarNumerals(item.name) : item.name,
+      farmers: Number(item.farmers) || 0,
+      merchants: Number(item.merchants) || 0,
+    }));
+  }, [rawDashboard, currentLang]);
+
   useEffect(() => {
     const interval = setInterval(() => refetch(), 30000);
     return () => clearInterval(interval);
   }, [refetch]);
-
-  const chartData = useMemo(() => {
-    return (response?.data?.chartData || []).filter((item: any) => item.name);
-  }, [response]);
 
   if (dashboardLoading || disputesLoading) {
     return (
@@ -96,8 +119,7 @@ const Dashboard = () => {
     );
   }
 
-  const { stats } = response?.data || {};
-  const recentDisputes = merchantDisputeResponse?.data?.slice(0, 5) || [];
+  const recentDisputes = localizedDisputes.slice(0, 5);
 
   return (
     <div className="min-h-screen p-4 lg:p-8 space-y-8 animate-in fade-in duration-500">
@@ -112,22 +134,27 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           label={t("dashboard.stats.active_farmers")}
-          value={stats?.activeFarmers || 0}
+          value={localizeData(localizedStats?.activeFarmers || 0, currentLang)}
           subtext={t("dashboard.stats.farmers_sub")}
           icon={Users}
         />
         <StatCard
           label={t("dashboard.stats.verified_merchants")}
-          value={stats?.totalMerchants || 0}
+          value={localizeData(localizedStats?.totalMerchants || 0, currentLang)}
           subtext={t("dashboard.stats.merchants_sub")}
           icon={Store}
         />
         <StatCard
           label={t("dashboard.stats.dispute_queue")}
-          value={recentDisputes.length}
+          value={
+            currentLang === "mm"
+              ? toMyanmarNumerals(rawMerchantDisputes?.data?.length || 0)
+              : formatNumberWithCommas(rawMerchantDisputes?.data?.length || 0)
+          }
           subtext={t("dashboard.stats.dispute_sub")}
           icon={AlertTriangle}
           variant="danger"
@@ -135,6 +162,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* GROWTH CHART */}
         <Card className="xl:col-span-2 border-none shadow-sm overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-6">
             <div>
@@ -146,18 +174,14 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-sm bg-[#6EAE19]" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase">
-                  {t("dashboard.charts.farmers")}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-sm bg-[#3b82f6]" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase">
-                  {t("dashboard.charts.merchants")}
-                </span>
-              </div>
+              <LegendItem
+                color="#6EAE19"
+                label={t("dashboard.charts.farmers")}
+              />
+              <LegendItem
+                color="#3b82f6"
+                label={t("dashboard.charts.merchants")}
+              />
             </div>
           </CardHeader>
           <CardContent className="pt-8">
@@ -169,34 +193,8 @@ const Dashboard = () => {
                   barGap={8}
                 >
                   <defs>
-                    <linearGradient
-                      id="farmerGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#6EAE19" stopOpacity={1} />
-                      <stop
-                        offset="100%"
-                        stopColor="#6EAE19"
-                        stopOpacity={0.6}
-                      />
-                    </linearGradient>
-                    <linearGradient
-                      id="merchantGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-                      <stop
-                        offset="100%"
-                        stopColor="#3b82f6"
-                        stopOpacity={0.6}
-                      />
-                    </linearGradient>
+                    <ChartGradient id="farmerGradient" color="#6EAE19" />
+                    <ChartGradient id="merchantGradient" color="#3b82f6" />
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -207,16 +205,31 @@ const Dashboard = () => {
                     dataKey="name"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                    tick={{
+                      fill: "#94a3b8",
+                      fontSize: 12,
+                      fontFamily: "inherit",
+                    }}
+                    interval={0}
+                    className="mm:leading-loose"
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 10 }}
+                    tick={{
+                      fill: "#94a3b8",
+                      fontSize: 10,
+                      fontFamily: "inherit",
+                    }}
+                    tickFormatter={(value) =>
+                      currentLang === "mm"
+                        ? toMyanmarNumerals(value)
+                        : formatNumberWithCommas(value)
+                    }
                   />
                   <Tooltip
-                    cursor={{ fill: "#f8fafc" }}
-                    content={<CustomTooltip />}
+                    cursor={{ fill: "#f8fafc", opacity: 0.1 }}
+                    content={<CustomTooltip currentLang={currentLang} />}
                   />
                   <Bar
                     name={t("dashboard.charts.farmers")}
@@ -238,18 +251,18 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* --- MERCHANT DISPUTES FEED --- */}
+        {/* MERCHANT_DISPUTES FEED */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <h3 className="font-bold text-slate-800 dark:text-slate-100">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 mm:leading-loose">
                 {t("dashboard.disputes_feed.title")}
               </h3>
             </div>
             <Link
               to="/admin/merchant-disputes"
-              className="group flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-[#6EAE19] transition-all"
+              className="group flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-[#6EAE19] transition-all mm:leading-loose"
             >
               {t("dashboard.disputes_feed.see_all")}
               <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
@@ -259,73 +272,10 @@ const Dashboard = () => {
           <div className="space-y-3">
             {recentDisputes.length > 0 ? (
               recentDisputes.map((dispute: any) => (
-                <div
-                  key={dispute._id}
-                  className="group relative bg-white dark:bg-secondary rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-                >
-                  <div
-                    className={cn(
-                      "absolute left-0 top-0 bottom-0 w-1",
-                      dispute.status === "pending"
-                        ? "bg-amber-400"
-                        : "bg-blue-400",
-                    )}
-                  />
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter mb-0.5">
-                        {t("dashboard.disputes_feed.id_label")}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="font-mono text-[10px] bg-slate-50 dark:bg-slate-800 px-1.5 py-0"
-                      >
-                        #{dispute._id.slice(-8).toUpperCase()}
-                      </Badge>
-                    </div>
-                    <Badge
-                      className={cn(
-                        "text-[9px] font-black px-2 py-0.5 rounded-full border-none uppercase tracking-widest",
-                        dispute.status === "pending"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-blue-100 text-blue-700",
-                      )}
-                    >
-                      {dispute.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-red-50 dark:group-hover:bg-red-500/10">
-                      <ShieldAlert className="h-4 w-4 text-slate-400 group-hover:text-red-500" />
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug">
-                      {dispute.reason}
-                    </h4>
-                  </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <Clock className="h-3 w-3" />
-                      <span className="text-[10px] font-bold">
-                        {t("dashboard.disputes_feed.activity")}
-                      </span>
-                    </div>
-                    <Link
-                      to="/admin/merchant-disputes"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-black hover:bg-[#6EAE19] transition-all transform hover:scale-105 shadow-lg"
-                    >
-                      {t("dashboard.disputes_feed.resolve")}{" "}
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </Link>
-                  </div>
-                </div>
+                <DisputeItem key={dispute._id} dispute={dispute} t={t} />
               ))
             ) : (
-              <div className="bg-white/50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
-                <Target className="h-10 w-10 text-slate-200 dark:text-slate-800 mb-4" />
-                <p className="text-xs font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">
-                  {t("dashboard.disputes_feed.empty")}
-                </p>
-              </div>
+              <EmptyState t={t} />
             )}
           </div>
         </div>
@@ -334,13 +284,89 @@ const Dashboard = () => {
   );
 };
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  subtext: string;
-  icon: any;
-  variant?: "default" | "danger";
-}
+/* --- SUB-COMPONENTS --- */
+
+const LegendItem = ({ color, label }: { color: string; label: string }) => (
+  <div className="flex items-center gap-2">
+    <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
+    <span className="text-[10px] font-bold text-slate-500 uppercase mm:leading-loose">
+      {label}
+    </span>
+  </div>
+);
+
+const ChartGradient = ({ id, color }: { id: string; color: string }) => (
+  <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stopColor={color} stopOpacity={1} />
+    <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+  </linearGradient>
+);
+
+const DisputeItem = ({ dispute, t }: any) => (
+  <div className="group relative bg-white dark:bg-secondary rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+    <div
+      className={cn(
+        "absolute left-0 top-0 bottom-0 w-1",
+        dispute.status === "pending" ? "bg-amber-400" : "bg-blue-400",
+      )}
+    />
+    <div className="flex justify-between items-start mb-3">
+      <div className="flex flex-col">
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 mm:leading-loose">
+          {t("dashboard.disputes_feed.id_label")}
+        </span>
+        <Badge
+          variant="outline"
+          className="font-mono text-[10px] bg-slate-50 dark:bg-slate-800 px-1.5 py-0"
+        >
+          #{dispute._id.slice(-8).toUpperCase()}
+        </Badge>
+      </div>
+      <Badge
+        className={cn(
+          "text-[9px] font-black px-2 py-0.5 rounded-full border-none uppercase tracking-widest",
+          dispute.status === "pending"
+            ? "bg-amber-100 text-amber-700"
+            : "bg-blue-100 text-blue-700",
+        )}
+      >
+        {dispute.status}
+      </Badge>
+    </div>
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-red-50">
+        <ShieldAlert className="h-4 w-4 text-slate-400 group-hover:text-red-500" />
+      </div>
+      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug mm:leading-loose">
+        {dispute.reason}
+      </h4>
+    </div>
+    <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
+      <div className="flex items-center gap-1.5 text-slate-400">
+        <Clock className="h-3 w-3" />
+        <span className="text-[10px] font-bold mm:leading-loose">
+          {t("dashboard.disputes_feed.activity")}
+        </span>
+      </div>
+      <Link
+        to="/admin/merchant-disputes"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-black hover:bg-[#6EAE19] transition-all transform hover:scale-105 shadow-lg mm:leading-loose"
+      >
+        {t("dashboard.disputes_feed.resolve")}{" "}
+        <ExternalLink className="h-2.5 w-2.5" />
+      </Link>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ t }: any) => (
+  <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+    <Target className="h-10 w-10 text-slate-200 mb-4" />
+    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mm:leading-loose">
+      {t("dashboard.disputes_feed.empty")}
+    </p>
+  </div>
+);
 
 function StatCard({
   label,
@@ -348,16 +374,16 @@ function StatCard({
   subtext,
   icon: Icon,
   variant = "default",
-}: StatCardProps) {
+}: any) {
   return (
     <Card className="border-none group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white dark:bg-slate-900">
       <CardContent>
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex justify-between items-start mb-6 mm:m-0">
           <div>
-            <p className="text-3xl font-black tracking-tighter mb-1 group-hover:text-[#6EAE19] transition-colors mm:leading-loose mm:-m-1">
+            <p className="text-3xl font-black tracking-tighter mb-1 mm:mb-0 group-hover:text-[#6EAE19] transition-colors mm:leading-loose">
               {value}
             </p>
-            <p className="text-[11px] font-bold text-slate-400 leading-tight w-2/3 mm:leading-loose mm:-m-1">
+            <p className="text-[11px] font-bold text-slate-400 leading-tight w-2/3 mm:leading-loose">
               {subtext}
             </p>
           </div>
@@ -372,7 +398,7 @@ function StatCard({
             <Icon size={20} />
           </div>
         </div>
-        <p className="text-[10px] font-black uppercase tracking-wider dark:text-slate-500">
+        <p className="text-[10px] font-black uppercase tracking-wider dark:text-slate-500 mm:leading-loose">
           {label}
         </p>
       </CardContent>

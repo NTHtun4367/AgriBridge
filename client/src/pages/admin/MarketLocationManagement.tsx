@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -35,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Loader2, PlusCircle, Store, MapPin } from "lucide-react";
+import { localizeData } from "@/utils/translator";
 
 const marketSchema = z.object({
   name: z.string().min(2, "Market name must be at least 2 characters"),
@@ -44,16 +46,22 @@ const marketSchema = z.object({
 type MarketFormValues = z.infer<typeof marketSchema>;
 
 export default function MarketPlaceManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language as "en" | "mm") || "en";
 
   const {
-    data: markets = [],
+    data: rawMarkets = [],
     isLoading,
     isFetching,
   } = useGetAllMarketsQuery(undefined);
 
   const [createMarket, { isLoading: isCreating }] = useCreateMarketMutation();
   const [deleteMarket, { isLoading: isDeleting }] = useDeleteMarketMutation();
+
+  // Localize market names and regions using the shared utility
+  const markets = useMemo(() => {
+    return localizeData(rawMarkets, currentLang);
+  }, [rawMarkets, currentLang]);
 
   const form = useForm<MarketFormValues>({
     resolver: zodResolver(marketSchema),
@@ -66,19 +74,19 @@ export default function MarketPlaceManagement() {
   async function handleAdd(values: MarketFormValues) {
     try {
       await createMarket(values).unwrap();
-      toast.success(t("market_mgmt.table.toast_success"));
+      toast.success(String(t("market_mgmt.table.toast_success")));
       form.reset();
     } catch (error) {
-      toast.error(t("market_mgmt.table.toast_error"));
+      toast.error(String(t("market_mgmt.table.toast_error")));
     }
   }
 
   async function handleDelete(id: string) {
     try {
       await deleteMarket(id).unwrap();
-      toast.success(t("market_mgmt.table.toast_delete"));
+      toast.success(String(t("market_mgmt.table.toast_delete")));
     } catch (error) {
-      toast.error(t("market_mgmt.table.toast_error"));
+      toast.error(String(t("market_mgmt.table.toast_error")));
     }
   }
 
@@ -87,30 +95,31 @@ export default function MarketPlaceManagement() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mm:leading-loose">
-            {t("market_mgmt.title")}
+            {String(t("market_mgmt.title"))}
           </h1>
           <p className="text-muted-foreground mm:leading-loose">
-            {t("market_mgmt.description")}
+            {String(t("market_mgmt.description"))}
           </p>
         </div>
         {isFetching && (
           <Badge variant="secondary" className="animate-pulse">
             <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-            {t("market_mgmt.updating")}
+            {String(t("market_mgmt.updating"))}
           </Badge>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Side: Form Card */}
         <div className="lg:col-span-4">
           <Card className="sticky top-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 mm:leading-loose">
                 <PlusCircle className="h-5 w-5 text-primary" />
-                {t("market_mgmt.add_card.title")}
+                {String(t("market_mgmt.add_card.title"))}
               </CardTitle>
-              <CardDescription className="mm:leading-loose">
-                {t("market_mgmt.add_card.description")}
+              <CardDescription className="mm:leading-relaxed">
+                {String(t("market_mgmt.add_card.description"))}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -124,13 +133,13 @@ export default function MarketPlaceManagement() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t("market_mgmt.add_card.label_name")}
+                        <FormLabel className="mm:leading-loose">
+                          {String(t("market_mgmt.add_card.label_name"))}
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder={t(
-                              "market_mgmt.add_card.placeholder_name",
+                            placeholder={String(
+                              t("market_mgmt.add_card.placeholder_name"),
                             )}
                             {...field}
                           />
@@ -145,16 +154,16 @@ export default function MarketPlaceManagement() {
                     name="region"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t("market_mgmt.add_card.label_region")}
+                        <FormLabel className="mm:leading-loose">
+                          {String(t("market_mgmt.add_card.label_region"))}
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
                             <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                               className="pl-9"
-                              placeholder={t(
-                                "market_mgmt.add_card.placeholder_region",
+                              placeholder={String(
+                                t("market_mgmt.add_card.placeholder_region"),
                               )}
                               {...field}
                             />
@@ -167,7 +176,7 @@ export default function MarketPlaceManagement() {
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full font-bold mm:leading-loose cursor-pointer"
                     disabled={isCreating}
                   >
                     {isCreating ? (
@@ -176,8 +185,8 @@ export default function MarketPlaceManagement() {
                       <Store className="h-4 w-4" />
                     )}
                     {isCreating
-                      ? t("market_mgmt.add_card.saving_btn")
-                      : t("market_mgmt.add_card.submit_btn")}
+                      ? String(t("market_mgmt.add_card.saving_btn"))
+                      : String(t("market_mgmt.add_card.submit_btn"))}
                   </Button>
                 </form>
               </Form>
@@ -185,12 +194,15 @@ export default function MarketPlaceManagement() {
           </Card>
         </div>
 
+        {/* Right Side: Table Card */}
         <div className="lg:col-span-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="mm:leading-loose">{t("market_mgmt.table.title")}</CardTitle>
-              <CardDescription className="mm:leading-loose">
-                {t("market_mgmt.table.description")}
+              <CardTitle className="mm:leading-loose">
+                {String(t("market_mgmt.table.title"))}
+              </CardTitle>
+              <CardDescription className="mm:leading-relaxed">
+                {String(t("market_mgmt.table.description"))}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -198,13 +210,17 @@ export default function MarketPlaceManagement() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-[45%]">
-                        {t("market_mgmt.table.col_name")}
+                      <TableHead className="w-[45%] font-bold">
+                        {String(t("market_mgmt.table.col_name"))}
                       </TableHead>
-                      <TableHead>{t("market_mgmt.table.col_region")}</TableHead>
-                      <TableHead>{t("market_mgmt.table.col_status")}</TableHead>
-                      <TableHead className="text-right px-6">
-                        {t("market_mgmt.table.col_action")}
+                      <TableHead className="font-bold">
+                        {String(t("market_mgmt.table.col_region"))}
+                      </TableHead>
+                      <TableHead className="font-bold">
+                        {String(t("market_mgmt.table.col_status"))}
+                      </TableHead>
+                      <TableHead className="text-right px-6 font-bold">
+                        {String(t("market_mgmt.table.col_action"))}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -224,10 +240,10 @@ export default function MarketPlaceManagement() {
                           key={market._id}
                           className="hover:bg-muted/30 transition-colors"
                         >
-                          <TableCell className="font-semibold">
+                          <TableCell className="font-semibold mm:leading-loose">
                             {market.name}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground mm:leading-loose">
                             {market.region}
                           </TableCell>
                           <TableCell>
@@ -239,18 +255,20 @@ export default function MarketPlaceManagement() {
                                 market.isActive
                                   ? "bg-green-100 text-green-700 hover:bg-green-100"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-100"
-                              } border-none`}
+                              } border-none mm:leading-loose`}
                             >
                               {market.isActive
-                                ? t("market_mgmt.table.status_active")
-                                : t("market_mgmt.table.status_inactive")}
+                                ? String(t("market_mgmt.table.status_active"))
+                                : String(
+                                    t("market_mgmt.table.status_inactive"),
+                                  )}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right px-6">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
                               disabled={isDeleting}
                               onClick={() => handleDelete(market._id)}
                             >
@@ -267,7 +285,9 @@ export default function MarketPlaceManagement() {
                         >
                           <div className="flex flex-col items-center gap-2">
                             <Store className="h-8 w-8 opacity-20" />
-                            <p>{t("market_mgmt.table.no_data")}</p>
+                            <p className="mm:leading-loose">
+                              {String(t("market_mgmt.table.no_data"))}
+                            </p>
                           </div>
                         </TableCell>
                       </TableRow>

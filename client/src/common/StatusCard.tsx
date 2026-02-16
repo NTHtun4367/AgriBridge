@@ -4,16 +4,26 @@ import { useTranslation } from "react-i18next";
 interface StatusCardProps {
   title: string;
   bgColor: string;
-  value: number;
+  value: number | string; // Fix: Accept both to handle Myanmar numeral strings
   icon: React.ReactNode;
 }
 
 function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
   const { t, i18n } = useTranslation();
-  const isMyanmar = i18n.language === "my";
+  const isMyanmar = i18n.language === "my" || i18n.language === "mm";
 
   // Ensuring Burmese descenders aren't cut off and titles are legible
   const mmLeading = isMyanmar ? "leading-[1.8] mb-4" : "leading-normal mb-6";
+
+  // Logic to handle display formatting safely
+  const renderValue = () => {
+    if (typeof value === "number") {
+      return value.toLocaleString(i18n.language, {
+        minimumFractionDigits: value % 1 !== 0 ? 2 : 0,
+      });
+    }
+    return value; // Return string as-is (already localized)
+  };
 
   return (
     <div
@@ -26,12 +36,10 @@ function StatusCard({ title, bgColor, value, icon }: StatusCardProps) {
           </p>
           <h3
             className={`text-2xl font-bold tabular-nums tracking-tight ${
-              value < 0 ? "text-destructive" : ""
+              typeof value === "number" && value < 0 ? "text-destructive" : ""
             }`}
           >
-            {value?.toLocaleString(i18n.language, {
-              minimumFractionDigits: value % 1 !== 0 ? 2 : 0, // Show decimals only if they exist
-            })}
+            {renderValue()}
             <span
               className={`ml-1.5 text-sm font-bold ${isMyanmar ? "text-base" : "text-xs"}`}
             >

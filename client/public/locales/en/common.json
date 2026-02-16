@@ -145,6 +145,169 @@
     "cta_final_desc": "Join the growing network of merchants digitizing their collection points and securing high-quality produce directly from the source.",
     "cta_final_btn": "Register as a Merchant"
   },
+  "login": {
+    "title": "Login",
+    "description": "Enter your information to login",
+    "identifier_label": "Email or Phone Number",
+    "identifier_placeholder": "example@gmail.com or 09...",
+    "password_label": "Password",
+    "password_placeholder": "******",
+    "submit_button": "Login",
+    "submitting_button": "Logging in...",
+    "no_account": "Don't have an account?",
+    "register_link": "Register",
+    "success_toast": "Login successful.",
+    "error_toast": "Login failed. Please try again."
+  },
+  "steps": {
+    "account": "Account",
+    "location": "Location",
+    "business": "Business",
+    "identity": "Identity"
+  },
+  "dialog": {
+    "welcome": "Welcome to AgriBridge",
+    "chooseAccount": "Choose what type of account you want to open."
+  },
+  "role": {
+    "farmer": "Farmer",
+    "merchant": "Merchant"
+  },
+  "registration": {
+    "stepCount": "Step {{step}} of {{total}}: {{label}} info",
+    "otpSent": "OTP sent! Please check your email or phone.",
+    "success": "Registration successful!",
+    "failed": "Registration failed. Please try again.",
+    "haveAccount": "Already have an account?"
+  },
+  "fields": {
+    "name": "Name",
+    "identifier": "Email or Phone Number",
+    "password": "Password",
+    "division": "Division",
+    "district": "District",
+    "township": "Township",
+    "homeAddress": "Home Address",
+    "businessName": "Business Name",
+    "businessPhone": "Business Phone",
+    "nrcInfo": "NRC Information",
+    "nrcDocuments": "NRC Documents (Images)",
+    "front": "Front",
+    "back": "Back",
+    "nrcRegion": "1",
+    "nrcNumber": "123456",
+    "nrcType": "(N)",
+    "phone": "09xxxxxxx"
+  },
+  "placeholders": {
+    "name": "John Doe",
+    "identifier": "Email or Phone",
+    "selectDivision": "Select division",
+    "selectDistrict": "Select district",
+    "selectTownship": "Select township",
+    "homeAddress": "Your home address",
+    "businessName": "Company Name",
+    "township": "Township"
+  },
+  "buttons": {
+    "next": "Next",
+    "back": "Back",
+    "createAccount": "Create Account",
+    "submitVerification": "Submit Verification",
+    "login": "Login"
+  },
+  "pending_approval": {
+    "title": "Application Received!",
+    "description": "Your merchant verification documents have been submitted. Our team is currently reviewing your details.",
+    "allowed_title": "What you can do now:",
+    "allowed_item1": "View real-time market prices",
+    "allowed_item2": "Complete your business profile",
+    "restricted_title": "Restricted until verified:",
+    "restricted_item1": "Posting trade offers or setting prices",
+    "restricted_item2": "Finalizing transactions with farmers",
+    "timeline": "Verification usually takes 24-48 hours",
+    "back_button": "Back to Login",
+    "footer_text": "Questions? Contact us at"
+  },
+  "privacy": {
+    "hero_badge": "Trust & Transparency",
+    "hero_title_start": "Protecting Your",
+    "hero_title_highlight": "Digital Harvest",
+    "effective_date": "Effective Date",
+    "commitment_title": "The Agri-Trust Commitment",
+    "commitment_desc": "We believe your farm data is as valuable as your land. AgriBridge is built to be your trusted digital partner, ensuring your records are never sold, never leaked, and always under your control.",
+    "section1_title": "1. The Information We Guard",
+    "section1_desc": "To provide you with accurate profit analysis and seasonal history, we only record the details you choose to share:",
+    "data_profile_label": "Profile",
+    "data_profile_text": "Your name and phone number for secure access.",
+    "data_logs_label": "Farm Logs",
+    "data_logs_text": "Expenses for fertilizer, seeds, labor, and your total income from harvests.",
+    "data_visual_label": "Visual Records",
+    "data_visual_text": "Images of receipts or bills you upload for your own bookkeeping.",
+    "section2_title": "2. Cultivating Your Growth",
+    "section2_desc": "We use your data strictly to help you run a more profitable farm business. We use it to:",
+    "usage_item1_title": "Calculate Your Real Profit",
+    "usage_item1_desc": "Turning raw numbers into clear reports so you know exactly how much you earned.",
+    "usage_item2_title": "Secure Your Records",
+    "usage_item2_desc": "Backing up your digital book so you never lose your data, even if your phone is damaged.",
+    "section3_title": "3. A Digital Fence Around Your Records",
+    "security_highlight": "We use industrial-grade encryption—think of it as a high-security lock on your digital barn.",
+    "security_promise": "No data is ever sold to third-party merchants or advertisers.",
+    "section4_title": "4. You Hold the Keys",
+    "section4_desc": "You are the owner of your information. AgriBridge is simply the tool. You have the right to:",
+    "rights_item1": "Review All Entries",
+    "rights_item2": "Permanently Delete",
+    "closing_quote": "\"AgriBridge honors the tradition of Myanmar's farming families by protecting their digital future.\""
+  },
+  "about": {
+    "hero_badge": "Our Vision & Mission",
+    "hero_title_line1": "Digitalizing the heart of",
+    "hero_title_highlight": "Myanmar's Agriculture.",
+    "hero_desc": "AgriBridge isn't just a ledger; it's a commitment to empower the millions of farmers who feed our nation with the data they need to thrive.",
+    "why_title_line1": "Why we built",
+    "why_title_line2": "AgriBridge",
+    "why_desc1": "For generations, Myanmar's farmers have managed complex seasonal cycles using nothing but memory and paper. In a rapidly changing market, this lack of data created a gap.",
+    "why_desc2_start": "We built the",
+    "bridge_quote": "Bridge",
+    "why_desc2_end": "to connect hard work with smart data, allowing farmers to see their true net profit in real-time.",
+    "feature1": "Financial Clarity",
+    "feature2": "Market Transparency",
+    "feature3": "Verified Merchants",
+    "feature4": "Secure Storage",
+    "card_version": "AgriBridge Analytics v2.0",
+    "stats_label": "Impact Statistics",
+    "stats_desc": "Average increase in financial awareness",
+    "approach_title": "Farmer First Approach",
+    "approach_desc": "Built by developers who grew up in farming families."
+  },
+  "contact": {
+    "hero_badge": "Support Center",
+    "hero_title_start": "How can we",
+    "hero_title_highlight": "help you grow?",
+    "hero_desc": "Whether you're a farmer needing technical help or a merchant looking to partner, our team is ready to bridge the gap.",
+    "direct_channels_title": "Direct Channels",
+    "direct_channels_desc": "Prefer direct communication? Reach out to us through any of these verified AgriBridge channels.",
+    "email_label": "Email Support",
+    "email_desc": "For general inquiries and technical help.",
+    "phone_label": "Phone / Viber",
+    "phone_desc": "Available Mon-Fri, 9:00 AM - 5:00 PM.",
+    "office_label": "Main Office",
+    "office_value": "Pathein, Myanmar",
+    "office_desc": "No. (45), Kanna Road, Ward (1), Pathein.",
+    "response_title": "Fast Response",
+    "response_desc": "We typically respond within 24 hours.",
+    "form_name_label": "Full Name",
+    "form_name_placeholder": "John Doe",
+    "form_email_label": "Email Address",
+    "form_email_placeholder": "john@example.com",
+    "form_subject_label": "Subject",
+    "form_subject_placeholder": "Technical Support / Merchant Inquiry",
+    "form_message_label": "Your Message",
+    "form_message_placeholder": "How can our team help your farm today?",
+    "form_button": "Send Message",
+    "form_sending": "Sending...",
+    "form_disclaimer": "By clicking send, you agree to our privacy policy and terms of service."
+  },
   "farmer_dash": {
     "title": "Farm Dashboard",
     "subtitle": "Real-time monitoring of your agricultural enterprise",
@@ -604,7 +767,13 @@
       "mode_preorder": "Preorder",
       "preorder_search": "Search Existing Preorders",
       "preorder_placeholder": "Select a preorder...",
+      "no_preorders": "No confirmed preorders found",
+      "preorder_label": "Merchant Preorder",
       "field_name": "Full Name",
+      "farmer_name": "Farmer Name",
+      "farm_location": "Farm Location",
+      "farmer_phone": "+95...",
+      "nrc_number": "123456",
       "field_phone": "Phone Number",
       "field_nrc": "Identity (NRC)",
       "field_address": "Address",
@@ -620,10 +789,27 @@
       "notes_placeholder": "e.g. Please pay within 7 days.",
       "preview_billed_to": "Billed To",
       "preview_date": "Date Issued",
+      "invoice_label": "INVOICE",
+      "brand_subtitle": "Digital Marketplace",
       "btn_print": "Print Preview",
       "btn_send": "Send Invoice",
       "status_processing": "Processing..."
-    }
+    },
+    "errors": {
+      "select_preorder": "Please select a verified preorder.",
+      "no_items": "Please add at least one item.",
+      "create_failed": "Failed to create invoice",
+      "create_success": "Invoice created successfully!"
+    },
+    "common": {
+      "na": "N/A",
+      "no_address": "No address provided",
+      "select_crop": "Select Crop",
+      "township": "Township",
+      "number_short": "No.",
+      "unit": "Unit"
+    },
+    "mmk": "MMK"
   },
   "transaction": {
     "new": "New Transaction",
@@ -671,7 +857,8 @@
       "no_records": "No records found",
       "try_adjusting": "Try adjusting your search or filters",
       "system_updated": "System updated"
-    }
+    },
+    "mmk": "MMK"
   },
   "merchant_preorders": {
     "title": "Preorders",
@@ -710,7 +897,8 @@
       "quantity": "Quantity",
       "est_unit_price": "Est. Unit Price",
       "view": "View"
-    }
+    },
+    "mmk": "MMK"
   },
   "merchant_invoices": {
     "title": "Ledger Overview",
@@ -745,7 +933,8 @@
       "save_gallery": "Save Receipt to Gallery",
       "syncing": "Syncing Ledger Data...",
       "generating": "Generating Receipt Image..."
-    }
+    },
+    "mmk": "MMK"
   },
   "merchant_disputes": {
     "title": "Report Merchant",
@@ -831,6 +1020,10 @@
       "page_info": "Page {{current}} of {{total}}",
       "prev": "Previous",
       "next": "Next"
+    },
+    "status": {
+      "active": "Active",
+      "unactive": "Unactive"
     }
   },
   "merchant_mgmt": {
@@ -954,7 +1147,8 @@
       "basket": "Basket",
       "ton": "Metric Ton",
       "lb": "Pound (lb)"
-    }
+    },
+    "mmk": "MMK"
   },
   "verification": {
     "title": "Verification",

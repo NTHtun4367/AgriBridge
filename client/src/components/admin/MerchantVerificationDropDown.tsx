@@ -1,44 +1,56 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { useUpdateUserVerificationStatusMutation } from "@/store/slices/adminApi"; // Ensure this exists in your API slice
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { useUpdateUserVerificationStatusMutation } from "@/store/slices/adminApi";
 import { toast } from "sonner";
 import { Loader2, CheckCircle, Clock, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 
-interface Props {
+interface MerchantVerificationDropDownProps {
   merchantId: string;
   currentStatus: string;
 }
 
-const verificationOptions = [
-  {
-    value: "pending",
-    label: "Pending",
-    color: "text-yellow-600",
-    icon: <Clock className="w-4 h-4" />,
-  },
-  {
-    value: "verified",
-    label: "Verified",
-    color: "text-green-600",
-    icon: <CheckCircle className="w-4 h-4" />,
-  },
-  {
-    value: "rejected",
-    label: "Rejected",
-    color: "text-red-600",
-    icon: <XCircle className="w-4 h-4" />,
-  },
-];
-
-function MerchantVerificationDropDown({ merchantId, currentStatus }: Props) {
-  // Replace with your actual mutation hook name
+function MerchantVerificationDropDown({
+  merchantId,
+  currentStatus,
+}: MerchantVerificationDropDownProps) {
+  const { t } = useTranslation();
   const [updateVerification, { isLoading }] =
     useUpdateUserVerificationStatusMutation();
+
+  const verificationOptions = useMemo(
+    () => [
+      {
+        value: "pending",
+        label: t("merchant_mgmt.status.pending", "Pending"),
+        color: "text-yellow-600",
+        icon: <Clock className="w-4 h-4" />,
+        borderColor: "border-yellow-500/50",
+      },
+      {
+        value: "verified",
+        label: t("merchant_mgmt.status.verified", "Verified"),
+        color: "text-green-600",
+        icon: <CheckCircle className="w-4 h-4" />,
+        borderColor: "border-green-500/50",
+      },
+      {
+        value: "rejected",
+        label: t("merchant_mgmt.status.rejected", "Rejected"),
+        color: "text-red-600",
+        icon: <XCircle className="w-4 h-4" />,
+        borderColor: "border-red-500/50",
+      },
+    ],
+    [t],
+  );
+
+  const currentOption = useMemo(() => {
+    return (
+      verificationOptions.find((item) => item.value === currentStatus) ||
+      verificationOptions[0] // Default to Pending if status is unknown
+    );
+  }, [currentStatus, verificationOptions]);
 
   const handleChange = async (newStatus: string) => {
     try {
@@ -46,17 +58,21 @@ function MerchantVerificationDropDown({ merchantId, currentStatus }: Props) {
         userId: merchantId,
         status: newStatus,
       }).unwrap();
-      toast.success(`Merchant is now ${newStatus}`);
-    } catch (error) {
-      toast.error("Failed to update verification status");
-    }
-  };
 
-  const getBorderColor = () => {
-    if (currentStatus === "verified")
-      return "border-green-500/50 text-green-600";
-    if (currentStatus === "rejected") return "border-red-500/50 text-red-600";
-    return "border-yellow-500/50 text-yellow-600";
+      toast.success(
+        t(
+          "merchant_mgmt.notifications.verification_updated",
+          `Verification updated to ${newStatus}`,
+        ),
+      );
+    } catch (error) {
+      toast.error(
+        t(
+          "merchant_mgmt.notifications.verification_error",
+          "Failed to update verification",
+        ),
+      );
+    }
   };
 
   return (
@@ -66,17 +82,27 @@ function MerchantVerificationDropDown({ merchantId, currentStatus }: Props) {
       disabled={isLoading}
     >
       <SelectTrigger
-        className={`w-[125px] h-8 border-2 text-[10px] font-bold transition-all bg-background uppercase ${getBorderColor()}`}
+        className={`w-[155px] h-9 border-2 text-xs font-bold transition-all bg-background uppercase ${currentOption.borderColor} ${currentOption.color}`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           {isLoading ? (
             <Loader2 className="w-3 h-3 animate-spin" />
           ) : (
-            <SelectValue placeholder="Verify" />
+            <>
+              {currentOption && (
+                <span className={currentOption.color}>
+                  {currentOption.icon}
+                </span>
+              )}
+              <span className="truncate mm:leading-loose">
+                {currentOption?.label}
+              </span>
+            </>
           )}
         </div>
       </SelectTrigger>
-      <SelectContent align="end" className="min-w-[140px]">
+
+      <SelectContent align="end" className="min-w-[155px]">
         {verificationOptions.map((item) => (
           <SelectItem
             value={item.value}

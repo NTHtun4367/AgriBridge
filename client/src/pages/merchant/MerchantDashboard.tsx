@@ -67,6 +67,7 @@ import { useGetMarketPricesQuery } from "@/store/slices/marketApi";
 import MerchantEntryDialog from "@/components/merchant/MerchantEntryDialog";
 import { InvoiceCreator } from "@/components/merchant/InvoiceCreator";
 import { useGetFinancialOverviewQuery } from "@/store/slices/entryApi";
+import { localizeData } from "@/utils/translator";
 
 interface CategoryItem {
   category: string;
@@ -85,14 +86,14 @@ const EMPTY_INVOICE = {
 
 const columnHelper = createColumnHelper<CategoryItem>();
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg border-t-4 border-t-indigo-500">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 mm:py-0 rounded-xl shadow-lg border-t-4 border-t-indigo-500">
         <p className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-wider">
           {label}
         </p>
-        <div className="space-y-2">
+        <div className="space-y-2 mm:space-y-0">
           {payload.map((entry: any, index: number) => (
             <div
               key={index}
@@ -108,7 +109,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 </p>
               </div>
               <p className="text-xs font-black text-slate-800 dark:text-slate-100">
-                {entry.value?.toLocaleString()} MMK
+                {entry.value.toLocaleString()} {t("merchant_dash.mmk")}
               </p>
             </div>
           ))}
@@ -120,8 +121,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const MerchantDashboard = () => {
-  const { t } = useTranslation();
-  const { data, isLoading, error } = useGetFinancialOverviewQuery({});
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language as "en" | "mm";
+
+  const { data: rawData, isLoading, error } = useGetFinancialOverviewQuery({});
   const { data: user } = useCurrentUserQuery();
 
   const [view, setView] = useState<"list" | "invoice">("list");
@@ -138,16 +141,26 @@ const MerchantDashboard = () => {
     { skip: !user?._id },
   );
 
-  const chartData = useMemo(() => {
-    return (
-      data?.categories?.map((item) => ({
-        name: item.category.charAt(0).toUpperCase() + item.category.slice(1),
-        [t("merchant_dash.chart.income_label")]: item.income,
-        [t("merchant_dash.chart.expense_label")]: item.expense,
-      })) || []
-    );
-  }, [data, t]);
+  // 1. Process data for Table (Translated values for display)
+  const localizedData = useMemo(() => {
+    if (!rawData) return null;
+    return localizeData(rawData, currentLang);
+  }, [rawData, currentLang]);
 
+  // 2. FIXED: Process data for Chart (Always use raw numeric values)
+  const chartData = useMemo(() => {
+    if (!rawData?.categories) return [];
+    return rawData.categories.map((item: any) => ({
+      name:
+        currentLang === "mm"
+          ? localizeData({ categories: [item] }, "mm").categories[0].category
+          : item.category,
+      income: Number(item.income) || 0,
+      expense: Number(item.expense) || 0,
+    }));
+  }, [rawData, currentLang]);
+
+  // 3. Table Column Definitions
   const columns = useMemo(
     () => [
       columnHelper.accessor("category", {
@@ -169,8 +182,11 @@ const MerchantDashboard = () => {
         header: t("merchant_dash.table.col_income"),
         cell: (info) => (
           <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-            +{info.getValue()?.toLocaleString()}{" "}
-            <span className="text-[10px] opacity-70">MMK</span>
+            {currentLang === "en" ? "+" : ""}
+            {info.getValue()}{" "}
+            <span className="text-[10px] opacity-70">
+              {t("merchant_dash.mmk")}
+            </span>
           </span>
         ),
       }),
@@ -178,34 +194,41 @@ const MerchantDashboard = () => {
         header: t("merchant_dash.table.col_expense"),
         cell: (info) => (
           <span className="text-rose-500 dark:text-rose-400 font-semibold">
-            -{info.getValue()?.toLocaleString()}{" "}
-            <span className="text-[10px] opacity-70">MMK</span>
+            {currentLang === "en" ? "-" : ""}
+            {info.getValue()}{" "}
+            <span className="text-[10px] opacity-70">
+              {t("merchant_dash.mmk")}
+            </span>
           </span>
         ),
       }),
       columnHelper.accessor("profit", {
         header: t("merchant_dash.table.col_profit"),
         cell: (info) => {
-          const val = info.getValue() ?? 0;
+          const val = info.getValue()?.toString() ?? "0";
+          const isNegative = val.includes("-") || val.includes("−");
           return (
             <Badge
               className={cn(
                 "shadow-none border",
-                val >= 0
+                !isNegative
                   ? "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:bg-emerald-500/20"
                   : "bg-rose-500/10 text-rose-600 border-rose-200 dark:bg-rose-500/20",
               )}
             >
-              {val.toLocaleString()} MMK
+              {val} {t("merchant_dash.mmk")}
             </Badge>
           );
         },
       }),
     ],
-    [t],
+    [t, currentLang],
   );
 
-  const tableData = useMemo(() => data?.categories || [], [data]);
+  const tableData = useMemo(
+    () => localizedData?.categories || [],
+    [localizedData],
+  );
 
   const table = useReactTable({
     data: tableData,
@@ -267,7 +290,7 @@ const MerchantDashboard = () => {
                   }}
                   variant="outline"
                 >
-                  <Plus className="mr-2 h-5 w-5 text-blue-600" />{" "}
+                  <Plus className="h-5 w-5 text-blue-600" />
                   {t("merchant_dash.actions.manual_invoice")}
                 </Button>
                 <MerchantEntryDialog rawData={marketData?.data || []} />
@@ -279,22 +302,25 @@ const MerchantDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               title={t("merchant_dash.stats.income")}
-              value={data?.overall?.income}
+              value={localizedData?.overall?.income}
               icon={<TrendingUp className="text-emerald-500 w-5 h-5" />}
               color="bg-emerald-500/10 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+              t={t}
             />
             <StatCard
               title={t("merchant_dash.stats.expenses")}
-              value={data?.overall?.expense}
+              value={localizedData?.overall?.expense}
               icon={<TrendingDown className="text-rose-500 w-5 h-5" />}
               color="bg-rose-500/10 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/20"
+              t={t}
             />
             <StatCard
               title={t("merchant_dash.stats.profit")}
-              value={data?.overall?.profit}
+              value={localizedData?.overall?.profit}
               icon={<Wallet className="text-indigo-500 w-5 h-5" />}
               color="bg-indigo-500/10 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20"
               isBold
+              t={t}
             />
           </div>
 
@@ -379,22 +405,21 @@ const MerchantDashboard = () => {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: "#94a3b8", fontSize: 10 }}
-                      tickFormatter={(val) => `${val / 1000}k`}
                     />
                     <Tooltip
                       cursor={{ fill: "#f8fafc", opacity: 0.1 }}
-                      content={<CustomTooltip />}
+                      content={<CustomTooltip t={t} />}
                     />
                     <Bar
                       name={t("merchant_dash.chart.income_label")}
-                      dataKey={t("merchant_dash.chart.income_label")}
+                      dataKey="income"
                       fill="url(#incomeGradient)"
                       radius={[6, 6, 0, 0]}
                       barSize={24}
                     />
                     <Bar
                       name={t("merchant_dash.chart.expense_label")}
-                      dataKey={t("merchant_dash.chart.expense_label")}
+                      dataKey="expense"
                       fill="url(#expenseGradient)"
                       radius={[6, 6, 0, 0]}
                       barSize={24}
@@ -408,7 +433,7 @@ const MerchantDashboard = () => {
           {/* TABLE */}
           <div className="w-full space-y-4">
             <div className="flex items-center justify-between gap-4">
-              <div className="relative w-full max-w-sm">
+              <div className="relative w-full max-sm:max-w-none max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("merchant_dash.table.search")}
@@ -416,10 +441,8 @@ const MerchantDashboard = () => {
                     (table.getColumn("category")?.getFilterValue() as string) ??
                     ""
                   }
-                  onChange={(event) =>
-                    table
-                      .getColumn("category")
-                      ?.setFilterValue(event.target.value)
+                  onChange={(e) =>
+                    table.getColumn("category")?.setFilterValue(e.target.value)
                   }
                   className="pl-9 h-9 border-2 mm:leading-loose"
                 />
@@ -432,22 +455,20 @@ const MerchantDashboard = () => {
                     size="sm"
                     className="ml-auto border-2 mm:leading-loose"
                   >
-                    <Settings2 className="mr-2 h-4 w-4" />{" "}
+                    <Settings2 className="mr-2 h-4 w-4" />
                     {t("merchant_dash.table.view_toggle")}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   {table
                     .getAllColumns()
-                    .filter((col) => col.getCanHide())
+                    .filter((c) => c.getCanHide())
                     .map((column) => (
                       <DropdownMenuCheckboxItem
                         key={column.id}
                         className="capitalize"
                         checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
+                        onCheckedChange={(v) => column.toggleVisibility(!!v)}
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>
@@ -517,12 +538,12 @@ const MerchantDashboard = () => {
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium mm:leading-loose mm:pt-6">
+                  <p className="text-xs font-medium mm:leading-loose mm:mb-0">
                     {t("merchant_dash.table.rows_per_page")}
                   </p>
                   <Select
                     value={`${table.getState().pagination.pageSize}`}
-                    onValueChange={(value) => table.setPageSize(Number(value))}
+                    onValueChange={(v) => table.setPageSize(Number(v))}
                   >
                     <SelectTrigger className="h-8 w-[70px] border-2">
                       <SelectValue />
@@ -562,7 +583,7 @@ const MerchantDashboard = () => {
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="mb-8 flex items-center justify-between">
             <Button variant="outline" onClick={() => setView("list")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />{" "}
+              <ArrowLeft className="h-4 w-4" />
               {t("merchant_dash.actions.exit_editor")}
             </Button>
           </div>
@@ -576,11 +597,10 @@ const MerchantDashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color, isBold = false }: any) => (
+const StatCard = ({ title, value, icon, color, t, isBold = false }: any) => (
   <div
     className={cn(
-      "p-6 rounded-2xl border flex items-center gap-5 transition-all duration-300",
-      "hover:-translate-y-1 hover:shadow-md",
+      "p-6 mm:py-0 rounded-2xl border flex items-center gap-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-md",
       color,
     )}
   >
@@ -599,8 +619,10 @@ const StatCard = ({ title, value, icon, color, isBold = false }: any) => (
             : "text-slate-800 dark:text-slate-100",
         )}
       >
-        {(value || 0).toLocaleString()}{" "}
-        <span className="text-sm font-medium opacity-60">MMK</span>
+        {value || 0}{" "}
+        <span className="text-sm font-medium opacity-60">
+          {t("merchant_dash.mmk")}
+        </span>
       </p>
     </div>
   </div>

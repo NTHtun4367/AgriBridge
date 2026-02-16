@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Phone, MapPin, Send, Clock} from "lucide-react";
+import { Mail, Phone, MapPin, Send, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { useTranslation } from "react-i18next";
 
 export default function ContactPage() {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,18 +30,18 @@ export default function ContactPage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent -z-10" />
         <ScrollReveal>
           <div className="flex justify-center mb-6">
-            <p
-              className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold"
-            >
-              Support Center
+            <p className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold mm:mt-5">
+              {t("contact.hero_badge")}
             </p>
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
-            How can we <span className="text-primary">help you grow?</span>
+          <h1 className="text-4xl mm:text-[48px] md:text-6xl font-extrabold mb-6 tracking-tight mm:leading-loose mm:-mt-2">
+            {t("contact.hero_title_start")}
+            <span className="text-primary">
+              {t("contact.hero_title_highlight")}
+            </span>
           </h1>
-          <p className="max-w-2xl mx-auto text-lg text-slate-500 px-6">
-            Whether you're a farmer needing technical help or a merchant looking
-            to partner, our team is ready to bridge the gap.
+          <p className="max-w-2xl mx-auto text-lg text-slate-500 px-6 mm:leading-loose">
+            {t("contact.hero_desc")}
           </p>
         </ScrollReveal>
       </section>
@@ -51,10 +53,11 @@ export default function ContactPage() {
           <div className="lg:col-span-5 space-y-8">
             <ScrollReveal delay={100}>
               <div className="space-y-6">
-                <h2 className="text-3xl font-bold">Direct Channels</h2>
+                <h2 className="text-3xl font-bold">
+                  {t("contact.direct_channels_title")}
+                </h2>
                 <p className="text-slate-500">
-                  Prefer direct communication? Reach out to us through any of
-                  these verified AgriBridge channels.
+                  {t("contact.direct_channels_desc")}
                 </p>
               </div>
             </ScrollReveal>
@@ -62,23 +65,23 @@ export default function ContactPage() {
             <div className="space-y-4">
               <ContactMethodCard
                 icon={<Mail className="h-6 w-6" />}
-                label="Email Support"
+                label={t("contact.email_label")}
                 value="support@agribridge.com"
-                description="For general inquiries and technical help."
+                description={t("contact.email_desc")}
                 delay={200}
               />
               <ContactMethodCard
                 icon={<Phone className="h-6 w-6" />}
-                label="Phone / Viber"
+                label={t("contact.phone_label")}
                 value="+95 9 123 456 789"
-                description="Available Mon-Fri, 9:00 AM - 5:00 PM."
+                description={t("contact.phone_desc")}
                 delay={300}
               />
               <ContactMethodCard
                 icon={<MapPin className="h-6 w-6" />}
-                label="Main Office"
-                value="Pathein, Myanmar"
-                description="No. (45), Kanna Road, Ward (1), Pathein."
+                label={t("contact.office_label")}
+                value={t("contact.office_value")}
+                description={t("contact.office_desc")}
                 delay={400}
               />
             </div>
@@ -90,9 +93,11 @@ export default function ContactPage() {
                   <Clock className="text-primary h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold">Fast Response</p>
+                  <p className="text-sm font-bold">
+                    {t("contact.response_title")}
+                  </p>
                   <p className="text-xs text-slate-400">
-                    We typically respond within 24 hours.
+                    {t("contact.response_desc")}
                   </p>
                 </div>
               </div>
@@ -110,20 +115,20 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-sm font-bold uppercase tracking-wider text-slate-500 ml-1">
-                          Full Name
+                          {t("contact.form_name_label")}
                         </label>
                         <Input
-                          placeholder="Mg Mg"
+                          placeholder={t("contact.form_name_placeholder")}
                           className="h-14 rounded-2xl border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-none focus-visible:ring-primary"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-bold uppercase tracking-wider text-slate-500 ml-1">
-                          Email Address
+                          {t("contact.form_email_label")}
                         </label>
                         <Input
                           type="email"
-                          placeholder="mgmg@example.com"
+                          placeholder={t("contact.form_email_placeholder")}
                           className="h-14 rounded-2xl border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-none focus-visible:ring-primary"
                         />
                       </div>
@@ -131,20 +136,20 @@ export default function ContactPage() {
 
                     <div className="space-y-2">
                       <label className="text-sm font-bold uppercase tracking-wider text-slate-500 ml-1">
-                        Subject
+                        {t("contact.form_subject_label")}
                       </label>
                       <Input
-                        placeholder="Technical Support / Merchant Inquiry"
+                        placeholder={t("contact.form_subject_placeholder")}
                         className="h-14 rounded-2xl border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-none focus-visible:ring-primary"
                       />
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-bold uppercase tracking-wider text-slate-500 ml-1">
-                        Your Message
+                        {t("contact.form_message_label")}
                       </label>
                       <Textarea
-                        placeholder="How can our team help your farm today?"
+                        placeholder={t("contact.form_message_placeholder")}
                         className="min-h-40 rounded-2xl border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-none focus-visible:ring-primary p-4"
                       />
                     </div>
@@ -156,18 +161,18 @@ export default function ContactPage() {
                       {isSubmitting ? (
                         <div className="flex items-center gap-2">
                           <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Sending...
+                          {t("contact.form_sending")}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <Send className="h-5 w-5" /> Send Message
+                          <Send className="h-5 w-5" />{" "}
+                          {t("contact.form_button")}
                         </div>
                       )}
                     </Button>
 
                     <p className="text-center text-xs text-slate-400">
-                      By clicking send, you agree to our privacy policy and
-                      terms of service.
+                      {t("contact.form_disclaimer")}
                     </p>
                   </form>
                 </CardContent>
@@ -176,24 +181,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
-      {/* 3. Location / Global Reach */}
-      {/* <ScrollReveal>
-        <section className="py-20 bg-secondary/30 text-center px-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="p-4 bg-primary/10 w-fit rounded-full mx-auto">
-              <Globe className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-3xl font-bold">Serving Farmers Nationwide</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              While our main headquarters is in Yangon, AgriBridge
-              representatives are active across the Ayeyarwady, Mandalay, and
-              Sagaing regions to provide local support.
-            </p>
-          </div>
-        </section>
-      </ScrollReveal> */}
-
       {/* --- FOOTER --- */}
       <Footer />
     </div>
@@ -220,12 +207,12 @@ function ContactMethodCard({
         <div className="p-4 bg-primary/10 rounded-2xl text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
           {icon}
         </div>
-        <div className="space-y-1">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <div className="space-y-1 mm:space-y-0">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mm:leading-loose">
             {label}
           </p>
-          <p className="text-lg font-bold">{value}</p>
-          <p className="text-sm text-slate-500">{description}</p>
+          <p className="text-lg font-bold mm:leading-loose">{value}</p>
+          <p className="text-sm text-slate-500 mm:leading-loose">{description}</p>
         </div>
       </div>
     </ScrollReveal>

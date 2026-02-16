@@ -26,48 +26,113 @@ import {
 import { toast } from "sonner";
 import StatusCard from "@/common/StatusCard";
 import { useGetInvoicesQuery } from "@/store/slices/invoiceApi";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
+
+// --- INTERFACES ---
+interface InvoiceItem {
+  cropName: string;
+  quantity: string | number;
+  price: string | number;
+  unit: string;
+}
+
+interface Invoice {
+  _id: string;
+  invoiceId: string;
+  farmerName: string;
+  farmerNRC: string;
+  farmerPhone: string;
+  farmerAddress: string;
+  totalAmount: string | number;
+  status: "paid" | "pending";
+  createdAt: string;
+  items: InvoiceItem[];
+}
+
+interface InvoiceStats {
+  total: number;
+  pending: number;
+  collected: number;
+}
 
 export default function MerchantInvoices() {
   const { t, i18n } = useTranslation();
+  const currentLang =
+    i18n.language === "my" || i18n.language === "mm" ? "mm" : "en";
 
   // --- API HOOKS ---
   const { data: invoices, isLoading } = useGetInvoicesQuery();
 
   // --- STATE ---
-  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const invoiceRef = useRef<HTMLDivElement>(null);
 
+  const mmToEnNumbers = (value: string): string => {
+    const mmDigits = "၀၁၂၃၄၅၆၇၈၉";
+    const enDigits = "0123456789";
+
+    return value.replace(/[၀-၉]/g, (char) => enDigits[mmDigits.indexOf(char)]);
+  };
+
+  const parseCurrency = (val: any): number => {
+    if (typeof val === "number") return val;
+    if (!val) return 0;
+
+    let str = val.toString();
+
+    // ✅ convert Myanmar numerals first
+    str = mmToEnNumbers(str);
+
+    const sanitized = str.replace(/[^0-9.-]/g, "");
+    const parsed = parseFloat(sanitized);
+
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
   // --- STATS CALCULATION ---
-  const stats = useMemo(() => {
+  const stats = useMemo<InvoiceStats>(() => {
     if (!invoices || !Array.isArray(invoices))
       return { total: 0, pending: 0, collected: 0 };
+
     return invoices.reduce(
-      (acc, inv) => {
-        const amount = inv.totalAmount ?? 0;
+      (acc: InvoiceStats, inv: any) => {
+        const amount = parseCurrency(inv.totalAmount);
         acc.total += amount;
-        if (inv.status === "paid") acc.collected += amount;
-        else acc.pending += amount;
+        if (inv.status === "paid") {
+          acc.collected += amount;
+        } else {
+          acc.pending += amount;
+        }
         return acc;
       },
       { total: 0, pending: 0, collected: 0 },
     );
   }, [invoices]);
 
-  // --- FILTER LOGIC ---
+  // --- FILTER & LOCALIZATION LOGIC ---
   const filteredInvoices = useMemo(() => {
     if (!invoices) return [];
-    return invoices.filter(
+
+    const filtered = (invoices as Invoice[]).filter(
       (inv) =>
         inv.farmerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inv.invoiceId?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [invoices, searchTerm]);
+
+    // We keep a copy of raw data for calculations but localize for the list display
+    return localizeData(filtered, currentLang);
+  }, [invoices, searchTerm, currentLang]);
+
+  const selectedInvoice = filteredInvoices.find(
+    (inv: any) => inv._id === selectedInvoiceId,
+  );
 
   // --- HANDLERS ---
   const handleExportImage = async () => {
-    if (!invoiceRef.current) return;
-
+    if (!invoiceRef.current || !selectedInvoice) return;
     const loadingToast = toast.loading(t("merchant_invoices.modal.generating"));
 
     try {
@@ -76,11 +141,13 @@ export default function MerchantInvoices() {
         pixelRatio: 3,
         backgroundColor: "#ffffff",
         filter: (node) => {
-          const exclusionClasses = ["print-hidden"];
-          return !exclusionClasses.some(
-            (cls) =>
-              node instanceof HTMLElement && node.classList.contains(cls),
-          );
+          if (
+            node instanceof HTMLElement &&
+            node.classList.contains("print-hidden")
+          ) {
+            return false;
+          }
+          return true;
         },
       });
 
@@ -99,9 +166,14 @@ export default function MerchantInvoices() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(
-      i18n.language === "my" ? "my-MM" : "en-GB",
-    );
+    try {
+      const date = new Date(dateString).toLocaleDateString(
+        i18n.language === "my" || i18n.language === "mm" ? "my-MM" : "en-GB",
+      );
+      return currentLang === "mm" ? toMyanmarNumerals(date) : date;
+    } catch {
+      return dateString;
+    }
   };
 
   if (isLoading)
@@ -119,7 +191,9 @@ export default function MerchantInvoices() {
       {/* Overview Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold mm:leading-loose">{t("merchant_invoices.title")}</h2>
+          <h2 className="text-2xl font-bold mm:leading-loose">
+            {t("merchant_invoices.title")}
+          </h2>
           <p className="text-sm text-slate-500 mm:leading-loose">
             {t("merchant_invoices.subtitle")}
           </p>
@@ -131,19 +205,31 @@ export default function MerchantInvoices() {
         <StatusCard
           title={t("merchant_invoices.stats.total_volume")}
           bgColor="bg-blue-500/15"
-          value={stats.total}
+          value={
+            currentLang === "mm"
+              ? toMyanmarNumerals(stats.total.toLocaleString())
+              : stats.total.toLocaleString()
+          }
           icon={<TrendingUp className="w-6 h-6 text-blue-500" />}
         />
         <StatusCard
           title={t("merchant_invoices.stats.total_collected")}
           bgColor="bg-emerald-500/15"
-          value={stats.collected}
+          value={
+            currentLang === "mm"
+              ? toMyanmarNumerals(stats.collected.toLocaleString())
+              : stats.collected.toLocaleString()
+          }
           icon={<CheckCircle className="w-6 h-6 text-green-600" />}
         />
         <StatusCard
           title={t("merchant_invoices.stats.pending_receivables")}
           bgColor="bg-red-500/15"
-          value={stats.pending}
+          value={
+            currentLang === "mm"
+              ? toMyanmarNumerals(stats.pending.toLocaleString())
+              : stats.pending.toLocaleString()
+          }
           icon={<TrendingDown className="w-6 h-6 text-red-500" />}
         />
       </div>
@@ -176,10 +262,10 @@ export default function MerchantInvoices() {
                 {t("merchant_invoices.list.no_data")}
               </div>
             ) : (
-              filteredInvoices.map((inv) => (
+              filteredInvoices.map((inv: any) => (
                 <div
                   key={inv._id}
-                  onClick={() => setSelectedInvoice(inv)}
+                  onClick={() => setSelectedInvoiceId(inv._id)}
                   className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-4">
@@ -195,16 +281,19 @@ export default function MerchantInvoices() {
                     <div>
                       <h4 className="font-bold">{inv.farmerName}</h4>
                       <p className="text-xs text-slate-500 font-medium">
-                        {inv.invoiceId} • {formatDate(inv.createdAt)}
+                        {currentLang === "mm"
+                          ? toMyanmarNumerals(inv.invoiceId)
+                          : inv.invoiceId}{" "}
+                        • {formatDate(inv.createdAt)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right mm:-space-y-2">
                       <p
-                        className={`font-bold ${inv.status === "paid" && "text-primary"}`}
+                        className={`font-bold ${inv.status === "paid" ? "text-primary" : ""}`}
                       >
-                        {inv.totalAmount.toLocaleString()} MMK
+                        {inv.totalAmount} {t("merchant_invoices.mmk")}
                       </p>
                       <Badge
                         variant="outline"
@@ -214,7 +303,7 @@ export default function MerchantInvoices() {
                             : "text-amber-500"
                         }`}
                       >
-                        {inv.status}
+                        {t(inv.status)}
                       </Badge>
                     </div>
                     <ChevronRight
@@ -236,7 +325,9 @@ export default function MerchantInvoices() {
             <DollarSign size={20} />
           </div>
           <div>
-            <h4 className="font-bold mm:-mt-3">{t("merchant_invoices.footer.title")}</h4>
+            <h4 className="font-bold mm:-mt-3">
+              {t("merchant_invoices.footer.title")}
+            </h4>
             <p className="text-xs text-slate-500 font-medium mm:-mb-3">
               {t("merchant_invoices.footer.description")}
             </p>
@@ -246,8 +337,8 @@ export default function MerchantInvoices() {
 
       {/* --- INVOICE MODAL --- */}
       <Dialog
-        open={!!selectedInvoice}
-        onOpenChange={() => setSelectedInvoice(null)}
+        open={!!selectedInvoiceId}
+        onOpenChange={(open) => !open && setSelectedInvoiceId(null)}
       >
         <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-transparent shadow-none">
           <DialogHeader className="sr-only">
@@ -257,7 +348,7 @@ export default function MerchantInvoices() {
           {selectedInvoice && (
             <div className="relative">
               <button
-                onClick={() => setSelectedInvoice(null)}
+                onClick={() => setSelectedInvoiceId(null)}
                 className="absolute -top-12 right-0 text-white flex items-center gap-2 font-bold hover:text-slate-200 transition-colors"
               >
                 <X size={20} /> {t("merchant_invoices.modal.close")}
@@ -276,7 +367,10 @@ export default function MerchantInvoices() {
                           {t("merchant_invoices.modal.invoice_header")}
                         </h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider">
-                          #{selectedInvoice.invoiceId}
+                          #
+                          {currentLang === "mm"
+                            ? toMyanmarNumerals(selectedInvoice.invoiceId)
+                            : selectedInvoice.invoiceId}
                         </p>
                       </div>
                       <div className="text-right">
@@ -298,12 +392,16 @@ export default function MerchantInvoices() {
                           {selectedInvoice.farmerName}
                         </p>
                         <p className="text-slate-500 text-xs leading-relaxed mm:mb-0">
-                          {selectedInvoice.farmerNRC}
+                          {currentLang === "mm"
+                            ? toMyanmarNumerals(selectedInvoice.farmerNRC)
+                            : selectedInvoice.farmerNRC}
                         </p>
                         <p className="text-slate-500 text-xs leading-relaxed">
                           {selectedInvoice.farmerAddress}
                           <br />
-                          {selectedInvoice.farmerPhone}
+                          {currentLang === "mm"
+                            ? toMyanmarNumerals(selectedInvoice.farmerPhone)
+                            : selectedInvoice.farmerPhone}
                         </p>
                       </div>
                       <div className="text-right">
@@ -317,7 +415,7 @@ export default function MerchantInvoices() {
                               : "bg-amber-100 text-amber-700"
                           }`}
                         >
-                          {selectedInvoice.status}
+                          {t(selectedInvoice.status)}
                         </Badge>
                         <p className="mt-6 text-[10px] text-slate-400 font-bold uppercase mm:mt-2">
                           {t("merchant_invoices.modal.date_issued")}
@@ -348,25 +446,43 @@ export default function MerchantInvoices() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                           {selectedInvoice.items?.map(
-                            (item: any, i: number) => (
-                              <tr key={i}>
-                                <td className="py-4 font-bold">
-                                  {item.cropName}
-                                </td>
-                                <td className="py-4 text-center text-slate-600">
-                                  {item.quantity} {item.unit}
-                                </td>
-                                <td className="py-4 text-right text-slate-600">
-                                  {item.price.toLocaleString()}
-                                </td>
-                                <td className="py-4 text-right font-black">
-                                  {(
-                                    item.quantity * item.price
-                                  ).toLocaleString()}{" "}
-                                  MMK
-                                </td>
-                              </tr>
-                            ),
+                            (item: any, i: number) => {
+                              // Ensure we parse numeric values from strings that might have commas/numerals
+                              const rawQty = parseCurrency(item.quantity);
+                              const rawPrice = parseCurrency(item.price);
+                              const totalValue = rawQty * rawPrice;
+
+                              return (
+                                <tr key={i}>
+                                  <td className="py-4 font-bold">
+                                    {item.cropName}
+                                  </td>
+                                  <td className="py-4 text-center text-slate-600">
+                                    {currentLang === "mm"
+                                      ? toMyanmarNumerals(
+                                          item.quantity.toString(),
+                                        )
+                                      : item.quantity}{" "}
+                                    {item.unit}
+                                  </td>
+                                  <td className="py-4 text-right text-slate-600">
+                                    {currentLang === "mm"
+                                      ? toMyanmarNumerals(
+                                          rawPrice.toLocaleString(),
+                                        )
+                                      : rawPrice.toLocaleString()}
+                                  </td>
+                                  <td className="py-4 text-right font-black">
+                                    {currentLang === "mm"
+                                      ? toMyanmarNumerals(
+                                          totalValue.toLocaleString(),
+                                        )
+                                      : totalValue.toLocaleString()}{" "}
+                                    {t("merchant_invoices.mmk")}
+                                  </td>
+                                </tr>
+                              );
+                            },
                           )}
                         </tbody>
                       </table>
@@ -377,13 +493,15 @@ export default function MerchantInvoices() {
                         {t("merchant_invoices.modal.total_due")}
                       </span>
                       <span className="text-primary">
-                        {selectedInvoice.totalAmount.toLocaleString()}{" "}
-                        <span className="text-sm font-bold">MMK</span>
+                        {selectedInvoice.totalAmount}{" "}
+                        <span className="text-sm font-bold">
+                          {t("merchant_invoices.mmk")}
+                        </span>
                       </span>
                     </div>
 
                     <div className="mt-10 flex gap-3 print-hidden">
-                      {selectedInvoice.status == "paid" && (
+                      {selectedInvoice.status === "paid" && (
                         <Button
                           variant="outline"
                           className="flex-1 py-6 gap-2 text-green-700 bg-green-50 border-green-200"

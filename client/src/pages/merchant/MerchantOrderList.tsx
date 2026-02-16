@@ -41,10 +41,12 @@ import {
   useUpdatePreorderStatusMutation,
 } from "@/store/slices/preorderApi";
 import { useNavigate } from "react-router";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
-const formatNRC = (nrc: any) => {
+const formatNRC = (nrc: any, lang: string) => {
   if (!nrc) return "N/A";
-  return `${nrc.region}/${nrc.township}${nrc.type}${nrc.number}`;
+  const nrcString = `${nrc.region}/${nrc.township}${nrc.type}${nrc.number}`;
+  return lang === "mm" ? toMyanmarNumerals(nrcString) : nrcString;
 };
 
 export function MerchantOrderList() {
@@ -61,6 +63,9 @@ export function MerchantOrderList() {
   const [updateStatus, { isLoading: isUpdating }] =
     useUpdatePreorderStatusMutation();
 
+  const currentLang =
+    i18n.language === "my" || i18n.language === "mm" ? "mm" : "en";
+
   const getDeliveryDate = (
     createdAt: string,
     timeline: { count: number; unit: string },
@@ -73,27 +78,43 @@ export function MerchantOrderList() {
     else if (unit.includes("week")) date.setDate(date.getDate() + count * 7);
     else if (unit.includes("month")) date.setMonth(date.getMonth() + count);
 
-    return date.toLocaleDateString(i18n.language === "my" ? "my-MM" : "en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    const formattedDate = date.toLocaleDateString(
+      i18n.language === "my" ? "my-MM" : "en-GB",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      },
+    );
+
+    return currentLang === "mm"
+      ? toMyanmarNumerals(formattedDate)
+      : formattedDate;
   };
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    return orders.filter(
+
+    // 1. First filter the raw data based on search
+    const filtered = orders.filter(
       (order: any) =>
         order.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.nrc?.number?.includes(searchQuery) ||
         order._id.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [orders, searchQuery]);
 
-  const selectedOrder = orders?.find((o: any) => o._id === selectedOrderId);
+    // 2. Localize the resulting array
+    return localizeData(filtered, currentLang);
+  }, [orders, searchQuery, currentLang]);
+
+  // Find the selected order from the already localized filtered list
+  const selectedOrder = filteredOrders?.find(
+    (o: any) => o._id === selectedOrderId,
+  );
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
+      // Use original ID for API calls (localizeData skips fields ending in "id")
       await updateStatus({ id, status }).unwrap();
       if (status === "cancelled") setSelectedOrderId(null);
     } catch (err) {
@@ -168,7 +189,7 @@ export function MerchantOrderList() {
                       className="group hover:bg-slate-50/50 transition-colors border-slate-100"
                     >
                       <TableCell className="pl-6 font-mono font-bold text-xs text-blue-600">
-                        #{order._id.slice(-6).toUpperCase()}
+                        #{toMyanmarNumerals(order._id.slice(-6).toUpperCase())}
                       </TableCell>
                       <TableCell>
                         <span className="font-bold text-sm">
@@ -177,7 +198,7 @@ export function MerchantOrderList() {
                       </TableCell>
                       <TableCell>
                         <span className="text-xs font-medium text-slate-600">
-                          {formatNRC(order.nrc)}
+                          {formatNRC(order.nrc, currentLang)}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
@@ -249,7 +270,10 @@ export function MerchantOrderList() {
                         {t("merchant_preorders.details.verification")}
                       </Badge>
                       <DialogTitle className="text-2xl font-black">
-                        #{selectedOrder._id.slice(-6).toUpperCase()}
+                        #
+                        {toMyanmarNumerals(
+                          selectedOrder._id.slice(-6).toUpperCase(),
+                        )}
                       </DialogTitle>
                     </div>
                     <div className="text-right">
@@ -258,9 +282,15 @@ export function MerchantOrderList() {
                       </p>
                       <p className="text-sm font-bold flex items-center gap-2 justify-end mt-1">
                         <Calendar size={14} className="text-blue-400" />
-                        {new Date(selectedOrder.createdAt).toLocaleDateString(
-                          i18n.language === "my" ? "my-MM" : "en-GB",
-                        )}
+                        {currentLang === "mm"
+                          ? toMyanmarNumerals(
+                              new Date(
+                                selectedOrder.createdAt,
+                              ).toLocaleDateString("my-MM"),
+                            )
+                          : new Date(
+                              selectedOrder.createdAt,
+                            ).toLocaleDateString("en-GB")}
                       </p>
                     </div>
                   </div>
@@ -279,7 +309,7 @@ export function MerchantOrderList() {
                         <p className="text-xs text-slate-600 flex items-center gap-2">
                           <CreditCard size={14} className="text-slate-400" />
                           {t("merchant_preorders.labels.nrc_label")}:{" "}
-                          {formatNRC(selectedOrder.nrc)}
+                          {formatNRC(selectedOrder.nrc, currentLang)}
                         </p>
                         <p className="text-xs text-slate-600 flex items-center gap-2">
                           <Phone size={14} className="text-slate-400" />
@@ -337,7 +367,7 @@ export function MerchantOrderList() {
                                 {item.quantity} {item.unit}
                               </TableCell>
                               <TableCell className="text-right font-mono font-bold text-blue-600 text-sm">
-                                {item.price.toLocaleString()} MMK
+                                {item.price} {t("merchant_preorders.mmk")}
                               </TableCell>
                             </TableRow>
                           ))}

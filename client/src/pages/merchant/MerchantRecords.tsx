@@ -30,9 +30,10 @@ import { useGetAllEntriesQuery } from "@/store/slices/entryApi";
 import { useCurrentUserQuery } from "@/store/slices/userApi";
 import { format } from "date-fns";
 import { useNavigate } from "react-router";
+import { localizeData, toMyanmarNumerals } from "@/utils/translator";
 
 function MerchantRecords() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: entries, isLoading } = useGetAllEntriesQuery();
   const { data: user } = useCurrentUserQuery();
   const navigate = useNavigate();
@@ -40,10 +41,16 @@ function MerchantRecords() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
 
+  // Determine current language for localization functions
+  const currentLang =
+    i18n.language === "mm" || i18n.language === "my" ? "mm" : "en";
+
   // Filter logic: Search (Category/Notes) and Transaction Type
   const filteredEntries = useMemo(() => {
     if (!entries) return [];
-    return entries.filter((en: any) => {
+
+    // 1. Filter the raw data first
+    const filtered = entries.filter((en: any) => {
       const categoryMatch = en.category?.toLowerCase() || "";
       const notesMatch = en.notes?.toLowerCase() || "";
       const term = searchTerm.toLowerCase();
@@ -54,7 +61,10 @@ function MerchantRecords() {
 
       return matchesSearch && matchesType;
     });
-  }, [entries, searchTerm, selectedType]);
+
+    // 2. Apply your localizeData function to the filtered result
+    return localizeData(filtered, currentLang);
+  }, [entries, searchTerm, selectedType, currentLang]);
 
   return (
     <div className="w-full min-h-screen p-4 md:p-8 bg-slate-50/30 dark:bg-transparent animate-in fade-in duration-500">
@@ -76,7 +86,10 @@ function MerchantRecords() {
                 {t("merchant_records.total_records")}
               </p>
               <p className="text-lg font-black text-primary">
-                {filteredEntries.length}
+                {/* Localize the length number */}
+                {currentLang === "mm"
+                  ? toMyanmarNumerals(filteredEntries.length)
+                  : filteredEntries.length}
               </p>
             </div>
           </div>
@@ -176,6 +189,12 @@ function MerchantRecords() {
                 ) : (
                   filteredEntries.map((en: any) => {
                     const isIncome = en.type === "income";
+
+                    // Format dates manually to handle numeral localization
+                    const dateObj = new Date(en.date);
+                    const dayMonth = format(dateObj, "dd MMM");
+                    const year = format(dateObj, "yyyy");
+
                     return (
                       <TableRow
                         key={en._id}
@@ -187,10 +206,14 @@ function MerchantRecords() {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="text-slate-900 dark:text-slate-200 font-bold">
-                              {format(new Date(en.date), "dd MMM")}
+                              {currentLang === "mm"
+                                ? toMyanmarNumerals(dayMonth)
+                                : dayMonth}
                             </span>
                             <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">
-                              {format(new Date(en.date), "yyyy")}
+                              {currentLang === "mm"
+                                ? toMyanmarNumerals(year)
+                                : year}
                             </span>
                           </div>
                         </TableCell>
@@ -221,7 +244,6 @@ function MerchantRecords() {
                             ) : (
                               <ArrowDownLeft size={14} className="shrink-0" />
                             )}
-                            {/* Re-using transaction namespace from previous prompt if available */}
                             {isIncome
                               ? t("transaction.income")
                               : t("transaction.expense")}
@@ -237,11 +259,10 @@ function MerchantRecords() {
                                   : "text-destructive"
                               }`}
                             >
-                              {isIncome ? "+" : "-"}{" "}
-                              {Number(en.value).toLocaleString()}
+                              {isIncome ? "+" : "-"} {en.value}
                             </span>
                             <span className="text-[9px] font-black text-slate-400 tracking-tighter">
-                              MMK
+                              {t("merchant_records.mmk")}
                             </span>
                           </div>
                         </TableCell>
@@ -259,7 +280,10 @@ function MerchantRecords() {
           <Calendar size={14} />
           <span>
             {t("merchant_records.status.system_updated")}:{" "}
-            {format(new Date(), "PPpp")}
+            {/* Localize footer date */}
+            {currentLang === "mm"
+              ? toMyanmarNumerals(format(new Date(), "PPpp"))
+              : format(new Date(), "PPpp")}
           </span>
         </div>
       </div>

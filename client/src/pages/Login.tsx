@@ -23,8 +23,10 @@ import { useLoginMutation } from "@/store/slices/userApi";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setCredentials } from "@/store/slices/auth";
+import { useTranslation } from "react-i18next"; // Added i18n import
 
 function Login() {
+  const { t } = useTranslation(); // Initialize translation hook
   const [loginMutation, { isLoading }] = useLoginMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -32,7 +34,7 @@ function Login() {
   const form = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: "", // Corrected field name
+      identifier: "",
       password: "",
     },
   });
@@ -47,7 +49,7 @@ function Login() {
       const response = await loginMutation(payload).unwrap();
       dispatch(setCredentials(response));
       form.reset();
-      toast.success("Login successful.");
+      toast.success(t("login.success_toast", "Login successful."));
 
       // Role-based redirection
       if (response.user.role === "admin") {
@@ -58,7 +60,10 @@ function Login() {
         navigate("/farmer/dashboard");
       }
     } catch (error: any) {
-      toast.error(error?.data?.message || "Login failed. Please try again.");
+      toast.error(
+        error?.data?.message ||
+          t("login.error_toast", "Login failed. Please try again."),
+      );
     }
   };
 
@@ -69,20 +74,27 @@ function Login() {
           <CardTitle className="text-2xl font-extrabold text-primary italic">
             <Link to={"/"}>AgriBridge</Link>
           </CardTitle>
-          <CardDescription>Enter your information to login</CardDescription>
+          <CardDescription className="mm:leading-loose">
+            {t("login.description", "Enter your information to login")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="identifier" // Changed from "email" to match schema
+                name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email or Phone Number</FormLabel>
+                    <FormLabel className="mm:leading-loose">
+                      {t("login.identifier_label", "Email or Phone Number")}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="example@gmail.com or 09..."
+                        placeholder={t(
+                          "login.identifier_placeholder",
+                          "example@gmail.com or 09...",
+                        )}
                         {...field}
                       />
                     </FormControl>
@@ -95,9 +107,15 @@ function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="mm:leading-loose">
+                      {t("login.password_label", "Password")}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="******" {...field} type="password" />
+                      <Input
+                        placeholder={t("login.password_placeholder", "******")}
+                        {...field}
+                        type="password"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -108,14 +126,16 @@ function Login() {
                 className="w-full cursor-pointer"
                 disabled={isLoading}
               >
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading
+                  ? t("login.submitting_button", "Logging in...")
+                  : t("login.submit_button", "Login")}
               </Button>
             </form>
           </Form>
-          <p className="text-xs text-center font-medium mt-4">
-            Don't have an account?
+          <p className="text-xs text-center font-medium mt-4 mm:leading-loose">
+            {t("login.no_account", "Don't have an account?")}
             <Link to={"/register"} className="underline ps-1 text-primary">
-              Register
+              {t("login.register_link", "Register")}
             </Link>
           </p>
         </CardContent>

@@ -13,8 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import Navigation from "@/common/home/Navigation";
 import Footer from "@/common/home/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { useTranslation } from "react-i18next";
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation();
   const lastUpdated = "January 2026";
 
   return (
@@ -28,16 +30,18 @@ export default function PrivacyPolicy() {
 
         <ScrollReveal>
           <div className="flex justify-center mb-6">
-            <p className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold">
-              Trust & Transparency
+            <p className="px-4 py-1.5 text-primary text-xl uppercase tracking-widest font-bold mm:mt-8">
+              {t("privacy.hero_badge")}
             </p>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">
-            Protecting Your{" "}
-            <span className="text-primary">Digital Harvest</span>
+          <h1 className="text-4xl mm:text-[48px] md:text-6xl font-black mb-4 tracking-tighter">
+            {t("privacy.hero_title_start")}{" "}
+            <span className="text-primary">
+              {t("privacy.hero_title_highlight")}
+            </span>
           </h1>
-          <p className="text-slate-500 font-medium italic">
-            Effective Date: {lastUpdated}
+          <p className="text-slate-500 font-medium italic mm:leading-loose mm:mt-12">
+            {t("privacy.effective_date")}: {lastUpdated}
           </p>
         </ScrollReveal>
       </section>
@@ -54,12 +58,11 @@ export default function PrivacyPolicy() {
               <div className="flex justify-center mb-2">
                 <ShieldCheck className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold">The Agri-Trust Commitment</h2>
-              <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
-                We believe your farm data is as valuable as your land.
-                AgriBridge is built to be your trusted digital partner, ensuring
-                your records are never sold, never leaked, and always under your
-                control.
+              <h2 className="text-2xl font-bold">
+                {t("privacy.commitment_title")}
+              </h2>
+              <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed mm:leading-loose">
+                {t("privacy.commitment_desc")}
               </p>
             </div>
           </div>
@@ -73,24 +76,23 @@ export default function PrivacyPolicy() {
               <div className="space-y-3">
                 <SectionHeader
                   icon={<Database />}
-                  title="1. The Information We Guard"
+                  title={t("privacy.section1_title")}
                 />
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg">
-                  To provide you with accurate profit analysis and seasonal
-                  history, we only record the details you choose to share:
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg mm:leading-loose">
+                  {t("privacy.section1_desc")}
                 </p>
                 <div className="grid gap-4">
                   <DataRow
-                    label="Profile"
-                    text="Your name and phone number for secure access."
+                    label={t("privacy.data_profile_label")}
+                    text={t("privacy.data_profile_text")}
                   />
                   <DataRow
-                    label="Farm Logs"
-                    text="Expenses for fertilizer, seeds, labor, and your total income from harvests."
+                    label={t("privacy.data_logs_label")}
+                    text={t("privacy.data_logs_text")}
                   />
                   <DataRow
-                    label="Visual Records"
-                    text="Images of receipts or bills you upload for your own bookkeeping."
+                    label={t("privacy.data_visual_label")}
+                    text={t("privacy.data_visual_text")}
                   />
                 </div>
               </div>
@@ -99,22 +101,20 @@ export default function PrivacyPolicy() {
               <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <SectionHeader
                   icon={<RefreshCw />}
-                  title="2. Cultivating Your Growth"
+                  title={t("privacy.section2_title")}
                 />
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  We use your data strictly to help you run a more profitable
-                  farm business. We use it to:
+                  {t("privacy.section2_desc")}
                 </p>
                 <ul className="space-y-4">
                   <li className="flex gap-4">
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-1" />
                     <div>
                       <span className="font-bold block">
-                        Calculate Your Real Profit
+                        {t("privacy.usage_item1_title")}
                       </span>
                       <span className="text-sm text-slate-500">
-                        Turning raw numbers into clear reports so you know
-                        exactly how much you earned.
+                        {t("privacy.usage_item1_desc")}
                       </span>
                     </div>
                   </li>
@@ -122,11 +122,10 @@ export default function PrivacyPolicy() {
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-1" />
                     <div>
                       <span className="font-bold block">
-                        Secure Your Records
+                        {t("privacy.usage_item2_title")}
                       </span>
                       <span className="text-sm text-slate-500">
-                        Backing up your digital book so you never lose your
-                        data, even if your phone is damaged.
+                        {t("privacy.usage_item2_desc")}
                       </span>
                     </div>
                   </li>
@@ -137,47 +136,48 @@ export default function PrivacyPolicy() {
               <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <SectionHeader
                   icon={<Lock />}
-                  title="3. A Digital Fence Around Your Records"
+                  title={t("privacy.section3_title")}
                 />
                 <div className="p-8 rounded-3xl bg-primary/5 border border-primary/10 space-y-4">
                   <p className="text-slate-700 dark:text-slate-300 font-medium">
-                    We use industrial-grade encryption—think of it as a
-                    high-security lock on your digital barn.
+                    {t("privacy.security_highlight")}
                   </p>
                   <div className="flex items-center gap-3 text-sm font-bold text-slate-900 dark:text-white">
                     <Scale className="h-5 w-5 text-primary" />
-                    <span>
-                      No data is ever sold to third-party merchants or
-                      advertisers.
-                    </span>
+                    <span>{t("privacy.security_promise")}</span>
                   </div>
                 </div>
               </div>
 
               {/* Section 4: Rights */}
               <div className="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-6">
-                <SectionHeader icon={<EyeOff />} title="4. You Hold the Keys" />
+                <SectionHeader
+                  icon={<EyeOff />}
+                  title={t("privacy.section4_title")}
+                />
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  You are the owner of your information. AgriBridge is simply
-                  the tool. You have the right to:
+                  {t("privacy.section4_desc")}
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <span className="font-medium">Review All Entries</span>
+                    <span className="font-medium">
+                      {t("privacy.rights_item1")}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <span className="font-medium">Permanently Delete</span>
+                    <span className="font-medium">
+                      {t("privacy.rights_item2")}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Closing Quote */}
               <div className="pt-12 text-center">
-                <p className="text-sm italic text-slate-400 max-w-md mx-auto">
-                  "AgriBridge honors the tradition of Myanmar's farming families
-                  by protecting their digital future."
+                <p className="text-sm italic text-slate-400 max-w-md mx-auto mm:leading-loose">
+                  {t("privacy.closing_quote")}
                 </p>
               </div>
             </CardContent>
@@ -215,7 +215,7 @@ function DataRow({ label, text }: { label: string; text: string }) {
       <Badge className="w-fit px-3 py-1 bg-white dark:bg-slate-700 shadow-sm border-none font-bold uppercase text-[10px] tracking-widest text-primary shrink-0">
         {label}
       </Badge>
-      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mm:leading-loose mm:mb-0">
         {text}
       </p>
     </div>

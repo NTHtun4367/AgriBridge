@@ -2,6 +2,7 @@ export const GLOSSARY: Record<string, string> = {
   // Common UI & Status
   merchant_preorders: "ကြိုတင်မှာယူမှုများ",
   merchant_disputes: "အငြင်းပွားမှုများ",
+  admin: "အက်ဒမင်",
   farmer: "လယ်သမား",
   merchant: "ကုန်သည်",
   wholesaler: "လက်ကားရောင်းချသူ",
@@ -19,6 +20,7 @@ export const GLOSSARY: Record<string, string> = {
   bag: "အိတ်",
   mandalay: "မန္တလေး",
   "yangon (bayintnaung)": "ရန်ကုန် (ဘုရင့်နောင်)",
+  yangon: "ရန်ကုန်",
   income: "ဝင်ငွေ",
   expense: "အသုံးစရိတ်",
   labor: "အလုပ်သမား",
@@ -36,6 +38,7 @@ export const GLOSSARY: Record<string, string> = {
   ma: "မ",
 
   // Common Name Syllables (One word mapping)
+  nay: "နေ",
   aung: "အောင်",
   kyaw: "ကျော်",
   min: "မင်း",
@@ -74,6 +77,8 @@ export const GLOSSARY: Record<string, string> = {
   ba: "ဗ",
   gyi: "ကြီး",
   kaung: "ကောင်း",
+  luu: "လူ",
+  chaw: "ချော",
 
   // Time Markers (AM/PM)
   am: "နံနက်",
@@ -712,9 +717,12 @@ export const GLOSSARY: Record<string, string> = {
   pathana: "ပသန",
   zalana: "ဇလန",
 
+  active: "အသုံးပြုနေဆဲ",
+  ban: "ရပ်ဆိုင်းထား",
   pending: "စောင့်ဆိုင်းဆဲ",
   confirmed: "အတည်ပြုပြီး",
   delivered: "ပို့ဆောင်ပြီး",
+  paid: "ပေးချေပြီး",
   cancelled: "ပယ်ဖျက်ပြီး",
   resolved: "ဖြေရှင်းပြီး",
   rejected: "ငြင်းပယ်ပြီး",
